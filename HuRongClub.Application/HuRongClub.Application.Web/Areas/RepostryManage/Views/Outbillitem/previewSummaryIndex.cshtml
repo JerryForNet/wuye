@@ -1,0 +1,81 @@
+﻿@{
+    ViewBag.Title = "打印预览";
+    Layout = "~/Views/Shared/_Index.cshtml";
+}
+
+<link href="/Content/styles/hurongclub-report.css" rel="stylesheet" />
+<script src="/Content/scripts/plugins/printTable/jquery.printTable.js"></script>
+<style>
+    body { width: 100%; background-color: #ccc; margin: 0px auto; padding: 0px; }
+    .ui-report .gridPanel { box-shadow: none; border: none; }
+</style>
+<script>
+	window.onload = function () {
+	    $('#gridTable').setGridWidth(($('.gridPanel').width())-10);
+	}
+	$(function () {
+	    GetGrid();
+	});
+
+	//加载表格
+	function GetGrid() {
+	    var arguments = window.dialogArguments;
+	    var queryJson;
+	    queryJson = window.opener.divqueryJson.innerHTML;
+	    var _json = JSON.parse(queryJson);
+	    $("#beginTime").html(_json.StartDate);
+	    $("#endTime").html(_json.EndDate);
+	    if (_json.ProviderName != undefined && _json.ProviderName != null && _json.ProviderName != "" && _json.ProviderName != "请选择") {
+	        $("#department").html(_json.ProviderName);
+	    }
+	    var $gridTable = $('#gridTable');
+
+	    $gridTable.jqGrid({
+	        autowidth: true,
+	        height: '100%',
+	        url: "/RepostryManage/Outbillitem/GetOutListJson",
+	        postData: { queryJson: queryJson },
+	        datatype: "json",
+	        colModel: [
+                { label: '材料编号', name: 'fgoodsid', index: 'fgoodsid', width: 120, align: 'left', sortable: true },
+                { label: '名称规格', name: 'fname', index: 'fname', align: 'left', sortable: true },
+                { label: '单位', name: 'funit', index: 'funit', width: 120, align: 'left', sortable: false },
+                { label: '数量', name: 'fnumber', index: 'fnumber', width: 120, align: 'left', sortable: false },
+                { label: '总金额', name: 'fmoney', index: 'fmoney',width:120, align: 'left', sortable: false }
+	        ],
+	        viewrecords: true,
+	        rowNum: "all",
+	        sortname: 'fgoodsid',
+	        sortorder: 'asc',
+	        gridview: true,
+	        footerrow: true,
+	        gridComplete: function () {
+	            //合计
+	            var fnumber = jQuery(this).getCol('fnumber', false, 'sum');
+	            var fmoney = jQuery(this).getCol('fmoney', false, 'sum');
+	            $(this).footerData("set", {
+	                "funit": "合计：",
+	                "fnumber": "<span id='TotalQty'>" + fnumber + "</span>",
+	                "fmoney": "<span id='TotalAmount'>" + fmoney.toFixed(2) + "</span>"
+	            });
+	            $('table.ui-jqgrid-ftable td[aria-describedby="gridTable_location"]').prevUntil().css("border-right-color", "#fff");
+
+	            //加载后打印
+	            window.print();
+	        }
+	    });
+	}
+</script>
+
+<div class="ui-report">
+    <div style="margin:0 auto; width:900px; background-color:#ffffff;">
+        <div class="gridPanel" id="gridPanel" style="min-height:780px;">
+            <div class="printArea">
+                <div class="grid-title" style="text-align:center; font-size:18px; padding-top:15px; font-weight:bold;">物 品 领 用 汇 总 结 果</div>
+                <div class="grid-title">领用部门：<label id="department">所有</label></div>
+                <div class="grid-subtitle" style="line-height:30px;">领用日期: <label id="beginTime"></label> 至 <label id="endTime"></label></div>
+                <table id="gridTable"></table>
+            </div>
+        </div>
+    </div>
+</div>

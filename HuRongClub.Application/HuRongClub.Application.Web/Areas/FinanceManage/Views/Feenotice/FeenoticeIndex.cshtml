@@ -1,0 +1,338 @@
+﻿@{
+    ViewBag.Title = "列表页面";
+    Layout = "~/Views/Shared/_Index.cshtml";
+}
+<script>
+    $(function () {
+        InitialPage();
+        GetGrid();
+
+        $("#StartDate").focus(function () {
+            var $val = $("#StartDate").val();
+            if ($val == "" || $val == undefined) {
+                var $vals = $("#CSDate").val();
+                $("#SelectedStartTime").html($vals);
+            }
+            else {
+                $("#SelectedStartTime").html($val);
+            }
+        });
+        $("#EndDate").focus(function () {
+            var $val = $("#EndDate").val();
+            if ($val == "" || $val == undefined) {
+                var $vals = $("#CEDate").val();
+                $("#SelectedEndTime").html($vals);
+            }
+            else {
+                $("#SelectedEndTime").html($val);
+            }
+        });
+        $("#CSDate").focus(function () {
+            var $val = $("#CSDate").val();
+            if ($val == "" || $val == undefined) {
+                var $vals = $("#StartDate").val();
+                $("#SelectedStartTime").html($vals);
+            }
+            else {
+                $("#SelectedStartTime").html($val);
+            }
+        });
+        $("#CEDate").focus(function () {
+            var $val = $("#CEDate").val();
+            if ($val == "" || $val == undefined) {
+                var $vals = $("#EndDate").val();
+                $("#SelectedEndTime").html($vals);
+            }
+            else {
+                $("#SelectedEndTime").html($val);
+            }
+        });
+    });
+    //初始化页面
+    function InitialPage() {
+        //resize重设布局;
+        $(window).resize(function (e) {
+            window.setTimeout(function () {
+                $('#gridTable').setGridWidth(($('.gridPanel').width()));
+                $('#gridTable').setGridHeight($(window).height() - 136.5);
+            }, 200);
+            e.stopPropagation();
+        });
+
+        //小区
+        $("#PropertyTree").ComboBox({
+            url: "/Home/GetPropertyJson",
+            id: "property_id",
+            text: "property_name",
+            description: "=====请选择====",
+            height: "360px"
+        });
+
+        //认领状态
+        $("#state").ComboBox({
+            description: "==请选择==",
+        });
+    }
+    //加载表格
+    function GetGrid() {
+        var $queryJsons = {
+            StartDate: $("#StartDate").val(),
+            EndDate: $("#EndDate").val()
+        }
+
+        var selectedRowIndex = 0;
+        var $gridTable = $('#gridTable');
+        $gridTable.jqGrid({
+            autowidth: true,
+            height: $(window).height() - 136.5,
+            url: "/FinanceManage/Feenotice/GetPageListJson",
+            postData: { queryJson: JSON.stringify($queryJsons) },
+            datatype: "json",
+            colModel: [
+                { label: 'NoticeID', name: 'NoticeID', index: 'NoticeID', width: 100, align: 'left', sortable: true, hidden: true },
+                { label: 'checkuserid', name: 'checkuserid', index: 'checkuserid', width: 100, align: 'left', sortable: true, hidden: true },
+                { label: '账单编号', name: 'accountcode', index: 'accountcode', width: 150, align: 'left',sortable: true  },
+                { label: '账单单位', name: 'accountcompany', index: 'accountcompany', width: 200, align: 'left',sortable: true  },
+                { label: '账单日期', name: 'accountdate', index: 'accountdate', width: 100, align: 'left',sortable: 'true'  ,formatter: function (cellvalue, options, rowObject) {return formatDate(cellvalue, 'yyyy-MM-dd');}},
+                { label: '账单金额', name: 'account', index: 'account', width: 100, align: 'left', sortable: true, formatter: 'number', formatoptions: { thousandsSeparator: "", decimalPlaces: 2 } },
+                { label: '账单备注', name: 'memo', index: 'memo', width: 100, align: 'left', sortable: false },
+                { label: '创建人', name: 'CreatorName', index: 'CreatorName', width: 100, align: 'left',sortable: true  },
+                { label: '创建日期', name: 'CreateDate', index: 'CreateDate', width: 100, align: 'left', sortable: true, formatter: function (cellvalue, options, rowObject) { return formatDate(cellvalue, 'yyyy-MM-dd'); } },
+                { label: '认领用户', name: 'checkuserid', index: 'checkuserid', width: 100, align: 'left',sortable: true  },
+                { label: '认领日期', name: 'checkdate', index: 'checkdate', width: 100, align: 'left', sortable: true, formatter: function (cellvalue, options, rowObject) { return formatDate(cellvalue, 'yyyy-MM-dd'); } },
+                { label: '认领物业', name: 'checkproperty', index: 'checkproperty', width: 130, align: 'left', sortable: true },
+                { label: '认领备注', name: 'checkremark', index: 'checkremark', width: 100, align: 'left', sortable: false },
+            ],
+            viewrecords: true,
+            rowNum: 30,
+            rowList: [30, 50, 100],
+            pager: "#gridPager",
+            sortname: 'accountdate',
+            sortorder: 'desc',
+            rownumbers: true,
+            shrinkToFit: false,
+            gridview: true,
+            onSelectRow: function () {
+                selectedRowIndex = $('#' + this.id).getGridParam('selrow');
+            },
+            gridComplete: function () {
+                $('#' + this.id).setSelection(selectedRowIndex, false);
+            }
+        });
+        //查询事件
+        $("#btn_Search").click(function () {
+            var $state = $("#StartDate").val();
+            var $end = $("#EndDate").val();
+            var $cstate = $("#CSDate").val();
+            var $cend = $("#CEDate").val();
+            var $account = $("#account").val();
+            if ($state == "" || $state == undefined || $end == "" || $end == undefined) {
+                if ($cstate == "" || $cstate == undefined || $cend == "" || $cend == undefined) {
+                    dialogMsg('请选择创建日期或认领日期！', 0);
+                    return false;
+                }
+            }
+
+            var queryJson = {
+                checkproperty: $("#PropertyTree").attr('data-value'),
+                accountcode: $.trim($("#accountcode").val()),
+                accountcompany: $.trim($("#accountcompany").val()),
+                checkuserid: $.trim($("#checkuserid").val()),
+                StartDate: $state,
+                EndDate: $end,
+                CSDate: $cstate,
+                CEDate: $cend,
+                state: $("#state").attr('data-value'),
+                account: $account
+            }
+            $gridTable.jqGrid('setGridParam', {
+                postData: { queryJson: JSON.stringify(queryJson) }
+            }).trigger('reloadGrid');
+
+            $("#divSelect").click();
+        });
+    }
+    //新增
+    function btn_add() {
+        dialogOpen({
+            id: 'Form',
+            title: '添加进账',
+            url: '/FinanceManage/Feenotice/FeenoticeForm',
+            width: '600px',
+            height: '450px',
+            callBack: function (iframeId) {
+                top.frames[iframeId].AcceptClick();
+            }
+        });
+    }
+    //编辑
+    function btn_edit() {
+        var keyValue = $('#gridTable').jqGridRowValue('NoticeID');
+        if (checkedRow(keyValue)) {
+            dialogOpen({
+                id: 'Form',
+                title: '编辑进账',
+                url: '/FinanceManage/Feenotice/FeenoticeForm?keyValue=' + keyValue,
+                width: '600px',
+                height: '450px',
+                callBack: function (iframeId) {
+                    top.frames[iframeId].AcceptClick();
+                }
+            })
+        }
+    }
+    //删除
+    function btn_delete() {
+        var keyValue = $('#gridTable').jqGridRowValue('NoticeID');
+        if (keyValue) {
+            $.RemoveForm({
+                url: '../../FinanceManage/Feenotice/RemoveForm',
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    $('#gridTable').trigger('reloadGrid');
+                }
+            })
+        } else {
+            dialogMsg('请选择需要删除的进账认领！', 0);
+        }
+    }
+    //认领
+    function btn_claim() {
+        var keyValue = $('#gridTable').jqGridRowValue('NoticeID');
+        if (checkedRow(keyValue)) {
+            var $checkuserid = $('#gridTable').jqGridRowValue('checkuserid');
+            if ($checkuserid == "" || $checkuserid == undefined) {
+                dialogOpen({
+                    id: 'Form',
+                    title: '进账认领',
+                    url: '/FinanceManage/Feenotice/FeenoticeClaim?keyValue=' + keyValue,
+                    width: '680px',
+                    height: '580px',
+                    callBack: function (iframeId) {
+                        top.frames[iframeId].AcceptClick();
+                    }
+                })
+            }
+            else {
+                dialogMsg('该进账已经认领，不能重复认领！', 0);
+            }
+        }
+    }
+    //批量导入
+    function btn_Import() {
+        dialogOpen({
+            id: 'Form',
+            title: '批量导入进账',
+            url: '/FinanceManage/Feenotice/FeenoticeImport',
+            width: '600px',
+            height: '280px',
+            callBack: function (iframeId) {
+                top.frames[iframeId].AcceptClick();
+            }
+        });
+    }
+</script>
+<div class="titlePanel">
+    <div class="title-search">
+        <table>
+            <tr>
+                <td>查询条件</td>
+                <td style="padding-left: 10px;">
+                    <div class="ui-filter" style="width: 200px;">
+                        <div class="ui-filter-text" id="divSelect">
+                            <strong id="SelectedStartTime">@DateTime.Now.AddDays(-7).ToString("yyyy-MM-dd")</strong> 至 <strong id="SelectedEndTime">@DateTime.Now.ToString("yyyy-MM-dd")</strong>
+                        </div>
+                        <div class="ui-filter-list" style="width: 550px;">
+                            <table class="form" id="filter-form">
+                                <tr>
+                                    <th class="formTitle">创建日期：</th>
+                                    <td class="formValue">
+                                        <div style="float: left; width: 45%;">
+                                            <input id="StartDate" type="text" value="@HuRongClub.Util.Time.GetDate(-7)" class="form-control input-datepicker" placeholder="起始日期" onfocus="WdatePicker({  dateFmt: 'yyyy-MM-dd' })" />
+                                        </div>
+                                        <div style="float: left; width: 10%; text-align: center;">至</div>
+                                        <div style="float: left; width: 45%;">
+                                            <input id="EndDate" type="text" value="@HuRongClub.Util.Time.GetToday()" class="form-control input-datepicker" placeholder="结束日期" onfocus="WdatePicker({ minDate: '#F{$dp.$D(\'StartDate\')}', dateFmt: 'yyyy-MM-dd' })" />
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th class="formTitle">认领日期：</th>
+                                    <td class="formValue">
+                                        <div style="float: left; width: 45%;">
+                                            <input id="CSDate" type="text" class="form-control input-datepicker" placeholder="起始日期" onfocus="WdatePicker({  dateFmt: 'yyyy-MM-dd' })" />
+                                        </div>
+                                        <div style="float: left; width: 10%; text-align: center;">至</div>
+                                        <div style="float: left; width: 45%;">
+                                            <input id="CEDate" type="text" class="form-control input-datepicker" placeholder="结束日期" onfocus="WdatePicker({ minDate: '#F{$dp.$D(\'CSDate\')}', dateFmt: 'yyyy-MM-dd' })" />
+                                        </div>
+                                    </td>
+                                </tr>                                
+                                <tr>
+                                    <td class="formTitle">账单编号：</td>
+                                    <td class="formValue">
+                                        <input id="accountcode" type="text" class="form-control" placeholder="请输入要查询账单编号" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="formTitle">账单单位：</td>
+                                    <td class="formValue">
+                                        <input id="accountcompany" type="text" class="form-control" placeholder="请输入要查询账单单位" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="formTitle">认领物业：</td>
+                                    <td class="formValue">
+                                        <div id="PropertyTree" type="selectTree" class="ui-select" style="min-width:180px;"></div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="formTitle">认领用户：</td>
+                                    <td class="formValue">
+                                        <input id="checkuserid" type="text" class="form-control" placeholder="请输入要查询认领用户" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="formTitle">认领状态：</td>
+                                    <td class="formValue">
+                                        <div id="state" type="select" class="ui-select" data-value="0">
+                                            <ul>
+                                                <li data-value="0">==请选择==</li>
+                                                <li data-value="1">认领</li>
+                                                <li data-value="2">未认领</li>
+                                            </ul>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="formTitle">金额：</td>
+                                    <td class="formValue">
+                                        <input id="account" type="text" class="form-control" placeholder="请输入要查询金额" />
+                                    </td>
+                                </tr>
+                            </table>
+                            <div class="ui-filter-list-bottom">
+                                <a id="btn_Search" class="btn btn-primary">&nbsp;查&nbsp;&nbsp;询</a>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div class="toolbar">
+        <div class="btn-group">
+            <a id="lr-replace" class="btn btn-default" onclick="reload()"><i class="fa fa-refresh"></i>&nbsp;刷新</a>
+            <a id="lr-Import" class="btn btn-default" onclick="btn_Import()"><i class="fa fa-list"></i>&nbsp;批量导入</a>
+            <a id="lr-add" class="btn btn-default" onclick="btn_add()"><i class="fa fa-plus"></i>&nbsp;新增</a>
+            <a id="lr-edit" class="btn btn-default" onclick="btn_edit()"><i class="fa fa-pencil-square-o"></i>&nbsp;编辑</a>
+            <a id="lr-delete" class="btn btn-default" onclick="btn_delete()"><i class="fa fa-trash-o"></i>&nbsp;删除</a>
+            <a id="lr-claim" class="btn btn-default" onclick="btn_claim()"><i class="fa fa-database"></i>&nbsp;认领</a>
+        </div>
+        <script>$('.toolbar').authorizeButton()</script>
+    </div>
+</div>
+<div class="gridPanel">
+    <table id="gridTable"></table>
+    <div id="gridPager"></div>
+</div>

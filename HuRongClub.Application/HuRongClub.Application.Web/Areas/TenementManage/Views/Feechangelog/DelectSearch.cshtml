@@ -1,0 +1,342 @@
+﻿@{
+    ViewBag.Title = "删除查询列表页面";
+    Layout = "~/Views/Shared/_Index.cshtml";
+}
+<script>
+;
+    $(function () {
+        InitialPage();
+        GetGrid();
+
+    });
+    //初始化页面
+    function InitialPage() {
+        //resize重设布局;
+        $(window).resize(function (e) {
+            window.setTimeout(function () {
+                $('#gridTable').setGridWidth(($('.gridPanel').width()));
+                $('#gridTable').setGridHeight($(window).height() - 165);
+            }, 200);
+            e.stopPropagation();
+        });
+
+        //加载楼栋
+        $.SetForm({
+            url: "/TenementManage/Building/GetListJson",
+            success: function (data) {
+                var rows = '<li><a data-value="">==所在楼栋==</a></li>';
+                $('#building_id').find('ul').append(rows);
+                $.each(data, function (id, item) {
+                    var row = '<li><a data-value="' + item.id + '">' + item.text + '</a></li>';
+                    $('#building_id').find('ul').append(row);
+                });
+                $('#building_id').find('li>a').click(function () {
+                    var id = $(this).attr('data-value');
+                    var text = $(this).html();
+                    $('#building_id').find('.dropdown-text').html(text).attr('data-value', id);
+                    $('#fee_code').find('.dropdown-text').html("业主单元");
+                    GetList(id);
+                });
+            }
+        });
+        //合同租户
+        $.SetForm({
+            url: "/TenementManage/Rentcontract/GetListBySel",
+            success: function (data) {
+                var rows = '<li><a data-value="">==合同租户==</a></li>';
+                $('#contractid').find('ul').append(rows);
+                $.each(data, function (id, item) {
+                    var row = '<li><a data-value="' + item.id + '">' + item.text + '</a></li>';
+                    $('#contractid').find('ul').append(row);
+                });
+                $('#contractid').find('li>a').click(function () {
+                    var id = $(this).attr('data-value');
+                    var text = $(this).html();
+                    $('#contractid').find('.dropdown-text').html(text).attr('data-value', id);
+
+                    $('#fee_code').find('.dropdown-text').html("==业主单元==").attr('data-value', "");
+                });
+            }
+        });
+        //费用科目
+        $.SetForm({
+            url: "/FinanceManage/Feeitem/GetSelectJson?type=1&group_id=" + encodeURI("应收费用"),
+            success: function (data) {
+                var rows = '<li><a data-value="">==费用科目==</a></li>';
+                $('#feeitemid').find('ul').append(rows);
+                $.each(data, function (id, item) {
+                    var row = '<li><a data-value="' + item.id + '">' + item.text + '</a></li>';
+                    $('#feeitemid').find('ul').append(row);
+                });
+                $('#feeitemid').find('li>a').click(function () {
+                    var id = $(this).attr('data-value');
+                    var text = $(this).html();
+                    $('#feeitemid').find('.dropdown-text').html(text).attr('data-value', id);
+                });
+            }
+        });
+        var mydate = new Date();
+        var $year = mydate.getFullYear();
+        var $mouth = mydate.getMonth() + 1;
+        //年
+        $.SetForm({
+            url: "/TenementManage/Feeincome/GetYear",
+            success: function (data) {
+                var row = '<li><a data-value="">==选择年==</a></li>';
+                $('#divYear').find('ul').append(row);
+                $.each(data, function (id, item) {
+                    var row = '<li><a data-value="' + item.id + '">' + item.text + '</a></li>';
+                    $('#divYear').find('ul').append(row);
+                });
+                $('#divYear').find('li>a').click(function () {
+                    var id = $(this).attr('data-value');
+                    var text = $(this).html();
+                    $('#divYear').find('.dropdown-text').html(text).attr('data-value', id);
+
+                    if (id == "")
+                    {
+                        $('#divMounth').find('.dropdown-text').html("==选择月==").attr('data-value', "");
+                    }
+
+                });
+            }
+        });
+        $('#divYear').find('.dropdown-text').html($year).attr('data-value', $year);
+        //月
+        $.SetForm({
+            url: "/TenementManage/Feeincome/GetMouth",
+            success: function (data) {
+                var row = '<li><a data-value="">==选择月==</a></li>';
+                $('#divMounth').find('ul').append(row);
+                $.each(data, function (id, item) {
+                    var row = '<li><a data-value="' + item.id + '">' + item.text + '</a></li>';
+                    $('#divMounth').find('ul').append(row);
+                });
+                $('#divMounth').find('li>a').click(function () {
+                    var id = $(this).attr('data-value');
+                    var text = $(this).html();
+                    $('#divMounth').find('.dropdown-text').html(text).attr('data-value', id);
+                });
+            }
+        });
+        $('#divMounth').find('.dropdown-text').html($mouth).attr('data-value', $mouth);
+
+    }
+
+    //加载房间
+    function GetList(keyValue) {
+        if (keyValue == null || undefined || keyValue == "" || keyValue == "0") {
+            $('#fee_code').find('ul').find("li").remove();
+        }
+        else {
+            $('#fee_code').find('ul').find("li").remove();
+            $.SetForm({
+                url: "/TenementManage/Building/GetRoomTreeJson",
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    var rows = '<li><a data-value="">==业主单元==</a></li>';
+                    $('#fee_code').find('ul').append(rows);
+                    $.each(data, function (id, item) {
+                        var row = '<li><a data-value="' + item.id + '">' + item.text + '</a></li>';
+                        $('#fee_code').find('ul').append(row);
+                    });
+                    $('#fee_code').find('li>a').click(function () {
+                        var id = $(this).attr('data-value');
+                        var text = $(this).html();
+                        $('#fee_code').find('.dropdown-text').html(text).attr('data-value', id);
+
+                        $('#contractid').find('.dropdown-text').html("==合同租户==").attr('data-value', "");
+                    });
+                }
+            })
+        }
+    }
+    //加载表格
+    function GetGrid() {
+        var selectedRowIndex = 0;
+        var $gridTable = $('#gridTable');
+        var queryJson = {
+            isdel: 1
+        }
+
+        $gridTable.jqGrid({
+            autowidth: true,
+            height: $(window).height() - 165,
+            url: "/TenementManage/Feechangelog/GetRedListJson",
+            postData: { queryJson: JSON.stringify(queryJson) },
+            datatype: "json",
+            colModel: [
+                { label: '业主/客户', name: 'room_name', index: 'room_name', width: 300, align: 'left', sortable: true },
+                { label: '费用科目', name: 'feename', index: 'feename', width: 150, align: 'left', sortable: true },
+                { label: '应收年月', name: 'income_date', index: 'income_date', width: 120, align: 'left', sortable: true, formatter: "date", formatoptions: { newformat: 'Y-m' } },
+                { label: '操作用户', name: 'operatername', index: 'operatername', width: 120, align: 'left', sortable: true },
+                { label: '操作日期', name: 'operatetime', index: 'operatetime', width: 120, align: 'left', sortable: true, formatter: "date", formatoptions: { newformat: 'Y-m-d' } },
+                { label: '应收金额', name: 'source_money', index: 'source_money', width: 100, align: 'left', sortable: false, formatter: 'number', formatoptions: { thousandsSeparator: "", decimalPlaces: 2 } },
+                { label: '备注', name: 'memo', index: 'memo', width: 200, align: 'left', sortable: true },
+            ],
+            viewrecords: true,
+            rowNum: 30,
+            rowList: [30, 50, 100],
+            pager: "#gridPager",
+            sortname: 'operatetime',
+            sortorder: 'desc',
+            rownumbers: true,
+            shrinkToFit: false,
+            gridview: true,
+            footerrow: true,
+            ondblClickRow: function () {
+                btn_detail();
+            },
+            onSelectRow: function () {
+                selectedRowIndex = $('#' + this.id).getGridParam('selrow');
+            },
+            gridComplete: function () {
+                $('#' + this.id).setSelection(selectedRowIndex, false);
+
+                var totalsource_money = $(this).getCol("source_money", false, "sum");
+                //合计
+                $(this).footerData("set", {
+                    "operatetime": "合计：",
+                    "source_money": totalsource_money,
+                });
+                $('table.ui-jqgrid-ftable td').prevUntil().css("border-right-color", "#fff");
+            }
+        });
+        //查询事件contractid
+        $("#btn_Search").click(function () {
+
+            var $contractid = $("#contractid").find('.dropdown-text').attr('data-value');
+            var $room_id = $("#fee_code").find('.dropdown-text').attr('data-value');
+            var $type = "";
+            if ($room_id != undefined && $room_id != "") {
+                $type = 1;
+            }
+            if ($contractid != undefined && $contractid != "") {
+                $type = 2;
+            }
+         
+            var queryJson = {
+                type: $type,
+                contractid: $contractid,
+                room_id: $("#fee_code").find('.dropdown-text').attr('data-value'),
+                feeitem_id: $("#feeitemid").find('.dropdown-text').attr('data-value'),
+                isdel: 1,
+                year: $("#divYear").find('.dropdown-text').attr('data-value'),
+                mouth: $("#divMounth").find('.dropdown-text').attr('data-value'),
+                state: $("#StartDate").val(),
+                end: $("#EndDate").val(),
+            }
+
+            $gridTable.jqGrid('setGridParam', {
+                postData: { queryJson: JSON.stringify(queryJson) }
+            }).trigger('reloadGrid');
+
+            $("#divSelect").click();
+
+        });
+    }
+</script>
+<div class="titlePanel">
+    <div class="title-search">
+        <table>
+            <tr>
+                <td>查询条件</td>
+                <td style="padding-left: 10px;">
+                    <div class="ui-filter" style="width: 200px;">
+                        <div class="ui-filter-text" id="divSelect">
+                            <strong id="SelectedStartTime">选择查询条件</strong>
+                        </div>
+                        <div class="ui-filter-list" style="width: 550px;">
+                            <table class="form" id="filter-form">    
+                                <tr>
+                                    <th class="formTitle">操作日期：</th>
+                                    <td class="formValue">
+                                        <input id="Category" type="hidden" value="1" />
+                                        <div style="float: left; width: 45%;">
+                                            <input id="StartDate" type="text" class="form-control input-datepicker" placeholder="起始日期" onfocus="WdatePicker({  dateFmt: 'yyyy-MM-dd' })" />
+                                        </div>
+                                        <div style="float: left; width: 10%; text-align: center;">至</div>
+                                        <div style="float: left; width: 45%;">
+                                            <input id="EndDate" type="text" class="form-control input-datepicker" placeholder="结束日期" onfocus="WdatePicker({ minDate: '#F{$dp.$D(\'StartDate\')}', dateFmt: 'yyyy-MM-dd' })" />
+                                        </div>
+                                    </td>
+                                </tr>                            
+                                <tr>
+                                    <th class="formTitle">计费年月：</th>
+                                    <td class="formValue">
+                                        <input id="Category" type="hidden" value="1" />
+                                        <div style="float: left;">
+                                            <div id="divYear" class="btn-group">
+                                                <a class="btn btn-default dropdown-text" data-toggle="dropdown">年</a>
+                                                <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                                                <ul class="dropdown-menu" style="max-height:240px;overflow:auto;overflow-x:hidden;"></ul>
+                                            </div>
+                                        </div>
+                                        <div style="float: left; width: 20px; text-align: center;">月</div>
+                                        <div style="float: left;">
+                                            <div id="divMounth" class="btn-group">
+                                                <a class="btn btn-default dropdown-text" data-toggle="dropdown">月</a>
+                                                <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                                                <ul class="dropdown-menu" style="max-height:240px;overflow:auto;overflow-x:hidden;"></ul>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="formTitle">所在楼栋：</td>
+                                    <td class="formValue">
+                                        <div style="float: left;">
+                                            <div id="building_id" class="btn-group">
+                                                <a class="btn btn-default dropdown-text" data-toggle="dropdown">==所在楼栋==</a>
+                                                <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                                                <ul class="dropdown-menu" style="max-height:200px;overflow:auto;overflow-x:hidden;"></ul>
+                                            </div>
+                                        </div>
+                                        <div style="float: left; width: 10px; text-align: center;">&nbsp;</div>
+                                        <div style="float: left;">
+                                            <div id="fee_code" class="btn-group">
+                                                <a class="btn btn-default dropdown-text" data-toggle="dropdown">==业主单元==</a>
+                                                <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                                                <ul class="dropdown-menu" style="max-height:200px;overflow:auto;overflow-x:hidden;"></ul>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="formTitle">费用科目：</td>
+                                    <td class="formValue">
+                                        <div id="feeitemid" class="btn-group">
+                                            <a class="btn btn-default dropdown-text" data-toggle="dropdown">==费用科目==</a>
+                                            <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                                            <ul class="dropdown-menu" style="max-height:160px;overflow:auto;overflow-x:hidden;"></ul>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="formTitle">合同租户：</td>
+                                    <td class="formValue">
+                                        <div id="contractid" class="btn-group">
+                                            <a class="btn btn-default dropdown-text" data-toggle="dropdown">==合同租户==</a>
+                                            <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                                            <ul class="dropdown-menu" style="max-height:100px;overflow:auto;overflow-x:hidden;"></ul>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                            <div class="ui-filter-list-bottom">
+                                <a id="btn_Search" class="btn btn-primary">&nbsp;查&nbsp;&nbsp;询</a>
+                            </div>
+                            <div style="height:120px;"></div>
+                        </div>
+
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+    </div>
+</div>
+<div class="gridPanel">
+    <table id="gridTable"></table>
+    <div id="gridPager"></div>
+</div>

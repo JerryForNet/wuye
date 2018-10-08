@@ -1,0 +1,69 @@
+﻿@{;
+ViewBag.Title = "列表页面";
+Layout = "~/Views/Shared/_Index.cshtml";
+}
+<script>
+;
+    $(function () {
+        initControl();
+    });
+    //初始化控件
+    function initControl() {
+        //费用精确位
+        $("#option_point").ComboBox({
+            description: "==请选择==",
+        });
+        //获取表单
+        $.SetForm({
+            url: "/TenementManage/Option/GetFormJson",
+            param: { keyValue: "" },
+            success: function (data) {
+                $("#tbform").SetWebControls(data);
+            }
+        })
+    }
+    //保存表单;
+    function AcceptClick() {
+        if (!$('#tbform').Validform()) {
+            return false;
+        }
+        var postData = $("#tbform").GetWebControls("");
+        $.SaveForm({
+            url: "/TenementManage/Option/SaveForm?keyValue=1",
+            param: postData,
+            loading: "正在保存数据...",
+            success: function () {
+                //$.currentIframe().$("#gridTable").trigger("reloadGrid");
+            }
+        })
+    }
+</script>
+<div id="pageayout" class="border" style="background: #fff; overflow: auto; height:300px;">
+    <div style="margin: 20px;">
+        <table class="form" id="tbform">
+            <tr>
+                <td class="formTitle">本案汇率：<font face="宋体">*</font></td>
+                <td class="formValue">
+                    <input id="option_exchange" type="text" class="form-control" isvalid="yes" checkexpession="Double" style="width:200px;" />
+                </td>
+            </tr>
+            <tr>
+                <td class="formTitle">费用精确位：<font face="宋体">*</font></td>
+                <td class="formValue">
+                    <div id="option_point" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull" style="width:200px;">
+                        <ul>
+                            <li data-value="0">元</li>
+                            <li data-value="1">角</li>
+                            <li data-value="2">分</li>
+                        </ul>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <div style="margin-top:10px; margin-left:100px;"><a class="btn btn-default" onclick="AcceptClick()">&nbsp;保 存&nbsp;</a></div>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>

@@ -1,0 +1,87 @@
+@{;
+ViewBag.Title = "表单页面";
+Layout = "~/Views/Shared/_Form.cshtml";
+}
+<script src="/Content/scripts/plugins/webuploader/webuploader.min.js"></script>
+<script src="/Content/scripts/plugins/webuploader/uploader.js"></script>
+<script>
+    var keyValue = request('keyValue');
+    $(function () {
+        initControl();
+
+        //初始化上传控件
+        $(".upload-File").InitUploader({ filesize: "10240", filepath: "/upload/file/", filetype: 3, sendurl: "/Content/Handler/upload_ajax.ashx", swf: "/Content/scripts/plugins/webuploader/uploader.swf", filetypes: "jpg,jpeg,gif,png,bmp" });
+
+    });
+    //初始化控件
+    function initControl() {
+        //获取表单
+        if (!!keyValue) {
+            $.SetForm({
+                url: "../../TenementManage/Property/GetFormJson",
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    $("#form1").SetWebControls(data);
+                }
+            })
+        }
+    }
+    //保存表单;
+    function AcceptClick() {
+        if (!$('#form1').Validform()) {
+            return false;
+        }
+        var postData = $("#form1").GetWebControls(keyValue);
+        $.SaveForm({
+            url: "../../TenementManage/Property/SaveForm?keyValue=" + keyValue,
+            param: postData,
+            loading: "正在保存数据...",
+            success: function () {
+                $.currentIframe().$("#gridTable").trigger("reloadGrid");
+            }
+        })
+    }
+</script>
+<div style="margin-top: 20px; margin-right: 30px;">
+    <table class="form">
+        <tr>
+            <td class="formTitle">物业名称<font face="宋体">*</font></td>
+            <td class="formValue" colspan='3'>
+                <input id="property_name" type="text" class="form-control" isvalid="yes" checkexpession="NotNull" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">物业地址<font face="宋体">*</font></td>
+            <td class="formValue" colspan='3'>
+                <input id="property_address" type="text" class="form-control" isvalid=" yes" checkexpession="NotNull" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">平面图</td>
+            <td class="formValue" colspan='3'>
+                <div class="file_uploadss">
+                    <input type="text" name="image" id="image" style="width:300px;" class="form-control upload-path" readonly="readonly" />
+                    <div style="padding-left:5px; float:left;" class="upload-box upload-File"></div>
+                </div>
+            </td>
+        </tr>
+        <tr hidden="hidden">
+            <td class="formTitle">图片宽度</td>
+            <td class="formValue" colspan='3'>
+                <input id="image_width" type="text" class="form-control" />
+            </td>
+        </tr>
+        <tr hidden="hidden">
+            <td class="formTitle">图片高度</td>
+            <td class="formValue" colspan='3'>
+                <input id="image_height" type="text" class="form-control" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">描述</td>
+            <td class="formValue" colspan='3'>
+                <textarea id="property_info" class="form-control" style="height: 50px; "></textarea>
+            </td>
+        </tr>
+    </table>
+</div>

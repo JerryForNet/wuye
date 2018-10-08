@@ -1,0 +1,65 @@
+﻿@{
+    ViewBag.Title = "类别选择界面";
+    Layout = "~/Views/Shared/_Index.cshtml";
+}
+<script>
+    var group_id = request('group_id');
+    $(function () {
+        InitialPage();
+        GetGrid();
+    });
+    //初始化页面
+    function InitialPage() {
+        //resize重设布局;
+        $(window).resize(function (e) {
+            window.setTimeout(function () {
+                $('#gridTable').setGridWidth(($('.gridPanel').width()));
+                $('#gridTable').setGridHeight($(window).height() - 50);
+            }, 200);
+            e.stopPropagation();
+        });
+    }
+    //加载表格
+    function GetGrid() {
+        var selectedRowIndex = 0;
+        var $gridTable = $('#gridTable');
+        $gridTable.jqGrid({
+            autowidth: true,
+            height: $(window).height() - 50,
+            url: "/FinanceManage/Feeitem/GetSelectJson?type=2&group_id=" + escape(group_id),
+            datatype: "json",
+            colModel: [
+                { label: 'feeitem_id', name: 'feeitem_id', index: 'feeitem_id', width: 100, align: 'left', sortable: true, hidden: true },
+                { label: '科目名称', name: 'feeitem_name', index: 'feeitem_name', width: 200, align: 'left', sortable: true },
+            ],
+            pager: false,
+            rowNum: "1000",
+            rownumbers: true,
+            shrinkToFit: false,
+            gridview: true,
+            ondblClickRow: function () {
+            }
+        });
+    }
+
+
+    //保存表单
+    function AcceptClick(callback) {
+        var row = $("#gridTable").jqGridRow()[0];
+        if (row.feeitem_id) {
+            var datajson = {
+                feeitem_id: row.feeitem_id,
+                feeitem_name: row.feeitem_name,
+            }
+            callback(datajson);
+            dialogClose();
+        } else {
+            dialogMsg('请选择需要选择的费用项目！', 0);
+        }
+    }
+</script>
+
+
+<div class="gridPanel">
+    <table id="gridTable"></table>
+</div>

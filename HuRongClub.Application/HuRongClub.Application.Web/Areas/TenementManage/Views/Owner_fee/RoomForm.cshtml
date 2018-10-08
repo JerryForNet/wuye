@@ -1,0 +1,118 @@
+﻿@{;
+    ViewBag.Title = "表单页面";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+<script>
+    var keyValue = request('keyValue');
+    $(function () {
+        initControl();
+    });
+    //初始化控件
+    function initControl() {
+        $("#fee_rule").ComboBox({
+            description: "==请选择==",
+        });
+        //费用科目
+        $("#fee_code").ComboBox({
+            url: "/FinanceManage/Feeitem/GetSelectJson?group_id=" + encodeURI("应收费用"),
+            id: "feeitem_id",
+            text: "feeitem_name",
+            description: "=====请选择====",
+            height: "170px"
+        });
+        //获取表单
+        //if (!!keyValue) {
+        //    $.SetForm({
+        //        url: "/TenementManage/Owner_fee/GetFormJson",
+        //        param: { keyValue: keyValue },
+        //        success: function (data) {
+        //            $("#form1").SetWebControls(data);
+        //        }
+        //    })
+        //}
+    }
+    //保存表单;
+    function AcceptClick(callback) {
+        if (!$('#form1').Validform()) {
+            return false;
+        }
+        var postData = $("#form1").GetWebControls(keyValue);
+        var $building_dim = $("#building_dim").val();
+        $.SaveForm({
+            url: "/TenementManage/Owner_fee/SaveForm?keyValue=" + keyValue + "&building_dim=" + $building_dim,
+            param: postData,
+            loading: "正在保存数据...",
+            success: function (data) {
+                //$.currentIframe().$("#gridTable").trigger("reloadGrid");
+                postData["owner_feeid"] = data.resultdata;
+                postData["feeitem_name"] = $("#fee_code").attr("data-text");
+                //
+                var $fee_money = $("#fee_money").val();
+                var $fee_rule = $("#fee_rule").attr("data-value");
+                var $fee_rule_text = $("#fee_rule").attr("data-text");
+                if ($fee_rule == "0") {
+                    postData["fee_rule"] = $fee_rule_text + "：" + $fee_money + "*" + $building_dim;
+                    $fee_money = Number(Number($fee_money) * Number($building_dim)).toFixed(2);
+                    postData["fee_money"] = $fee_money;
+                }
+                else {
+                    postData["fee_rule"] = $fee_rule_text + "：" + $fee_money;
+                }
+
+                callback(postData);
+                dialogClose();
+            }
+        })
+    }
+</script>
+<div style="margin-top: 20px; margin-right: 30px;">
+    <table class="form">
+        <tr>
+            <td class="formTitle">业主：</td>
+            <td class="formValue">
+                <input id="owner_name" type="text" class="form-control" value="@ViewBag.owner_name" disabled="disabled" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">费用科目：<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div id="fee_code" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull"></div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">费用规则：<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div id="fee_rule" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull">
+                    <ul>
+                        <li data-value="0">按房屋面积</li>
+                        <li data-value="1">按固定金额</li>
+                    </ul>
+                </div>
+                <div>
+
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">费用金额：<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="fee_money" type="text" class="form-control" placeholder="费用金额" isvalid="yes" checkexpession="Double" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">费用起交日期：<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="start_date" type="text" class="form-control input-datepicker" placeholder="费用起交日期" onfocus="WdatePicker()" isvalid="yes" checkexpession="NotNull" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">&nbsp;</td>
+            <td class="formValue">1.费用规则为按房屋面积时费用金额填单价（元/平方米）<br /> 2.费用规则为按固定金额时填实际收费金额</td>
+        </tr>
+    </table>
+    <input type="hidden" id="owner_feeid" value="" />
+    <input type="hidden" id="feeitem_name" value="" />
+    <input type="hidden" id="owner_id" value="@ViewBag.owner_id" />
+    <input type="hidden" id="room_id" value="@ViewBag.room_id" />
+    <input type="hidden" id="building_dim" value="@ViewBag.building_dim" />
+</div>

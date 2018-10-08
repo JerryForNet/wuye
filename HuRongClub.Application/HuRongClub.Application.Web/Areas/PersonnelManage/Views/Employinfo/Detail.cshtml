@@ -1,0 +1,329 @@
+﻿@{;
+ViewBag.Title = "表单页面";
+Layout = "~/Views/Shared/_Form.cshtml";
+}
+<script>
+    var keyValue = request('keyValue');
+    $(function () {
+        initControl();
+    });
+    //初始化控件
+    function initControl() {
+
+        //性别
+        $("#sex").ComboBox({
+            description: "==请选择==",
+        });
+        //固定期限
+        $("#contractnotime").ComboBox({
+            description: "==请选择==",
+        });
+
+        //用工类型
+        $("#contracttypeid").ComboBox({
+            description: "==请选择==",
+        });
+        //婚姻
+        $("#ifmarry").ComboBox({
+            description: "==请选择==",
+        });
+        //员工状态
+        $("#status").ComboBox({
+            description: "==请选择==",
+        });
+        //部门
+        $("#deptid").ComboBox({
+            url: "../../PersonnelManage/HrDepartment/GetTreeJson",
+            id: "deptid",
+            text: "deptname",
+            description: "==请选择==",
+            height: "200px",
+            allowSearch: true,
+        });
+        //政治面貌
+        $("#politicsid").ComboBox({
+            url: "../../SysManage/Dictitem/GetTreeJson?dictid=5",
+            id: "itemid",
+            text: "itemname",
+            description: "==请选择==",
+            height: "200px",
+            allowSearch: true,
+        });
+        //学历
+        $("#degreeid").ComboBox({
+            url: "../../SysManage/Dictitem/GetTreeJson?dictid=6",
+            id: "itemid",
+            text: "itemname",
+            description: "==请选择==",
+            height: "200px",
+            allowSearch: true,
+        });
+        //职务
+        $("#careerid").ComboBox({
+            url: "../../SysManage/Dictitem/GetTreeJson?dictid=8",
+            id: "itemid",
+            text: "itemname",
+            description: "==请选择==",
+            height: "200px",
+            allowSearch: true,
+        });
+        //职级
+        $("#careerdegree").ComboBox({
+            url: "../../SysManage/Dictitem/GetTreeJson?dictid=12",
+            id: "itemid",
+            text: "itemname",
+            description: "==请选择==",
+            height: "200px",
+            allowSearch: true,
+        });
+
+        //岗位
+        $("#jobid").ComboBox({
+            url: "../../SysManage/Dictitem/GetTreeJson?dictid=9",
+            id: "itemid",
+            text: "itemname",
+            description: "==请选择==",
+            height: "200px",
+            allowSearch: true,
+        });
+        //职称
+        $("#dutyid").ComboBox({
+            url: "../../SysManage/Dictitem/GetTreeJson?dictid=10",
+            id: "itemid",
+            text: "itemname",
+            description: "==请选择==",
+            height: "200px",
+            allowSearch: true,
+        });
+
+        //技术等级
+        $("#techclassid").ComboBox({
+            url: "../../SysManage/Dictitem/GetTreeJson?dictid=11",
+            id: "itemid",
+            text: "itemname",
+            description: "==请选择==",
+            height: "200px",
+            allowSearch: true,
+        });
+
+        //用工来源
+        $("#contractfromid").ComboBox({
+            url: "../../SysManage/Dictitem/GetTreeJson?dictid=18",
+            id: "itemid",
+            text: "itemname",
+            description: "==请选择==",
+            height: "200px",
+            allowSearch: true,
+        });
+        //获取表单
+        if (!!keyValue) {
+            $.SetForm({
+                url: "../../PersonnelManage/Employinfo/GetFormJson",
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    $("#form1").SetWebControls(data);
+                    $("#deptid").ComboBoxSetValue(data.deptid)
+
+                }
+            })
+        }
+
+    }
+</script>
+<div style="margin-top: 20px; margin-right: 30px;">
+    <table class="form">
+
+        <tr>
+            <td class="formTitle">姓名<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="empname" type="text" class="form-control" isvalid="yes" checkexpession="NotNull" maxlength="16" />
+            </td>
+            <td class="formTitle">工号<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="empcode" type="text" class="form-control" isvalid="yes" checkexpession="NotNull" maxlength="12" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">性别<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div id="sex" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull">
+                    <ul>
+                        <li data-value="男">男</li>
+                        <li data-value="女">女</li>
+                    </ul>
+                </div>
+            </td>
+            <td class="formTitle">出生年月</td>
+            <td class="formValue">
+                <input id="birthday" type="text" class="form-control" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">手机号</td>
+            <td class="formValue">
+                <input id="mobilephone" type="text" class="form-control" isvalid="yes" checkexpession="MobileOrNull" />
+            </td>
+            <td class="formTitle">电子邮件</td>
+            <td class="formValue">
+                <input id="email" type="text" class="form-control" isvalid="yes" checkexpession="isEmailOrNull" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">政治面貌</td>
+            <td class="formValue">
+                <div id="politicsid" type="select" class="ui-select" isvalid="yes"></div>
+            </td>
+            <td class="formTitle">专业</td>
+            <td class="formValue">
+                <input id="specialty" type="text" class="form-control" maxlength="16" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">邮编</td>
+            <td class="formValue">
+                <input id="postcode" type="text" class="form-control" maxlength="8" />
+            </td>
+            <td class="formTitle">家庭电话</td>
+            <td class="formValue">
+                <input id="homephone" type="text" class="form-control" isvalid="yes" checkexpession="PhoneOrNull" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">身份证号</td>
+            <td class="formValue">
+                <input id="identityno" type="text" class="form-control" isvalid="yes" checkexpession="IDCardOrNull" />
+            </td>
+            <td class="formTitle">婚姻状况</td>
+            <td class="formValue">
+
+                <div id="ifmarry" type="select" class="ui-select" isvalid="yes">
+                    <ul>
+                        <li data-value="0">未婚</li>
+                        <li data-value="1">已婚</li>
+                    </ul>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">学历</td>
+            <td class="formValue">
+                <div id="degreeid" type="select" class="ui-select" isvalid="yes"></div>
+            </td>
+            <td class="formTitle">照片</td>
+            <td class="formValue">
+                <input id="photofile" type="text" class="form-control" maxlength="128" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">家庭住址</td>
+            <td class="formValue" colspan="3">
+                <input id="address" type="text" class="form-control" maxlength="200" />
+            </td>
+        </tr>
+
+        <tr>
+            <td class="formTitle">部门编号<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div id="deptid" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull"></div>
+            </td>
+            <td class="formTitle">员工状态<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div id="status" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull">
+                    <ul>
+                        <li data-value="0">在职</li>
+                        <li data-value="1">离职</li>
+                    </ul>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">职务</td>
+            <td class="formValue">
+                <div id="careerid" type="select" class="ui-select" isvalid="yes"></div>
+            </td>
+            <td class="formTitle">职级</td>
+            <td class="formValue">
+                <div id="careerdegree" type="select" class="ui-select" isvalid="yes"></div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">岗位</td>
+            <td class="formValue">
+                <div id="jobid" type="select" class="ui-select" isvalid="yes"></div>
+            </td>
+            <td class="formTitle">职称</td>
+            <td class="formValue">
+                <div id="dutyid" type="select" class="ui-select" isvalid="yes"></div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">技术等级</td>
+            <td class="formValue">
+                <div id="techclassid" type="select" class="ui-select" isvalid="yes"></div>
+            </td>
+            <td class="formTitle">是否无固定期限<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div id="contractnotime" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull">
+                    <ul>
+                        <li data-value="0">否</li>
+                        <li data-value="1">是</li>
+                    </ul>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">进公司日期<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="indate" type="text" class="form-control input-datepicker" isvalid="yes" checkexpession="NotNull" readonly="readonly" onfocus="WdatePicker()" />
+            </td>
+            <td class="formTitle">离职日期<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="fireoutdate" type="text" class="form-control input-datepicker" readonly="readonly" onfocus="WdatePicker()" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">合同开始日期<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="hiredate" type="text" class="form-control input-datepicker" isvalid="yes" checkexpession="NotNull" onfocus="WdatePicker()" readonly="readonly" />
+            </td>
+            <td class="formTitle">合同结束日期</td>
+            <td class="formValue">
+                <input id="firedate" type="text" class="form-control input-datepicker" onfocus="WdatePicker()" readonly="readonly" />
+            </td>
+        </tr>
+
+        <tr>
+            <td class="formTitle">用工来源</td>
+            <td class="formValue">
+                <div id="contractfromid" type="select" class="ui-select" isvalid="yes"></div>
+            </td>
+            <td class="formTitle">用工类型<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div id="contracttypeid" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull">
+                    <ul>
+                        <li data-value="1">劳务工</li>
+                        <li data-value="0">合同工</li>
+                    </ul>
+                </div>
+            </td>
+        </tr>
+
+        <tr>
+            <td class="formTitle">录入日期<font face="宋体">*</font></td>
+            <td class="formValue">
+
+                <input id="inputtime" type="text" class="form-control input-datepicker" isvalid="yes" checkexpession="NotNull" onfocus="WdatePicker()"  readonly="readonly"/>
+            </td>
+            <td class="formTitle">录入者</td>
+            <td class="formValue">
+                <input id="operateuser" type="text" class="form-control" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">备注</td>
+            <td class="formValue" colspan="3">
+                <textarea id="notes" class="form-control" style="height: 50px;" maxlength="250"></textarea>
+            </td>
+        </tr>
+    </table>
+</div>

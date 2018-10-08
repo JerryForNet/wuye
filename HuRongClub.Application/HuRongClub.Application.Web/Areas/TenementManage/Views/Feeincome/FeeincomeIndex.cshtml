@@ -1,0 +1,624 @@
+﻿@{
+    ViewBag.Title = "列表页面";
+    Layout = "~/Views/Shared/_FlowForm.cshtml";
+}
+<!--jqgrid表格组件start-->
+<link href="/Content/scripts/plugins/jqgrid/jqgrid.css" rel="stylesheet" />
+<script src="/Content/scripts/plugins/jqgrid/grid.locale-cn.js"></script>
+<script src="/Content/scripts/plugins/jqgrid/jqgrid.min.js"></script>
+<!--表格组件end-->
+<!-- bootbox-select -->
+<link href="/Content/scripts/bootstrap/bootstrap-select.min.css" rel="stylesheet" />
+<script src="/Content/scripts/bootstrap/bootstrap-select.min.js"></script>
+<!-- bootbox-select -->
+<style>
+    .step-content .active .btn-group .active { display: block; }
+</style>
+<script>;
+    $(function () {
+        InitialPage();
+        GetGrid();
+        GetGridRent();
+        
+        var $width = ($('.gridPanel').width()-5);
+        $("#gbox_gridTablesRent").css("width", $width + "px");
+        $("#gview_gridTablesRent").css("width", $width + "px");
+        $("#gview_gridTablesRent .ui-jqgrid-hdiv").css("width", $width + "px");
+        $(".ui-jqgrid-bdiv").css("width", $width + "px");
+            
+        // 租户缴费
+        $(".nav-tabs li").click(function (index, item) {
+            if ($(this).text() == "租户缴费") {
+                $('#btn_SearchRent').trigger("click");
+            }
+        });
+    });
+    //初始化页面
+    function InitialPage() {
+        //resize重设布局;
+        $(window).resize(function (e) {
+            window.setTimeout(function () {
+                var width = ($('.gridPanel').width() - 20);
+                
+                $('#gridTable').setGridWidth(width);
+                $('#gridTable').setGridHeight($(window).height() - 136.5);
+
+                var widthRent = ($('#RentInfo').width() - 10);
+                $('#gridTablesRent').setGridWidth(widthRent);
+                $('#gridTablesRent').setGridHeight($(window).height() - 136.5);
+            }, 200);
+            e.stopPropagation();
+        });
+        //加载楼栋
+        $.SetForm({
+            url: "/TenementManage/Building/GetListJson",
+            success: function (data) {
+                var rows = '<li><a data-value="">所在楼栋</a></li>';
+                $('#building_id').find('ul').append(rows);
+                $.each(data, function (id, item) {
+                    var row = '<li><a data-value="' + item.id + '">' + item.text + '</a></li>';
+                    $('#building_id').find('ul').append(row);
+                });
+                $('#building_id').find('li>a').click(function () {
+                    var id = $(this).attr('data-value');
+                    var text = $(this).html();
+                    $('#building_id').find('.dropdown-text').html(text).attr('data-value', id);
+                    $('#fee_code').find('.dropdown-text').html("业主单元");
+                    GetList(id);
+                });
+
+            }
+        });
+
+        var mydate = new Date();
+        var $year = mydate.getFullYear();
+        var $mouth = mydate.getMonth() + 1;
+        //年
+        $.SetForm({
+            url: "/TenementManage/Feeincome/GetYear",
+            success: function (data) {
+                $.each(data, function (id, item) {
+                        var row = '<li><a data-value="' + item.id + '">' + item.text + '</a></li>';
+                        $('#divYear').find('ul').append(row);
+                        $('#divYears').find('ul').append(row);
+                });
+                $('#divYear').find('li>a').click(function () {
+                    var id = $(this).attr('data-value');
+                    var text = $(this).html();
+                    $('#divYear').find('.dropdown-text').html(text).attr('data-value', id);
+                });
+                $('#divYears').find('li>a').click(function () {
+                    var id = $(this).attr('data-value');
+                    var text = $(this).html();
+                    $('#divYears').find('.dropdown-text').html(text).attr('data-value', id);
+                });
+            }
+        });
+        $('#divYear').find('.dropdown-text').html($year).attr('data-value', $year);
+        $('#divYears').find('.dropdown-text').html($year).attr('data-value', $year);
+        //月
+        $.SetForm({
+            url: "/TenementManage/Feeincome/GetMouth",
+            success: function (data) {
+                $.each(data, function (id, item) {
+                        var row = '<li><a data-value="' + item.id + '">' + item.text + '</a></li>';
+                        $('#divMounth').find('ul').append(row);
+                        $('#divMounths').find('ul').append(row);
+                });
+                $('#divMounth').find('li>a').click(function () {
+                    var id = $(this).attr('data-value');
+                    var text = $(this).html();
+                    $('#divMounth').find('.dropdown-text').html(text).attr('data-value', id);
+                });
+                $('#divMounths').find('li>a').click(function () {
+                    var id = $(this).attr('data-value');
+                    var text = $(this).html();
+                    $('#divMounths').find('.dropdown-text').html(text).attr('data-value', id);
+                });
+            }
+        });
+        $('#divMounth').find('.dropdown-text').html($mouth).attr('data-value', $mouth);
+        $('#divMounths').find('.dropdown-text').html($mouth).attr('data-value', $mouth);
+
+        //合同租户
+        var defval = '租聘单元|合同编号|客户名称';
+        $("#contractid").selectpicker({ noneSelectedText: defval,width:250 });
+        $.SetForm({
+            url: "/TenementManage/Rentcontract/GetListBySel?status=1",
+            success: function (data) {
+                //$.each(data, function (id, item) {
+                //    var row = '<li><a data-value="' + item.id + '">' + item.text + '</a></li>';
+                //    $('#contractid').find('ul').append(row);
+                //});
+                //$('#contractid').find('li>a').click(function () {
+                //    var id = $(this).attr('data-value');
+                //    var text = $(this).html();
+                //    $('#contractid').find('.dropdown-text').html(text).attr('data-value', id);
+
+                //    $('#btn_SearchRent').trigger("click");
+                //});
+
+                //加载费用项目
+                if (data.length > 0) {
+                    var str = "";
+                    $.each(data, function (id, item) {
+                        str += "<option data-value='" + item.id + "' value=" + item.id + ">" + item.unitroom + "|" + item.contractcode + "|" + item.shortname + "</option>";
+                    });
+                    $("#contractid").append(str);
+                    $("#contractid").selectpicker('refresh');
+                    //$("#contractid").prev("div").prev("button").addClass("bs-placeholder").attr("title", defval).text(defval);
+                }
+
+                $('#contractid').change(function () {
+                    var id = $(this).attr('data-value');
+                    var text = $(this).html();
+
+                    $('#btn_SearchRent').trigger("click");
+                });
+            }
+        });
+    }
+    //加载房间
+    function GetList(keyValue) {
+        if (keyValue == null || undefined || keyValue == "" || keyValue == "0") {
+            $('#fee_code').find('ul').find("li").remove();
+        }
+        else {
+            $('#fee_code').find('ul').find("li").remove();
+            $.SetForm({
+                url: "/TenementManage/Building/GetRoomTreeJson",
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    var rows = '<li><a data-value="">业主单元</a></li>';
+                    $('#fee_code').find('ul').append(rows);
+                    $.each(data, function (id, item) {
+                        var row = '<li><a data-value="' + item.id + '">' + item.text + '</a></li>';
+                        $('#fee_code').find('ul').append(row);
+                    });
+                    $('#fee_code').find('li>a').click(function () {
+                        var id = $(this).attr('data-value');
+                        var text = $(this).html();
+                        $('#fee_code').find('.dropdown-text').html(text).attr('data-value', id);
+
+                        $('#btn_Search').trigger("click");
+                    });
+                }
+            })
+        }
+    }
+    //加载表格
+    function GetGrid() {
+        var $feecode = $("#fee_code").find('.dropdown-text').attr('data-value');
+        var selectedRowIndex = 0;
+        var $gridTable = $('#gridTable');
+        $gridTable.jqGrid({
+            autowidth: true,
+            height: $(window).height() - 150,
+            url: "/TenementManage/Feeincome/GetListsJson?type=4",
+            datatype: "json",
+            colModel: [
+                { label: 'income_id', name: 'income_id', index: 'income_id', width: 100, align: 'left', sortable: true, hidden: true },
+                { label: 'owner_id', name: 'owner_id', index: 'owner_id', width: 100, align: 'left', sortable: true, hidden: true },
+                //{ label: '选择', name: 'check_name', index: 'check_name', width: 50, align: 'center', formatter: 'checkbox', formatoptions: { disabled: false } },
+                { label: '所属物业', name: 'property_name', index: 'property_name', width: 300, align: 'left', sortable: true },
+                { label: '费用科目', name: 'feeitem_name', index: 'feeitem_name', width: 150, align: 'left', sortable: true },
+                { label: '应收年月', name: 'fee_years', index: 'fee_years', width: 150, align: 'left', sortable: true, formatter: "date", formatoptions: { newformat: 'Y-m' } },
+                { label: '应收费用', name: 'fee_income', index: 'fee_income', width: 150, align: 'left', sortable: true, formatter: 'number', formatoptions: { thousandsSeparator: "", decimalPlaces: 2 } },
+                { label: '已缴费用', name: 'fee_already', index: 'fee_already', width: 150, align: 'left', sortable: true, formatter: 'number', formatoptions: { thousandsSeparator: "", decimalPlaces: 2 } },
+            ],
+            rowNum: 10000,
+            rownumbers: true,
+            multiselect: true,
+            gridComplete: function () {
+                $('#' + this.id).setSelection(selectedRowIndex, false);
+                var rowIds = jQuery('#' + this.id).jqGrid('getDataIDs');
+                for (var k = 0; k < rowIds.length; k++) {
+                    var curRowData = jQuery('#' + this.id).jqGrid('getRowData', rowIds[k]);
+                    var curChk = $("#" + this.id).find("#" + rowIds[k]).find(":checkbox"); //$("#" + rowIds[k] + "").find(":checkbox");
+                    curChk.attr('name', 'check_name');   //给每一个checkbox赋名字
+                    curChk.attr('value', curRowData['income_id']);   //给checkbox赋值
+                }
+            }
+        });
+        //查询事件
+        $("#btn_Search").click(function () {
+            var queryJson = {
+                type: 4,
+                owner_id: $("#fee_code").find('.dropdown-text').attr('data-value')
+            }
+            $gridTable.jqGrid('setGridParam', {
+                postData: { owner_id: $("#fee_code").find('.dropdown-text').attr('data-value') }
+            }).trigger('reloadGrid');
+        });
+    }
+    //减免费用
+    function btn_reduct() {
+        var keyValue = $("#gridTable").jqGridRowValue("income_id");
+        var keyValue = "";
+        $($("input[name='check_name']:checked")).each(function () {
+            keyValue += this.value + ',';
+        });
+        if (keyValue != "") {
+            keyValue = keyValue.substring(0, (keyValue.length - 1));
+        }
+        if (checkedArray(keyValue)) {
+            dialogOpen({
+                id: 'Form',
+                title: '减免费用',
+                url: '/TenementManage/Feeincome/FeeincomeForm?keyValue=' + keyValue,
+                width: '75%',
+                height: '460px',
+                callBack: function (iframeId) {
+                    top.frames[iframeId].AcceptClick();
+                }
+            });
+        }
+    }
+    //删除费用
+    function btn_delete() {
+        var keyValue = "";
+        $($("input[name='check_name']:checked")).each(function () {
+            keyValue += this.value + ',';
+        });
+        if (keyValue != "") {
+            keyValue = keyValue.substring(0, (keyValue.length - 1));
+        }
+        if (checkedArray(keyValue)) {
+            //$.RemoveForm({
+            //    url: '/TenementManage/Feeincome/RemoveForm',
+            //    param: { keyValue: keyValue },
+            //    success: function (data) {
+            //        $('#gridTable').trigger('reloadGrid');
+            //    }
+            //})
+            dialogOpen({
+                id: 'Form',
+                title: '删除费用',
+                url: '/TenementManage/Feeincome/FeeincomeDel?keyValue=' + keyValue,
+                width: '75%',
+                height: '460px',
+                callBack: function (iframeId) {
+                    top.frames[iframeId].AcceptClick();
+                }
+            });
+        } else {
+            dialogMsg('请选择需要删除的费用！', 0);
+        }
+    }
+    //生成费用 
+    function btn_Generate() {
+        var $feecode = $("#fee_code").find('.dropdown-text').attr('data-value');
+        if ($feecode == undefined || $feecode == "" || $feecode == 'null' || $feecode == 'undefined') {
+            isOK = false;
+            dialogMsg('请选择要生成费用单元。', 0);
+        } else {
+            var $year = $("#divYear").find('.dropdown-text').attr('data-value');
+            var $mouth = $("#divMounth").find('.dropdown-text').attr('data-value');
+            $.ConfirmAjax({
+                url: '/TenementManage/Feeincome/Generate',
+                msg:'确定生成费用吗？',
+                param: { roomid: $feecode, year: $year, mouth: $mouth },
+                success: function (data) {
+                    $('#gridTable').trigger('reloadGrid');
+                }
+            });
+        }
+    }
+    //缴费确定
+    function btn_fixed() {
+        var keyValue = $("#gridTable").jqGridRowValue("income_id");
+        var keyValue = "";
+        $($("input[name='check_name']:checked")).each(function () {
+            keyValue += this.value + ',';
+        });
+        if (keyValue != "") {
+            keyValue = keyValue.substring(0, (keyValue.length - 1));
+        }
+        if (checkedArray(keyValue)) {
+            dialogOpen({
+                id: 'Form',
+                title: '缴费确定',
+                url: '/TenementManage/Feeincome/FixedForm?keyValue=' + keyValue,
+                width: '75%',
+                height: '460px',
+                callBack: function (iframeId) {
+                    top.frames[iframeId].AcceptClick();
+                }
+            });
+        }
+    }
+    //打印通知单
+    function btn_pring() {
+        var keyValue = $("#gridTable").jqGridRowValue("income_id");
+        var keyValue = "";
+        $($("input[name='check_name']:checked")).each(function () {
+            keyValue += this.value + ',';
+        });
+        if (keyValue != "") {
+            keyValue = keyValue.substring(0, (keyValue.length - 1));
+        }
+        if (checkedArray(keyValue)) {
+
+            window.open('/TenementManage/Feeincome/PrintFrom?keyValue=' + keyValue);
+
+            //dialogOpen({
+            //    id: 'Form',
+            //    title: '打印通知单',
+            //    url: '/TenementManage/Feeincome/PrintFrom?keyValue=' + keyValue,
+            //    width: '860px',
+            //    height: '460px',
+            //    callBack: function (iframeId) {
+            //        top.frames[iframeId].AcceptClick();
+            //    }
+            //});
+        }
+    }
+    //加载表格--租户缴费
+    function GetGridRent() {
+        var selectedRowIndex = 0;
+        var $gridTable = $('#gridTablesRent');
+        $gridTable.jqGrid({
+            autowidth: true,
+            height: $(window).height() - 150,
+            url: "/TenementManage/Feeincome/GetListRentJson",
+            datatype: "json",
+            colModel: [
+                { label: 'income_id', name: 'income_id', index: 'income_id', width: 100, align: 'left', sortable: true, hidden: true },
+                //{ label: '选择', name: 'ck_rname', index: 'ck_rname', width: 50, align: 'center', formatter: 'checkbox', formatoptions: { disabled: false } },
+                { label: '业主/客户', name: 'property_name', index: 'property_name', width: 300, align: 'left', sortable: true },
+                { label: '费用科目', name: 'feeitem_name', index: 'feeitem_name', width: 150, align: 'left', sortable: true },
+                { label: '应收年月', name: 'fee_years', index: 'fee_years', width: 150, align: 'left', sortable: true, formatter: "date", formatoptions: { newformat: 'Y-m' } },
+                { label: '应收费用', name: 'fee_income', index: 'fee_income', width: 150, align: 'left', sortable: true, formatter: 'number', formatoptions: { thousandsSeparator: "", decimalPlaces: 2 } },
+                { label: '已缴费用', name: 'fee_already', index: 'fee_already', width: 150, align: 'left', sortable: true, formatter: 'number', formatoptions: { thousandsSeparator: "", decimalPlaces: 2 } },
+            ],
+            rowNum: 10000,
+            multiselect: true,
+            rownumbers: true,
+            gridComplete: function () {
+                $('#' + this.id).setSelection(selectedRowIndex, false);
+
+                var $rowIds = jQuery('#' + this.id).jqGrid('getDataIDs');
+                for (var j = 0; j < $rowIds.length; j++) {
+                    var $curRowData = jQuery('#' + this.id).jqGrid('getRowData', $rowIds[j]);
+                    var $curChk = $("#" + this.id).find("#" + $rowIds[j]).find(":checkbox"); //$("#" + $rowIds[j] + "").find(":checkbox");
+                    $curChk.attr('name', 'ck_rname');   //给每一个checkbox赋名字
+                    $curChk.attr('value', $curRowData['income_id']);   //给checkbox赋值
+                }
+            }
+        });
+        //查询事件
+        $("#btn_SearchRent").click(function () {
+            //console.log($("#contractid").val());
+            $gridTable.jqGrid('setGridParam', {
+                postData: { contractid: $("#contractid").val() }
+            }).trigger('reloadGrid');
+        });
+    }
+    //租户缴费生成
+    function btn_GenerateByZH() {
+        var $contractid = $("#contractid").val();
+        if ($contractid == undefined || $contractid == "" || $contractid == 'null' || $contractid == 'undefined') {
+            isOK = false;
+            dialogMsg('请选择要生成费用单元。', 0);
+        } else {
+            var $years = $("#divYears").find('.dropdown-text').attr('data-value');
+            var $mouths = $("#divMounths").find('.dropdown-text').attr('data-value');
+            $.ConfirmAjax({
+                url: '/TenementManage/Feeincome/GenerateRent',
+                msg: '确定生成费用吗？',
+                param: { roomid: $contractid, year: $years, mouth: $mouths },
+                success: function (data) {
+                    $('#gridTablesRent').trigger('reloadGrid');
+                }
+            });
+        }
+    }
+    //打印通知单--租户
+    function btn_pring_r() {
+        var $keyValue = "";
+        $($("input[name='ck_rname']:checked")).each(function () {
+            $keyValue += this.value + ',';
+        });
+        if ($keyValue != "") {
+            $keyValue = $keyValue.substring(0, ($keyValue.length - 1));
+        }
+        if (checkedArray($keyValue)) {
+            window.open('/TenementManage/Feeincome/PrintFrom?keyValue=' + $keyValue);
+            //dialogOpen({
+            //    id: 'Form',
+            //    title: '打印通知单',
+            //    url: '/TenementManage/Feeincome/PrintFrom?keyValue=' + $keyValue,
+            //    width: '860px',
+            //    height: '460px',
+            //    callBack: function (iframeId) {
+            //        top.frames[iframeId].AcceptClick();
+            //    }
+            //});
+        }
+    }
+    //删除费用--租户
+    function btn_delete_r() {
+        var $keyValue = "";
+        $($("input[name='ck_rname']:checked")).each(function () {
+            $keyValue += this.value + ',';
+        });
+        if ($keyValue != "") {
+            $keyValue = $keyValue.substring(0, ($keyValue.length - 1));
+        }
+        if (checkedArray($keyValue)) {
+            //$.RemoveForm({
+            //    url: '/TenementManage/Feeincome/RemoveForm',
+            //    param: { keyValue: $keyValue },
+            //    success: function (data) {
+            //        $('#gridTablesRent').trigger('reloadGrid');
+            //    }
+            //})
+            dialogOpen({
+                id: 'Form',
+                title: '删除费用',
+                url: '/TenementManage/Feeincome/FeeincomeDel?type=1&keyValue=' + $keyValue,
+                width: '75%',
+                height: '460px',
+                callBack: function (iframeId) {
+                    top.frames[iframeId].AcceptClick();
+                }
+            });
+        } else {
+            dialogMsg('请选择需要删除的费用！', 0);
+        }
+    }
+    //减免费用--租户
+    function btn_reduct_r() {
+        var $keyValue = "";
+        $($("input[name='ck_rname']:checked")).each(function () {
+            $keyValue += this.value + ',';
+        });
+        if ($keyValue != "") {
+            $keyValue = $keyValue.substring(0, ($keyValue.length - 1));
+        }
+        if (checkedArray($keyValue)) {
+            dialogOpen({
+                id: 'Form',
+                title: '减免费用',
+                url: '/TenementManage/Feeincome/FeeincomeForm?type=1&keyValue=' + $keyValue,
+                width: '75%',
+                height: '460px',
+                callBack: function (iframeId) {
+                    top.frames[iframeId].AcceptClick();
+                }
+            });
+        }
+    }
+    //缴费确定--租户
+    function btn_fixed_r() {
+        var $keyValue = "";
+        $($("input[name='ck_rname']:checked")).each(function () {
+            $keyValue += this.value + ',';
+        });
+        if ($keyValue != "") {
+            $keyValue = $keyValue.substring(0, ($keyValue.length - 1));
+        }
+        if (checkedArray($keyValue)) {
+            dialogOpen({
+                id: 'Form',
+                title: '缴费确定',
+                url: '/TenementManage/Feeincome/FixedForm?type=1&keyValue=' + $keyValue,
+                width: '75%',
+                height: '460px',
+                callBack: function (iframeId) {
+                    top.frames[iframeId].AcceptClick();
+                }
+            });
+        }
+    }
+</script>
+
+<ul class="nav nav-tabs">
+    <li class="active"><a href="#BaseInfo" data-toggle="tab">单元业主缴费</a></li>
+    <li><a href="#RentInfo" data-toggle="tab">租户缴费</a></li>
+</ul>
+<div class="step-content" id="wizard-steps" style="border-left: none; border-bottom: none; border-right: none; ">
+    <div class="step-pane active" id="BaseInfo">
+        <div class="titlePanel">
+            <div class="title-search">
+                <table>
+                    <tr>
+                        <td>
+                            <div id="building_id" class="btn-group">
+                                <a class="btn btn-default dropdown-text" data-toggle="dropdown">所在楼栋</a>
+                                <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                                <ul class="dropdown-menu" style="max-height:480px;overflow:auto;overflow-x:hidden;"></ul>
+                            </div>
+                        </td>
+                        <td style="padding-left: 5px;">
+                            <div id="fee_code" class="btn-group">
+                                <a class="btn btn-default dropdown-text" data-toggle="dropdown">业主单元</a>
+                                <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                                <ul class="dropdown-menu" style="max-height:480px;overflow:auto;overflow-x:hidden;"></ul>
+                            </div>
+                        </td>
+                        <td style="padding-left: 10px;">年</td>
+                        <td style="padding-left: 5px;">
+                            <div id="divYear" class="btn-group">
+                                <a class="btn btn-default dropdown-text" data-toggle="dropdown">年</a>
+                                <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                                <ul class="dropdown-menu" style="max-height:480px;overflow:auto;overflow-x:hidden;"></ul>
+                            </div>
+                        </td>
+                        <td style="padding-left: 10px;">月</td>
+                        <td style="padding-left: 5px;">
+                            <div id="divMounth" class="btn-group">
+                                <a class="btn btn-default dropdown-text" data-toggle="dropdown">月</a>
+                                <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                                <ul class="dropdown-menu" style="max-height:480px;overflow:auto;overflow-x:hidden;"></ul>
+                            </div>
+                        </td>
+                        <td style="padding-left: 5px;">
+                            <a id="btn_Search" class="btn btn-primary" style="display:none;"><i class="fa fa-search"></i>查询</a>
+                            <a id="btn_Generate" class="btn btn-primary" onclick="btn_Generate()"><i class="fa fa-tasks"></i>&nbsp;生成费用</a>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="toolbar">
+                <div class="btn-group">
+                    <a id="lr-pring" class="btn btn-default" onclick="btn_pring()"><i class="fa fa-print"></i>&nbsp;打印通知单</a>
+                    <a id="lr-delete" class="btn btn-default" onclick="btn_delete()"><i class="fa fa-trash-o"></i>&nbsp;删除费用</a>
+                    <a id="lr-reduct" class="btn btn-default" onclick="btn_reduct()"><i class="fa fa-minus-square"></i>&nbsp;减免费用</a>
+                    <a id="lr-fixed" class="btn btn-default" onclick="btn_fixed()"><i class="fa fa-cog"></i>&nbsp;缴费确定</a>
+                </div>
+                <script>$('.toolbar').authorizeButton()</script>
+            </div>
+        </div>
+        <div class="gridPanel">
+            <table id="gridTable"></table>
+            <div id="gridPager"></div>
+        </div>
+    </div>
+    <div class="step-pane" id="RentInfo">
+        <div class="titlePanel">
+            <div class="title-search">
+                <table>
+                    <tr>
+                        <td>
+                            <select id="contractid" name="contractid" class="selectpicker bla bla bli" data-live-search="true"></select>
+                        </td>                        
+                        <td style="padding-left: 10px;">年</td>
+                        <td style="padding-left: 5px;">
+                            <div id="divYears" class="btn-group">
+                                <a class="btn btn-default dropdown-text" data-toggle="dropdown">年</a>
+                                <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                                <ul class="dropdown-menu" style="max-height:480px;overflow:auto;overflow-x:hidden;"></ul>
+                            </div>
+                        </td>
+                        <td style="padding-left: 10px;">月</td>
+                        <td style="padding-left: 5px;">
+                            <div id="divMounths" class="btn-group">
+                                <a class="btn btn-default dropdown-text" data-toggle="dropdown">月</a>
+                                <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                                <ul class="dropdown-menu" style="max-height:480px;overflow:auto;overflow-x:hidden;"></ul>
+                            </div>
+                        </td>
+                        <td style="padding-left: 5px;">
+                            <a id="btn_SearchRent" class="btn btn-primary" style="display:none;"><i class="fa fa-search"></i>查询</a>
+                            <a id="btn_GenerateByZH" class="btn btn-primary" onclick="btn_GenerateByZH()"><i class="fa fa-tasks"></i>&nbsp;生成费用</a>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="toolbar">
+                <div class="btn-group">
+                    <a id="lr-pring_r" class="btn btn-default" onclick="btn_pring_r()"><i class="fa fa-print"></i>&nbsp;打印通知单</a>
+                    <a id="lr-delete_r" class="btn btn-default" onclick="btn_delete_r()"><i class="fa fa-trash-o"></i>&nbsp;删除费用</a>
+                    <a id="lr-reduct_r" class="btn btn-default" onclick="btn_reduct_r()"><i class="fa fa-minus-square"></i>&nbsp;减免费用</a>
+                    <a id="lr-fixed_r" class="btn btn-default" onclick="btn_fixed_r()"><i class="fa fa-cog"></i>&nbsp;缴费确定</a>
+                </div>
+                <script>$('.toolbar').authorizeButton()</script>
+            </div>         
+        </div>
+        <div class="gridPanel">
+            <table id="gridTablesRent"></table>
+            <div id="gridPagerRent"></div>
+        </div>
+    </div>
+</div>

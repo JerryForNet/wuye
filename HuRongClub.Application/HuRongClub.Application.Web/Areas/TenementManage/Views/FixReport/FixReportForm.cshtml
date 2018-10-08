@@ -1,0 +1,653 @@
+﻿@{;
+    ViewBag.Title = "报修维修";
+    Layout = "~/Views/Shared/_OrderForm.cshtml";
+}
+<!--jqgrid表格组件start-->
+<link href="/Content/scripts/plugins/jqgrid/jqgrid.css" rel="stylesheet" />
+<script src="/Content/scripts/plugins/jqgrid/grid.locale-cn.js"></script>
+<script src="/Content/scripts/plugins/jqgrid/jqgrid.min.js"></script>
+<!--表格组件end-->
+<style>
+    body { margin: 0px; }
+    .bills { overflow: hidden; border-radius: 0px; position: relative; background: #FFFFFF; border: 0px solid rgb(204, 204, 204); box-shadow: none; padding: 0px; }
+    .ui-widget-content { border-left: 0px; border-right: 0px; border-bottom: 0px; }
+</style>
+<script>
+    var keyValue = request('keyValue');
+    $(function () {
+        initControl();
+        GetOrderEntryGrid();
+        GetGridLoad();
+    });
+    //初始化控件
+    function initControl() {
+        //维修类别
+        $("#fixtype").ComboBox({
+            description: "==请选择==",
+        });
+        //检修班组
+        $("#fixgroup").ComboBox({
+            description: "==请选择==",
+        });
+        //业主
+        $("#room").ComboBox({
+            description: "==请选择业主==",
+            height: "360px"
+        });
+        //检修情况
+        $("#back_info").ComboBox({
+            description: "==请选择检修情况==",
+        });
+        //检修质量
+        $("#back_qu").ComboBox({
+            description: "==请选择检修质量==",
+        });
+        //服务态度
+        $("#back_ser").ComboBox({
+            description: "==请选择服务态度==",
+        });
+
+        //加载楼栋
+        $("#building_id").ComboBox({
+            url: "/TenementManage/Building/GetListJson?Type=2",
+            id: "building_id",
+            text: "building_name",
+            description: "==请选择楼栋==",
+            height: "360px"
+        }).bind("change", function () {
+            var id = $(this).attr('data-value');
+            if (id != "" && id != undefined) {
+                GetRoomSel(id);
+            } else {
+                $("#room-option div ul").html("");
+                $("#room").ComboBox({
+                    description: "==请选择业主==",
+                    height: "360px"
+                });
+            }
+        });
+        
+        $("#contractid").ComboBox({
+            url: "/TenementManage/Rentcontract/GetListBySel?type=2",
+            id: "contractid",
+            text: "customername",
+            description: "==请选择租户==",
+            height: "360px"
+        }).bind("change", function () {
+            var id = $("#contractid").attr('data-value');
+            if (id != "" && id != undefined) {
+                $('#room div').html("==请选择业主==")
+                $('#room').attr('data-value', "").attr('data-text', "");
+            }
+        });
+
+        //获取表单
+        if (!!keyValue) {
+            $.SetForm({
+                url: "../../TenementManage/FixReport/GetFormJson",
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    $("#form1").SetWebControls(data);
+
+                    $("#building_id").ComboBoxSetValue(data.building_id);
+                    GetRoomSel(data.building_id);
+                    if (data.owner_id != "" && data.owner_id.length > 0) {
+                        $("#room").ComboBoxSetValue(data.owner_id);
+                    }
+                    if (data.customertype == 1) {
+                           
+                    } else {
+                        $("#contractid").ComboBoxSetValue(data.owner_id);
+                    }
+                }
+            })
+        }
+    }
+    //加载业主
+    function GetRoomSel(bid) {
+        $("#room").ComboBox({
+            url: "/TenementManage/Owner/GetSelectJson?building_id=" + bid,
+            id: "owner_id",
+            text: "owner_name",
+            description: "==请选择业主==",
+            height: "360px"
+        }).bind("change", function () {
+            var id = $("#room").attr('data-value');
+            if (id != "" && id != undefined) {
+                $('#contractid').attr('data-value', "").attr('data-text', "");
+                $('#contractid div').html("==请选择租户==")
+            }
+        });
+    }
+
+    //加载材料表
+    function GetOrderEntryGrid() {
+        var $grid = $('#gridTable');
+        $grid.jqGrid({
+            unwritten: false,
+            datatype: 'local',
+            height: $(window).height() - 200,
+            autowidth: true,
+            colModel: [
+                { label: 'pkeyid', name: 'pkeyid', width: 80, align: 'left', sortable: false, resizable: true, hidden: true },
+                { label: 'fixreportid', name: 'fixreportid', width: 80, align: 'left', sortable: false, resizable: true, hidden: true },
+                { label: 'fgoodsid', name: 'fgoodsid', width: 80, align: 'left', sortable: false, resizable: true, hidden: true },
+                { label: '材料名称规格', name: 'fname', width: 300, align: 'left', sortable: false, resizable: true },
+                //{ label: '库存', name: 'fcount', width: 120, align: 'center', sortable: false, resizable: true },
+                { label: '数量', name: 'fnumber', width: 120, align: 'center', sortable: false, resizable: true },
+                { label: '单价', name: 'fprice', width: 120, align: 'center', sortable: false, resizable: true },
+                { label: '金额', name: 'fmoney', width: 120, align: 'center', sortable: false, resizable: true },
+            ],
+            pager: false,
+            rownumbers: true,
+            shrinkToFit: false,
+            gridview: true,
+            footerrow: false,
+            gridComplete: function () {
+            }
+        });
+        //默认添加13行 空行
+        for (var i = 1; i < 13; i++) {
+            var rowdata = {
+                pkeyid: '<input name="pkeyid" type="text" class="editable center" />',
+                fixreportid: '<input name="fixreportid" type="text" class="editable center" />',
+                fgoodsid: '<input name="fgoodsid" type="text" class="editable center" />',
+                fname: '<div class="product"><input name="fname" type="text" class="editable" isvalid="no" checkexpession="NotNull"/><span class="ui-icon-ellipsis"></span></div>',
+                //fcount: '<input name="fcount" type="text" class="editable center" readonly/>',
+                fnumber: '<input name="fnumber" type="text" class="editable center decimal" isvalid="no" checkexpession="Double" /><input type="hidden" name="fnumber_kc" value="0">',
+                fprice: '<input name="fprice" type="text" class="editable center decimal"  isvalid="no" checkexpession="Double" />',
+                fmoney: '<input name="fmoney" type="text" class="editable center decimal"  isvalid="no" checkexpession="Double" />',
+            }
+            $grid.jqGrid('addRowData', i, rowdata);
+        };
+        $grid.find('.decimal').attr('onfocus', 'IsMoney(this.id)');
+
+        //材料
+        $('input[name="fname"]').focus(function () {
+            $('.ui-icon-ellipsis').hide();
+            $(this).next('.ui-icon-ellipsis').show();
+            $(this).Contextmenu();
+        });
+        //选择材料项目事件
+        $('.ui-icon-ellipsis').click(function () {
+            var $ellipsis = $(this);
+            var $url = ("/RepostryManage/Goodsinfo/OptionIndex")
+            dialogOpen({
+                id: "Options",
+                title: '选择材料',
+                url: $url,
+                width: "800px",
+                height: "550px",
+                callBack: function (iframeId) {
+                    top.frames[iframeId].AcceptClick(function (data) {                        
+                        $ellipsis.parents('[role=row]').find('input[name="fname"]').val(data.fname);
+                        $ellipsis.parents('[role=row]').find('input[name="fprice"]').val(data.fprice);
+                        $ellipsis.parents('[role=row]').find('input[name="fnumber_kc"]').val(data.fcount);
+                        //$ellipsis.parents('[role=row]').find('input[name="fcount"]').val(data.fcount);
+                        $ellipsis.parents('[role=row]').find('input[name="fgoodsid"]').val(data.fgoodsid);
+
+                        $ellipsis.parents('[role=row]').find('input[name="fnumber"]').attr("isvalid", "yes");
+                        $ellipsis.parents('[role=row]').find('input[name="fmoney"]').attr("isvalid", "yes");
+                    });
+                },
+                btn: ['确认选中', '关闭']
+            });
+        });
+        //价格文本框换算
+        $grid.find('.decimal').keyup(function () {
+            var _inputName = $(this).attr('name');
+            var $fnumber = $(this).parents('[role=row]').find('input[name="fnumber"]'); //数量
+            var $fprice = $(this).parents('[role=row]').find('input[name="fprice"]');   //单价
+            var $fmoney = $(this).parents('[role=row]').find('input[name="fmoney"]');   //金额
+
+            //数量*单价=金额
+            $fmoney.val(toDecimal($fnumber.val() * $fprice.val()));
+            
+            //合计
+            var TotalAmount = 0.00;
+            $grid.find("tbody tr").each(function (i) {
+                var Amount = $(this).find('td:eq(7)').find('input').val();
+                if (Amount != "" && Amount != undefined) {
+                    TotalAmount += Number(Amount);
+                }
+            });
+            $("#materialfee").val(toDecimal(TotalAmount));
+        });
+    }
+    //加载材料
+    function GetGridLoad() {
+        //获取表单
+        if (!!keyValue) {
+            $.SetForm({
+                url: "/TenementManage/FixReport/GetFixList",
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    //明细
+                    var childEntity = data;
+                    $('#gridTable').find('[role=row]').each(function (i) {
+                        var row = childEntity[i - 1];
+                        if (row != undefined) {
+                            $(this).find('input[name="pkeyid"]').val(row.pkeyid);
+                            $(this).find('input[name="fixreportid"]').val(row.fixreportid);
+                            $(this).find('input[name="fname"]').val(row.fname);
+                            $(this).find('input[name="fnumber"]').val(row.fnumber).attr("readonly", "readonly");
+                            $(this).find('input[name="fprice"]').val(row.fprice).attr("readonly", "readonly");
+                            $(this).find('input[name="fmoney"]').val(row.fmoney).attr("readonly", "readonly");
+
+                            $(this).find('input[name="fnumber_kc"]').val(row.fnumber);
+
+                            $(this).find('span').remove();//移除选择标签
+                        }
+                    });
+                }
+            })
+        }
+    }
+
+    //切换显示底部按钮
+    function tabSwitch(obj) {
+        $(".form-button").hide();
+        $(".btn" + obj).show();
+    }
+    //关闭
+    function onClose() {
+        var index = top.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+        top.layer.close(index);
+    }
+
+    //报修信息保存
+    function AcceptClick_Base() {
+        if (!$('#BaseInfo').Validform()) {
+            return false;
+        }
+        //var building_id = $("#building_id").attr('data-value');
+        //if (building_id == "" || building_id == undefined || building_id.length == 0) {
+        //    dialogMsg('请选择楼栋！', 0);
+        //    return false;
+        //}
+        try {
+            var postData = $("#BaseInfo").GetWebControls(keyValue);
+            var $room = $("#room").attr('data-value');
+            if ($room != "" && $room != undefined) {
+                postData["customertype"] = 1;
+                postData["owner_id"] = $room;
+                var $room_name = $("#room").attr('data-text').split('/');
+                postData["customername"] = $room_name[1];
+            } else {
+                var $contractid = $("#contractid").attr('data-value');
+                if ($contractid != "" && $contractid != undefined) {
+                    postData["customertype"] = 2;
+                    postData["owner_id"] = $contractid;
+                    var $_name = $("#contractid").attr('data-text').split('(')[1].split(')')[0];
+                    postData["customername"] = $_name;
+                }
+                //else {
+                //    dialogMsg('请选择业主客户！', 0);
+                //    return false;
+                //}
+            }
+        } catch (e) {
+            console.dir(e);
+        }
+        
+        
+        $.SaveForm({
+            url: "/TenementManage/FixReport/SaveForm?keyValue=" + keyValue,
+            param: postData,
+            loading: "正在保存数据...",
+            close: false,
+            success: function (data) {
+                if (keyValue == "" || keyValue == undefined) {
+                    $("#FixReportID").val(data.resultdata);
+                    keyValue = data.resultdata;
+                }
+                $.currentIframe().$("#gridTable").trigger("reloadGrid");
+            }
+        })
+    }
+    //客户反馈保存
+    function AcceptClick_Customer() {
+        if (!$('#CustomerInfo').Validform()) {
+            return false;
+        }
+        var $FixReportID = $("#FixReportID").val();
+        if ($FixReportID == "" || $FixReportID == undefined) {
+            dialogMsg('请先保存报修信息！', 0);
+            return false;
+        }
+        var postData = $("#CustomerInfo").GetWebControls(keyValue);
+        $.SaveForm({
+            url: "/TenementManage/FixReport/SaveForm?keyValue=" + $FixReportID,
+            param: postData,
+            loading: "正在保存数据...",
+            close: false,
+            success: function () {
+                
+            }
+        })
+    }
+    //验收回访
+    function AcceptClick_Visit() {
+        if (!$('#visitInfo').Validform()) {
+            return false;
+        }
+        var $FixReportID = $("#FixReportID").val();
+        if ($FixReportID == "" || $FixReportID == undefined) {
+            dialogMsg('请先保存报修信息！', 0);
+            return false;
+        }
+        var postData = $("#visitInfo").GetWebControls(keyValue);
+        $.SaveForm({
+            url: "/TenementManage/FixReport/SaveForm?keyValue=" + $FixReportID,
+            param: postData,
+            loading: "正在保存数据...",
+            close: false,
+            success: function () {
+
+            }
+        })
+    }
+    //材料费用
+    function AcceptClick_Cost() {
+        if (!$('#CostInfo').Validform()) {
+            return false;
+        }
+        var $FixReportID = $("#FixReportID").val();
+        if ($FixReportID == "" || $FixReportID == undefined) {
+            dialogMsg('请先保存报修信息！', 0);
+            return false;
+        }
+        var postData = $("#CostInfo").GetWebControls(keyValue);
+        var childEntryJson = [];
+        var bl = false;
+        var isCount = true;
+        $('#gridTable').find('[role=row]').each(function (i) {
+            if (!!$(this).find('input[name="fname"]').val()) {
+                var $income = $(this).find('input[name="fname"]').val();
+                var $fnumber = $(this).find('input[name="fnumber"]').val();
+
+                childEntryJson.push({
+                    fname: $(this).find('input[name="fname"]').val(),
+                    fnumber: $(this).find('input[name="fnumber"]').val(),
+                    fprice: $(this).find('input[name="fprice"]').val(),
+                    fmoney: $(this).find('input[name="fmoney"]').val(),
+                    pkeyid: $(this).find('input[name="pkeyid"]').val()
+                });
+            }
+        });
+        //if (!isCount) {
+        //    dialogMsg('材料数量不大于库存数量！', 0);
+        //    return false;
+        //}
+        //if (childEntryJson.length == 0) {
+        //    dialogMsg('请填写材料！', 0);
+        //    return false;
+        //}
+
+        if (childEntryJson.length > 0) {
+            childEntryJson = JSON.stringify(childEntryJson);
+        }
+        console.log(childEntryJson);
+        $.SaveForm({
+            url: "/TenementManage/FixReport/SavesForm?keyValue=" + $FixReportID,
+            param: { "strEntity": JSON.stringify(postData), "strChildEntitys": childEntryJson },
+            loading: "正在保存数据...",
+            close: false,
+            success: function () {
+                $.currentIframe().$("#gridTable").trigger("reloadGrid");
+                $('#gridTable').find('[role=row]').each(function (i) {
+                    if (!!$(this).find('input[name="fname"]').val()) {
+                        $(this).find('input[name="pkeyid"]').val("00000");
+
+                        var $fnumber = $(this).find('input[name="fnumber"]').val();
+                        var $fcount = $(this).find('input[name="fcount"]').val();
+                        if ($fcount != "" && $fcount != undefined) {
+                            $(this).find('input[name="fcount"]').val(Number($fcount) - Number($fnumber));
+                        }
+
+                        $(this).find('input[name="fnumber"]').attr("readonly", "readonly");
+                        $(this).find('input[name="fprice"]').attr("readonly", "readonly");
+                        $(this).find('input[name="fmoney"]').attr("readonly", "readonly");
+                        $(this).find('span').remove();//移除选择标签
+                    }
+                });
+            }
+        })
+    }
+</script>
+<div class="bills">
+    <div style="margin-left: 10px; margin-right: 10px;">
+        <ul class="nav nav-tabs">
+            <li class="active"><a href="#BaseInfo" data-toggle="tab" onclick="tabSwitch(1)">报修信息</a></li>
+            <li><a href="#CustomerInfo" data-toggle="tab" onclick="tabSwitch(2)">客户反馈</a></li>
+            <li><a href="#visitInfo" data-toggle="tab" onclick="tabSwitch(3)">验收回访</a></li>
+            <li><a href="#CostInfo" data-toggle="tab" onclick="tabSwitch(4)">材料费用</a></li>
+        </ul>
+        <div class="step-content" id="wizard-steps" style="border-left: none; border-bottom: none; border-right: none;">
+            <div class="step-pane active" id="BaseInfo" style="margin-left: 0px; margin-top: 15px; margin-right: 30px;">
+                <table class="form">
+                    <tr>
+                        <th class="formTitle">报修单号：<font face="宋体">*</font></th>
+                        <td class="formValue">
+                            <input id="fixNumber_No" type="text" class="form-control" placeholder="报修单号" value="@ViewBag.fixNumber_No" isvalid="yes" checkexpession="NotNull" />
+                        </td>
+                        <th class="formTitle">&nbsp;</th>
+                        <td class="formValue">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <th class="formTitle">报修人：<font face="宋体">*</font></th>
+                        <td class="formValue">
+                            <input id="ReportMan" type="text" class="form-control" placeholder="报修人" isvalid="yes" checkexpession="NotNull" />
+                        </td>
+                        <th class="formTitle">业主客户：<font face="宋体">*</font></th>
+                        <td class="formValue">
+                            <table style="width:100%;">
+                                <tr>
+                                    <td><div type="select" class="ui-select" id="building_id" style="min-width:100px;"></div></td>
+                                    <td style="padding-left:5px;"><div type="select" class="ui-select" id="room" style="min-width:100px;"></div></td>
+                                    <td style="padding-left:5px;"><div type="select" class="ui-select" id="contractid" style="min-width:100px;"></div></td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="formTitle">联系电话：</th>
+                        <td class="formValue">
+                            <input id="phone" type="text" class="form-control" placeholder="联系电话" />
+                        </td>
+                        <th class="formTitle">报修物业：</th>
+                        <td class="formValue">
+                            <input id="propertyname" type="text" class="form-control" readonly="readonly" value="@ViewBag.propertyname" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="formTitle">报修时间：<font face="宋体">*</font></th>
+                        <td class="formValue">
+                            <input id="ReportDate" type="text" class="form-control input-datepicker" placeholder="报修时间" onfocus="WdatePicker({dateFmt: 'yyyy-MM-dd HH:mm:ss' })" isvalid="yes" checkexpession="NotNull" />
+                        </td>
+                        <th class="formTitle">维修类别：<font face="宋体">*</font></th>
+                        <td class="formValue">
+                            <div id="fixtype" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull">
+                                <ul>
+                                    <li data-value="0">无偿服务</li>
+                                    <li data-value="1">有偿服务</li>
+                                    <li data-value="2">公共部位</li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="formTitle">报修内容：<font face="宋体">*</font></th>
+                        <td class="formValue" colspan="3" style="height:50px;">
+                            <textarea id="Content" class="form-control" isvalid="yes" checkexpession="NotNull"></textarea>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="formTitle">发单时间：<font face="宋体">*</font></th>
+                        <td class="formValue">
+                            <input id="senddate" type="text" class="form-control input-datepicker" placeholder="发单时间" onfocus="WdatePicker({dateFmt: 'yyyy-MM-dd HH:mm:ss' })" isvalid="yes" checkexpession="NotNull" />
+                        </td>
+                        <th class="formTitle">检修班组：<font face="宋体">*</font></th>
+                        <td class="formValue">
+                            <div id="fixgroup" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull">
+                                <ul>
+                                    <li data-value="管道班">管道班</li>
+                                    <li data-value="电工班">电工班</li>
+                                    <li data-value="空调班">空调班</li>
+                                    <li data-value="清洁班">清洁班</li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="formTitle">到达客户处时间：<font face="宋体">*</font></th>
+                        <td class="formValue">
+                            <input id="receivedate" type="text" class="form-control input-datepicker" placeholder="到达客户处时间" onfocus="WdatePicker({dateFmt: 'yyyy-MM-dd HH:mm:ss' })" isvalid="yes" checkexpession="NotNull" />
+                        </td>
+                        <th class="formTitle">检修人：<font face="宋体">*</font></th>
+                        <td class="formValue">
+                            <input id="fixman" type="text" class="form-control" placeholder="检修人" isvalid="yes" checkexpession="NotNull" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="formTitle">交单时间：<font face="宋体">*</font></th>
+                        <td class="formValue">
+                            <input id="backdate" type="text" class="form-control input-datepicker" placeholder="交单时间" onfocus="WdatePicker({dateFmt: 'yyyy-MM-dd HH:mm:ss' })" isvalid="yes" checkexpession="NotNull" />
+                        </td>
+                        <th class="formTitle">&nbsp;</th>
+                        <td class="formValue">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <th class="formTitle">检修处理信息：</th>
+                        <td class="formValue" colspan="3" style="height:50px;">
+                            <textarea id="fixinfo" class="form-control"></textarea>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="step-pane" id="CustomerInfo" style="margin: 5px;">
+                <div style="height:40px;">&nbsp;</div>
+                <table class="form" style="width:50%;">
+                    <tr>
+                        <th class="formTitle">检修情况：<font face="宋体">*</font></th>
+                        <td class="formValue">
+                            <div id="back_info" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull">
+                                <ul>
+                                    <li data-value="及时">及时</li>
+                                    <li data-value="较及时">较及时</li>
+                                    <li data-value="不及时">不及时</li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="formTitle">检修质量：<font face="宋体">*</font></th>
+                        <td class="formValue">
+                            <div id="back_qu" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull">
+                                <ul>
+                                    <li data-value="好">好</li>
+                                    <li data-value="较好">较好</li>
+                                    <li data-value="不好">不好</li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="formTitle">服务态度：<font face="宋体">*</font></th>
+                        <td class="formValue">
+                            <div id="back_ser" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull">
+                                <ul>
+                                    <li data-value="满意">满意</li>
+                                    <li data-value="较满意">较满意</li>
+                                    <li data-value="不满意">不满意</li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="formTitle">其他意见：</th>
+                        <td class="formValue">
+                            <textarea id="backinfo" class="form-control"></textarea>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="step-pane" id="visitInfo" style="margin: 5px;">
+                <table class="form">
+                    <tr>
+                        <th class="formTitle">验收日期：<font face="宋体">*</font></th>
+                        <td class="formValue">
+                            <input id="checkdate" type="text" class="form-control input-datepicker" placeholder="验收日期" isvalid="yes" checkexpession="NotNull" />
+                        </td>
+                        <th class="formTitle">工程主管：</th>
+                        <td class="formValue">
+                            <input id="checkcharge" type="text" class="form-control" placeholder="工程主管" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="formTitle">验收情况：</th>
+                        <td class="formValue" colspan="3">
+                            <textarea id="checkinfo" class="form-control"></textarea>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="formTitle">回访日期：<font face="宋体">*</font></th>
+                        <td class="formValue">
+                            <input id="feedbackdate" type="text" class="form-control input-datepicker" placeholder="回访日期" isvalid="yes" checkexpession="NotNull" />
+                        </td>
+                        <th class="formTitle">回访人：</th>
+                        <td class="formValue">
+                            <input id="feedbackman" type="text" class="form-control" placeholder="回访人" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="formTitle">回访情况：</th>
+                        <td class="formValue" colspan="3">
+                            <textarea id="feedbackinfo" class="form-control"></textarea>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="step-pane" id="CostInfo" style="margin: 5px;">
+                <div style="height: 33px; line-height: 33px; text-align: right;">
+                    &nbsp;
+                </div>
+                <div class="gridPanel">
+                    <table id="gridTable"></table>
+                </div>
+                <div style="height: 33px; line-height: 33px; text-align: right;">
+                    <table class="form" style="width:50%;">
+                        <tr>
+                            <th class="formTitle">材料费：</th>
+                            <td class="formValue">
+                                <input id="materialfee" type="text" class="form-control" readonly="readonly" />
+                            </td>
+                            <th class="formTitle">人工费：</th>
+                            <td class="formValue">
+                                <input id="manfee" type="text" class="form-control" isvalid="no" checkexpession="Double" />
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <input type="hidden" id="FixReportID" value="" />
+    </div>
+</div>
+<div class="form-button btn1">
+    <a id="btn_BaseInfo" class="btn btn-success" onclick="AcceptClick_Base();">保存</a>
+    <a class="btn btn-danger layui-layer-close1" onclick="onClose();">关闭</a>
+</div>
+<div class="form-button btn2" style="display:none; ">
+    <a id="btn_ExpandInfo" class="btn btn-success" onclick="AcceptClick_Customer();">保存</a>
+    <a class="btn btn-danger layui-layer-close1" onclick="onClose();">关闭</a>
+</div>
+<div class="form-button btn3" style="display:none;">
+    <a id="btn_ExpandInfo" class="btn btn-success" onclick="AcceptClick_Visit();">保存</a>
+    <a class="btn btn-danger layui-layer-close1" onclick="onClose();">关闭</a>
+</div>
+<div class="form-button btn4" style="display:none;">
+    <a id="btn_ExpandInfo" class="btn btn-success" onclick="AcceptClick_Cost();">保存</a>
+    <a class="btn btn-danger layui-layer-close1" onclick="onClose();">关闭</a>
+</div>
+

@@ -1,0 +1,265 @@
+﻿@{;
+    ViewBag.Title = "其他收入列表页面";
+    Layout = "~/Views/Shared/_Index.cshtml";
+}
+<script>
+    $(function () {
+        InitialPage();
+        GetGrid();
+
+        $("#StartDate").focus(function () {
+            var $val = $("#StartDate").val();
+            $("#SelectedStartTime").html($val);
+        });
+        $("#EndDate").focus(function () {
+            var $val = $("#EndDate").val();
+            $("#SelectedEndTime").html($val);
+        });
+    });
+    //初始化页面
+    function InitialPage() {
+        //resize重设布局;
+        $(window).resize(function (e) {
+            window.setTimeout(function () {
+                $('#gridTable').setGridWidth(($('.gridPanel').width()));
+                $('#gridTable').setGridHeight($(window).height() - 136.5);
+            }, 200);
+            e.stopPropagation();
+        });
+        //费用科目
+        $.SetForm({
+            url: "/FinanceManage/Feeitem/GetSelectJson?type=1&group_id=" + encodeURI("其他收入"),
+            success: function (data) {
+                var rows = '<li><a data-value="">==费用科目==</a></li>';
+                $('#feeitemid').find('ul').append(rows);
+                $.each(data, function (id, item) {
+                    var row = '<li><a data-value="' + item.id + '">' + item.text + '</a></li>';
+                    $('#feeitemid').find('ul').append(row);
+                });
+                $('#feeitemid').find('li>a').click(function () {
+                    var id = $(this).attr('data-value');
+                    var text = $(this).html();
+                    $('#feeitemid').find('.dropdown-text').html(text).attr('data-value', id);
+                });
+            }
+        });
+
+    }
+    //加载表格
+    function GetGrid() {
+        var selectedRowIndex = 0;
+        var $gridTable = $('#gridTable');
+        var $queryJsons = {
+            ticketid: 0,
+            state: $("#StartDate").val(),
+            end: $("#EndDate").val(),
+        }
+
+        $gridTable.jqGrid({
+            autowidth: true,
+            height: $(window).height() - 136.5,
+            url: "/TenementManage/Otherincome/GetPageListOtherJson",
+            postData: { queryJson: JSON.stringify($queryJsons) },
+            datatype: "json",
+            colModel: [
+                { label: 'incomeid', name: 'incomeid', index: 'incomeid', width: 80, align: '', sortable: false, hidden: true },
+                { label: 'ticketid', name: 'ticketid', index: 'ticketid', width: 80, align: '', sortable: false, hidden: true },
+                { label: '客户姓名', name: 'customer', index: 'customer', width: 300, align: 'left', sortable: true },
+                { label: '收费日期', name: 'feedate', index: 'feedate', width: 150, align: 'left', sortable: true, formatter: "date", formatoptions: { newformat: 'Y-m-d' } },
+                { label: '发票号', name: 'ticket_code', index: 'ticket_code', width: 150, align: 'left', sortable: true },
+                { label: '操作用户', name: 'operateuser', index: 'operateuser', width: 150, align: 'left', sortable: true },
+                { label: '费用金额', name: 'feemoney', index: 'feemoney', width: 150, align: 'left', sortable: true, formatter: 'number', formatoptions: { thousandsSeparator: "", decimalPlaces: 2 } },
+            ],
+            viewrecords: true,
+            rowNum: 30,
+            rowList: [30, 50, 100],
+            pager: "#gridPager",
+            sortname: 'incomeid',
+            sortorder: 'desc',
+            rownumbers: true,
+            shrinkToFit: false,
+            gridview: true,
+            onSelectRow: function () {
+                selectedRowIndex = $('#' + this.id).getGridParam('selrow');
+            },
+            gridComplete: function () {
+                $('#' + this.id).setSelection(selectedRowIndex, false);
+            },
+            subGrid: true,
+            subGridRowExpanded: function (subgrid_id, row_id) {
+                var keyValue = $gridTable.jqGrid('getRowData', row_id)['incomeid'];
+                var subgrid_table_id = subgrid_id + "_t";
+                $("#" + subgrid_id).html("<table id='" + subgrid_table_id + "'></table>");
+                $("#" + subgrid_table_id).jqGrid({
+                    url: "/TenementManage/Otherincome/GetDetailsJson?incomeid=" + keyValue,
+                    datatype: "json",
+                    height: "100%",
+                    colModel: [
+                        { label: 'incomeitem_id', name: 'incomeitem_id', index: 'incomeitem_id', width: 80, align: '', sortable: false, hidden: true },
+                        { label: 'incomeid', name: 'incomeid', index: 'incomeid', width: 80, align: '', sortable: false, hidden: true },
+                        { label: '费用科目', name: 'feeitem_id', index: 'feeitem_id', width: 200, align: '', sortable: true },
+                        { label: '费用金额', name: 'fee_income', index: 'fee_income', width: 150, align: '', sortable: true, formatter: 'number', formatoptions: { thousandsSeparator: "", decimalPlaces: 2 } },
+                        { label: '摘要', name: 'subject', index: 'subject', width: 400, align: '', sortable: true },
+                    ],
+                    caption: "收费明细",
+                    rowNum: "1000",
+                    rownumbers: true,
+                    shrinkToFit: false,
+                    gridview: true,
+                    hidegrid: false
+                });
+            },
+            footerrow: true,
+            grouping: true,
+            gridComplete: function () {
+                var totalincome = $(this).getCol("feemoney", false, "sum");
+                // 合计
+                $(this).footerData("set", {
+                    "operateuser":"合计",
+                    "feemoney": totalincome
+                });
+                $('table.ui-jqgrid-ftable td').prevUntil().css("border-right-color", "#fff");
+            }
+        });
+        //查询条件
+        $("#typelist .dropdown-menu li").click(function () {
+            var text = $(this).find('a').html();
+            var value = $(this).find('a').attr('data-value');
+            $("#typelist .dropdown-text").html(text).attr('data-value', value)
+        });
+        //查询事件
+        $("#btn_Search").click(function () {
+            var queryJson = {
+                feeitem_id: $("#feeitemid").find('.dropdown-text').attr('data-value'),
+                ticketid: $("#typelist").find('.dropdown-text').attr('data-value') + $.trim($("#codelist").val()),
+                customer: $("#customer").val(),
+                state: $("#StartDate").val(),
+                end: $("#EndDate").val(),
+            }
+            $gridTable.jqGrid('setGridParam', {
+                postData: { queryJson: JSON.stringify(queryJson) }
+            }).trigger('reloadGrid');
+
+            $("#divfilter").click();
+        });
+    }
+    //新增
+    function btn_add() {
+        dialogOpen({
+            id: 'Form',
+            title: '添加其他收入',
+            url: '/TenementManage/Otherincome/Form',
+            width: '1000px',
+            height: '85%',
+            callBack: function (iframeId) {
+                top.frames[iframeId].AcceptClick();
+            }
+        });
+    }
+    //详细
+    function btn_details() {
+        var keyValue = $("#gridTable").jqGridRowValue("ticketid");
+        if (checkedRow(keyValue)) {
+            dialogOpen({
+                id: 'Form',
+                title: '详细其他收入',
+                url: '/TenementManage/Otherincome/OtherincomeForm?keyValue=' + keyValue + "&type=1",
+                width: '800px',
+                height: '460px',
+                btn: null
+            })
+        }
+    }
+</script>
+<div class="titlePanel">
+    <div class="title-search">
+        <table>
+            <tr>
+                <td>查询条件</td>
+                <td style="padding-left: 10px;">
+                    <div class="ui-filter" style="width: 200px;">
+                        <div class="ui-filter-text" id="divfilter">
+                            <strong id="SelectedStartTime">@DateTime.Now.AddDays(-7).ToString("yyyy-MM-dd")</strong> 至 <strong id="SelectedEndTime">@DateTime.Now.ToString("yyyy-MM-dd")</strong>
+                        </div>
+                        <div class="ui-filter-list" style="width: 550px;">
+                            <table class="form" id="filter-form">
+                                <tr>
+                                    <th class="formTitle">收费日期：</th>
+                                    <td class="formValue">
+                                        <input id="Category" type="hidden" value="1" />
+                                        <div style="float: left; width: 45%;">
+                                            <input id="StartDate" type="text" value="@HuRongClub.Util.Time.GetDate(-7)" class="form-control input-datepicker" placeholder="起始日期" onfocus="WdatePicker({  dateFmt: 'yyyy-MM-dd' })" />
+                                        </div>
+                                        <div style="float: left; width: 10%; text-align: center;">至</div>
+                                        <div style="float: left; width: 45%;">
+                                            <input id="EndDate" type="text" value="@HuRongClub.Util.Time.GetToday()" class="form-control input-datepicker" placeholder="结束日期" onfocus="WdatePicker({ minDate: '#F{$dp.$D(\'StartDate\')}', dateFmt: 'yyyy-MM-dd' })" />
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="formTitle">客户姓名：</td>
+                                    <td class="formValue">
+                                        <input id="customer" type="text" class="form-control" placeholder="请输入要查询客户姓名" style="width: 305px;" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="formTitle">票据类型：</td>
+                                    <td class="formValue">
+                                        <div style="float: left;">
+                                            <div id="typelist" class="btn-group">
+                                                <a class="btn btn-default dropdown-text" data-toggle="dropdown" data-value="0">票据类型</a>
+                                                <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                                                <ul class="dropdown-menu">
+                                                    <li><a data-value="0">==请选择==</a></li>
+                                                    <li><a data-value="00">收据</a></li>
+                                                    <li><a data-value="01">发票</a></li>
+                                                    <li><a data-value="02">停车发票</a></li>
+                                                    <li><a data-value="04">虹联发票</a></li>
+                                                    <li><a data-value="05">虹联收据</a></li>
+                                                    <li><a data-value="06">新厦发票</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        <div style="float: left; padding-left:5px;">
+                                            <input id="codelist" type="text" class="form-control" placeholder="请输入要查询票据编号" style="width: 200px;" />
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="formTitle">费用科目：</td>
+                                    <td class="formValue">
+                                        <div id="feeitemid" class="btn-group">
+                                            <a class="btn btn-default dropdown-text" data-toggle="dropdown">==费用科目==</a>
+                                            <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                                            <ul class="dropdown-menu" style="max-height:160px;overflow:auto;overflow-x:hidden;"></ul>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                            <div class="ui-filter-list-bottom">
+                                @*<a id="btn_Reset" class="btn btn-default">&nbsp;重&nbsp;&nbsp;置</a>*@
+                                <a id="btn_Search" class="btn btn-primary">&nbsp;查&nbsp;&nbsp;询</a>
+                            </div>
+                            <div style="height:150px;"></div>
+                        </div>
+
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div class="toolbar">
+        <div class="btn-group">
+            <a id="lr-replace" class="btn btn-default" onclick="reload()"><i class="fa fa-refresh"></i>&nbsp;刷新</a>
+            <a id="lr-add" class="btn btn-default" onclick="btn_add()"><i class="fa fa-plus"></i>&nbsp;新增</a>
+            <a id="lr-edit" class="btn btn-default" onclick="btn_edit()"><i class="fa fa-pencil-square-o"></i>编辑</a>
+            <a id="lr-delete" class="btn btn-default" onclick="btn_delete()"><i class="fa fa-trash-o"></i>删除</a>
+            <a id="lr-details" class="btn btn-default" onclick="btn_details()"><i class="fa fa-list-alt"></i>&nbsp;详细</a>
+        </div>
+        <script>$('.toolbar').authorizeButton()</script>
+    </div>
+</div>
+<div class="gridPanel">
+    <table id="gridTable"></table>
+    <div id="gridPager"></div>
+</div>

@@ -1,0 +1,114 @@
+﻿@{;
+    ViewBag.Title = "表单页面";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+
+<script src="/Content/scripts/plugins/webuploader/webuploader.min.js"></script>
+<script src="/Content/scripts/plugins/webuploader/uploader.js"></script>
+<script>
+    var keyValue = request('keyValue');
+    $(function () {
+        initControl();
+
+        //初始化上传控件
+        $(".upload-File").InitUploader({ filesize: "10240", filepath: "/upload/file/", filetype: 3, sendurl: "/Content/Handler/upload_ajax.ashx", swf: "/Content/scripts/plugins/webuploader/uploader.swf", filetypes: "" });
+
+    });
+    //初始化控件
+    function initControl() {
+        //获取表单
+        if (!!keyValue) {
+            $.SetForm({
+                url: "../../TenementManage/Rentcontract/GetFormJson",
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    $("#form1").SetWebControls(data);
+                }
+            })
+        }
+    }
+
+    //保存表单;
+    function AcceptClick() {
+        if (!$('#form1').Validform()) {
+            return false;
+        }
+        var postData = $("#form1").GetWebControls(keyValue);
+        $.SaveForm({
+            url: "../../TenementManage/Rentcontract/SaveForm?keyValue=" + keyValue,
+            param: postData,
+            loading: "正在保存数据...",
+            success: function () {
+                $.currentIframe().$("#gridTable").trigger("reloadGrid");
+            }
+        })
+    }
+</script>
+<div style="margin-top: 20px; margin-right: 30px;">
+    <table class="form">
+        <tr>
+            <td class="formTitle">合同编号：<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="contractcode" type="text" class="form-control" placeholder="合同编号" isvalid="yes" checkexpession="NotNull" />
+            </td>
+            <td class="formTitle">合同总面积：</td>
+            <td class="formValue">
+                <input id="rentarea" type="text" class="form-control" placeholder="合同总面积" isvalid="yes" checkexpession="DoubleOrNull"  />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">客户姓名：<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="customername" type="text" class="form-control" placeholder="客户姓名" isvalid="yes" checkexpession="NotNull" />
+            </td>
+            <td class="formTitle">联系电话：</td>
+            <td class="formValue">
+                <input id="phone" type="text" class="form-control" placeholder="联系电话" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">传真：</td>
+            <td class="formValue">
+                <input id="fax" type="text" class="form-control" placeholder="传真"/>
+            </td>
+            <td class="formTitle">客户联系人：</td>
+            <td class="formValue">
+                <input id="linkman" type="text" class="form-control" placeholder="客户联系人"/>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">合同开始日期：<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="expire_begin" type="text" class="form-control input-datepicker" placeholder="合同开始日期" isvalid="yes" checkexpession="NotNull" onfocus="WdatePicker({ dateFmt: 'yyyy-MM-dd' })"/>
+            </td>
+            <td class="formTitle">合同截止日期：<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="expire_end" type="text" class="form-control input-datepicker" placeholder="合同截止日期" isvalid="yes" checkexpession="NotNull" onfocus="WdatePicker({ minDate: '#F{$dp.$D(\'expire_begin\')}', dateFmt: 'yyyy-MM-dd' })" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">合同签约日期：</td>
+            <td class="formValue">
+                <input id="signdate" type="text" class="form-control input-datepicker" placeholder="合同签约日期"/>
+            </td>
+            <td class="formTitle">合同登记日期：</td>
+            <td class="formValue">
+                <input id="inputtime" type="text" class="form-control input-datepicker" placeholder="合同登记日期"  />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">合同内容描述：</td>
+            <td class="formValue" colspan="3">
+                <textarea id="contractinfo" placeholder="合同内容描述" class="form-control"></textarea>
+        </tr>
+        <tr>
+            <td class="formTitle">合同附件：</td>
+            <td class="formValue" colspan="3">
+                <div class="file_uploadss">
+                    <input type="text" name="attfile" id="attfile" style="width:335px;" class="form-control upload-path" readonly="readonly" />
+                    <div style="padding-left:5px; float:left;" class="upload-box upload-File"></div>
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>

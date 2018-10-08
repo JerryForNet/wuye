@@ -1,0 +1,156 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{6CE11FF9-1CB7-494E-89C7-5F06BEA94211}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>HuRongClub.Application.IService</RootNamespace>
+    <AssemblyName>HuRongClub.Application.IService</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AuthorizeManage\IAuthorizeService.T.cs" />
+    <Compile Include="AuthorizeManage\IAuthorizeService.cs" />
+    <Compile Include="AuthorizeManage\IModuleButtonService.cs" />
+    <Compile Include="AuthorizeManage\IModuleColumnService.cs" />
+    <Compile Include="AuthorizeManage\IModuleFormInstanceService.cs" />
+    <Compile Include="AuthorizeManage\IModuleFormService.cs" />
+    <Compile Include="AuthorizeManage\IModuleService.cs" />
+    <Compile Include="AuthorizeManage\IPermissionService.cs" />
+    <Compile Include="BaseManage\IDepartmentService.cs" />
+    <Compile Include="BaseManage\IOrganizeService.cs" />
+    <Compile Include="BaseManage\IUserService.cs" />
+    <Compile Include="BaseManage\IRoleService.cs" />
+    <Compile Include="BaseManage\IPostService.cs" />
+    <Compile Include="BaseManage\IJobService.cs" />
+    <Compile Include="BaseManage\IUserGroupService.cs" />
+    <Compile Include="FinanceManage\FeeitemIService.cs" />
+    <Compile Include="FinanceManage\FeenoticeIService.cs" />
+    <Compile Include="FinanceManage\InnerbillIService.cs" />
+    <Compile Include="IAccountService.cs" />
+    <Compile Include="OaManage\NoticeIService.cs" />
+    <Compile Include="OaManage\WeekplanIService.cs" />
+    <Compile Include="PersonnelManage\EmployexchangeIService.cs" />
+    <Compile Include="PersonnelManage\EmployfamilyIService.cs" />
+    <Compile Include="PersonnelManage\EmployresumeIService.cs" />
+    <Compile Include="PersonnelManage\HrDepartmentIService.cs" />
+    <Compile Include="PersonnelManage\EmployinfoIService.cs" />
+    <Compile Include="PersonnelManage\PaydetailIService.cs" />
+    <Compile Include="PersonnelManage\PayitemIService.cs" />
+    <Compile Include="PersonnelManage\PayrollIService.cs" />
+    <Compile Include="RepostryManage\FeereportIService.cs" />
+    <Compile Include="RepostryManage\GoodsinfoIService.cs" />
+    <Compile Include="RepostryManage\GoodstypeIService.cs" />
+    <Compile Include="RepostryManage\InbillIService.cs" />
+    <Compile Include="RepostryManage\InbillItemIService.cs" />
+    <Compile Include="RepostryManage\LblistIService.cs" />
+    <Compile Include="RepostryManage\MonthcheckIService.cs" />
+    <Compile Include="RepostryManage\OutbillIService.cs" />
+    <Compile Include="RepostryManage\OutbillitemIService.cs" />
+    <Compile Include="RepostryManage\ProviderIService.cs" />
+    <Compile Include="RepostryManage\WhProviderIService.cs" />
+    <Compile Include="SysManage\Accounts_UsersIService.cs" />
+    <Compile Include="SysManage\DictIService.cs" />
+    <Compile Include="SysManage\DictitemIService.cs" />
+    <Compile Include="SystemManage\ILogService.cs" />
+    <Compile Include="SystemManage\ICodeRuleService.cs" />
+    <Compile Include="SystemManage\IDataBaseBackupService.cs" />
+    <Compile Include="AuthorizeManage\IFilterIPService.cs" />
+    <Compile Include="AuthorizeManage\IFilterTimeService.cs" />
+    <Compile Include="SystemManage\IDataBaseLinkService.cs" />
+    <Compile Include="SystemManage\IDataBaseTableService.cs" />
+    <Compile Include="SystemManage\IAreaService.cs" />
+    <Compile Include="SystemManage\IDataItemDetailService.cs" />
+    <Compile Include="SystemManage\IDataItemService.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TenementManage\BuildingIService.cs" />
+    <Compile Include="TenementManage\DeviceIService.cs" />
+    <Compile Include="TenementManage\DeviceMaintenceIService.cs" />
+    <Compile Include="TenementManage\DevicePartIService.cs" />
+    <Compile Include="TenementManage\DeviceRecordIService.cs" />
+    <Compile Include="TenementManage\EnergyIService.cs" />
+    <Compile Include="TenementManage\FeechangelogIService.cs" />
+    <Compile Include="TenementManage\FeecheckIService.cs" />
+    <Compile Include="TenementManage\FeeincomeCutIService.cs" />
+    <Compile Include="TenementManage\FeeincomeIService.cs" />
+    <Compile Include="TenementManage\FeereceiveIService.cs" />
+    <Compile Include="TenementManage\FeeticketIService.cs" />
+    <Compile Include="TenementManage\FixReportIService.cs" />
+    <Compile Include="TenementManage\OptionIService.cs" />
+    <Compile Include="TenementManage\OtherincomeIService.cs" />
+    <Compile Include="TenementManage\OwnerIService.cs" />
+    <Compile Include="TenementManage\Owner_feeIService.cs" />
+    <Compile Include="TenementManage\PaymentSerachIService.cs" />
+    <Compile Include="TenementManage\PropertyIService.cs" />
+    <Compile Include="TenementManage\RentcontractIService.cs" />
+    <Compile Include="TenementManage\RentfeeitemIService.cs" />
+    <Compile Include="TenementManage\RoomIService.cs" />
+    <Compile Include="TenementManage\wy_DeviceFixIService.cs" />
+    <Compile Include="TenementManage\wy_device_contractIService.cs" />
+    <Compile Include="TenementManage\wy_device_planIService.cs" />
+    <Compile Include="TenementManage\wy_device_typeIService.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\HuRongClub.Data\HuRongClub.Data.Repository\HuRongClub.Data.Repository.csproj">
+      <Project>{1751a2dd-0f00-4c76-b180-97e8f72fe078}</Project>
+      <Name>HuRongClub.Data.Repository</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\HuRongClub.Util\HuRongClub.Util.WebControl\HuRongClub.Util.WebControl.csproj">
+      <Project>{93f81df7-5a0b-4a13-a90e-8cf7c41955c3}</Project>
+      <Name>HuRongClub.Util.WebControl</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\HuRongClub.Util\HuRongClub.Util\HuRongClub.Util.csproj">
+      <Project>{07aa2566-d0e5-47af-a17d-3b1c6aee598d}</Project>
+      <Name>HuRongClub.Util</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\HuRongClub.Application.Code\HuRongClub.Application.Code.csproj">
+      <Project>{9b10db87-130c-41d3-8687-1fac877db74a}</Project>
+      <Name>HuRongClub.Application.Code</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\HuRongClub.Application.Entity\HuRongClub.Application.Entity.csproj">
+      <Project>{c10920fe-8c74-4993-a7f4-1da189da842c}</Project>
+      <Name>HuRongClub.Application.Entity</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

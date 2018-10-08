@@ -1,0 +1,89 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>@HuRongClub.Util.Config.GetValue("SystemName").ToString()</title>
+    <link href="~/Content/styles/hurongclub-login.css" rel="stylesheet" />
+    <link href="~/Content/styles/font-awesome.min.css" rel="stylesheet" />
+</head>
+
+<body style="overflow-x:hidden;margin:0px;">
+    <div id="ajax-loader" style="cursor: progress; position: fixed; top: -50%; left: -50%; width: 200%; height: 200%; background: #fff; z-index: 10000; overflow: hidden;">
+        <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; margin: auto;height:200px;width:350px;text-align:center;">
+            <img src="/Content/images/loading.gif" />
+        </div>
+    </div>
+    <div class="lr-login-top">
+        <div class="lr-login-title">
+            <div class="lr-login-logo"></div>
+        </div>
+    </div>
+    <div class="lr-login-center">
+        <table>
+            <tr>
+                <td>
+                    <div class="lr-bg-left"></div>
+                </td>
+                <td>
+                    <div class="lr-bg-md">
+                        <div id="lr-login-form" class="lr-input-form">
+                            <div>
+                                <input class="ipt" id="username" type="text" placeholder="账户、邮箱或手机号">
+                            </div>
+                            <div>
+                                <input class="ipt" id="password" type="password" placeholder="密码">
+                            </div>
+                            <div>
+                                <div style="float: left; width: 65%">
+                                    <input class="ipt" id="verifycode" maxlength="4" type="text" placeholder="图片验证码">
+                                </div>
+                                <div style="float: left; width: 35%">
+                                    <img id="login_verifycode" class="img_verifycode" src="/Login/VerifyCode" width="100" height="30" alt="点击切换验证码" title="点击切换验证码" style="cursor: pointer; padding-top: 9px; padding-left: 9px;" />
+                                </div>
+                            </div>
+                            <div style="border:0;height:20px;line-height:20px;margin-top:10px;">
+                                <label style="cursor: pointer;margin-left:8px;display:none;">
+                                    <input id="autologin" type="checkbox" style="margin-bottom: 4.5px; margin-right: 0px; vertical-align: middle;">
+                                    <span>下次自动登录</span>
+                                </label>
+                                <span style="float:right;margin-right:10px;"><a href="#" onclick="alert('请联系管理员')">忘记密码了</a></span>
+                            </div>
+                            <div class="btn">
+                                <button id="btnlogin" type="button"><span>登录</span></button>
+                            </div>
+
+                            <div style="border:0;margin-top:10px;text-align:center;">当前版本 V1.0.0.10</div>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <div class="lr-bg-right"></div>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div class="lr-login-bottom">
+        上海益民互融金融信息服务有限公司出品
+        <br>
+        © 2015互融CLUB AII rights reserved 官方网站:<a href="www.hurongclub.com">www.hurongclub.com</a>
+    </div>
+</body>
+</html>
+<script src="~/Content/scripts/jquery/jquery-1.10.2.min.js"></script>
+<script src="~/Content/scripts/plugins/jquery.md5.js"></script>
+<script src="~/Content/scripts/plugins/cookie/jquery.cookie.js"></script>
+<script src="~/Content/scripts/plugins/dialog/dialog.js"></script>
+<script src="~/Content/scripts/plugins/validator/validator.js"></script>
+<script src="~/Content/scripts/plugins/tipso.min.js"></script>
+<script src="~/Content/scripts/utils/login.js?v=1001"></script>
+<script>
+    var contentPath = '/'.substr(0, '/'.length - 1);
+    var isIE = !!window.ActiveXObject;
+    var isIE6 = isIE && !window.XMLHttpRequest;
+    if (isIE6) {
+        window.location.href = contentPath + "/Error/ErrorBrowser";
+    }
+</script>

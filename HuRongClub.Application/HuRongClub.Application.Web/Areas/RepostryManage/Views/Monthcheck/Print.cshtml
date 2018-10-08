@@ -1,0 +1,102 @@
+﻿@{
+    ViewBag.Title = "打印预览";
+    Layout = "~/Views/Shared/_Index.cshtml";
+}
+
+<link href="/Content/styles/hurongclub-report.css" rel="stylesheet" />
+<script src="/Content/scripts/plugins/printTable/jquery.printTable.js"></script>
+<style>
+    body { width: 100%; background-color: #ccc; margin: 0px auto; padding: 0px; }
+    .ui-report .gridPanel { box-shadow: none; border: none; }
+</style>
+<script>
+	window.onload = function () {
+	    $('#gridTable').setGridWidth(($('.gridPanel').width()));
+	}
+	$(function () {
+	    GetGrid();
+	});
+
+	//加载表格
+	function GetGrid() {
+	    var arguments = window.dialogArguments;
+	    var queryJson;
+	    queryJson = window.opener.divqueryJson.innerHTML;
+
+	    var _json = JSON.parse(queryJson);
+	    var _year = _json.StartDate;
+	    var _mouth = _json.EndDate;
+	    $("#lbym").html(_year + "年" + _mouth + "月");
+
+	    var day = new Date(_year, _mouth, 0);
+	    $("#lbtjsj").html(_year + "-" + (_mouth.length == 1 ? "0" + _mouth : _mouth) + "-01 至 " + _year + "-" + (_mouth.length == 1 ? "0" + _mouth : _mouth) + "-" + day.getDate());
+
+	    var mydate = new Date();
+	    var _mh = (mydate.getMonth() + 1);
+	    var str = mydate.getFullYear() + "-" + (_mh< 10 ? "0" + _mh : _mh) + "-" + mydate.getDate();
+	    $("#lbprint").html(str);
+
+	    var $gridTable = $('#gridTable');
+	    $gridTable.jqGrid({
+	        autowidth: true,
+	        height: '100%',
+	        url: "/RepostryManage/Monthcheck/GetListJson",
+	        postData: { queryJson: queryJson },
+	        datatype: "json",
+	        colModel: [
+                { label: '大类编号', name: 'ftypecode', index: 'fgoodsid', align: 'center', width: 300, sortable: false },
+                { label: '大类名称', name: 'ftypename', index: 'ftypename', width: 300, align: 'center', sortable: false },
+                { label: '期初余额', name: 'fbeginmoney', index: 'fbeginmoney', width: 300, align: 'center', sortable: false },
+                { label: '本期入库金额', name: 'finmoney', index: 'finmoney', width: 300, align: 'center', sortable: false },
+                { label: '本期领用金额', name: 'foutmoney', index: 'foutmoney', width: 300, align: 'center', sortable: false },
+                { label: '期末余额', name: 'fendmoney', index: 'fendmoney', width: 310, align: 'center', sortable: false }
+	        ],
+	        viewrecords: true,
+	        rowNum: "all",
+	        sortname: 'fgoodsid',
+	        sortorder: 'asc',
+	        gridview: true,
+	        footerrow: true,
+	        gridComplete: function () {
+	            //合计
+	            var fbeginmoney = jQuery(this).getCol('fbeginmoney', false, 'sum');  //期初余额
+	            var finmoney = jQuery(this).getCol('finmoney', false, 'sum'); //本期入库金额
+	            var foutmoney = jQuery(this).getCol('foutmoney', false, 'sum'); //本期领用金额
+	            var fendmoney = jQuery(this).getCol('fendmoney', false, 'sum'); //期末余额
+
+	            $(this).footerData("set", {
+	                "ftypename": "合计（元）：",
+	                "fbeginmoney": "<span id='TotalAmount'>" + fbeginmoney.toFixed(2) + "</span>",
+	                "finmoney": "<span id='TotalAmount'>" + finmoney.toFixed(2) + "</span>",
+	                "foutmoney": "<span id='TotalAmount'>" + foutmoney.toFixed(2) + "</span>",
+	                "fendmoney": "<span id='TotalAmount'>" + fendmoney.toFixed(2) + "</span>"
+	            });
+	            $('table.ui-jqgrid-ftable td[aria-describedby="gridTable_location"]').prevUntil().css("border-right-color", "#fff");
+
+	            //加载后打印
+	            window.print();
+	        }
+	    });
+	}
+</script>
+
+<div class="ui-report">
+    <div style="margin:0 auto; width:900px; background-color:#ffffff;">
+        <div class="gridPanel" id="gridPanel" style="min-height:780px;">
+            <div class="printArea">
+                <div class="grid-title" id="lbym" style="text-align:center; font-size:18px; padding-top:15px; font-weight:bold;"></div>
+                <div class="grid-title" style="text-align:center; font-size:18px; font-weight:bold;">材料大类收发存资金明细表</div>
+                <div class="grid-subtitle" style="line-height:30px;">
+                    <table style="width:100%;">
+                        <tr>
+                            <td>单位：元</td>
+                            <td>统计日期：<label id="lbtjsj"></label></td>
+                            <td>打印日期：<label id="lbprint"></label></td>
+                        </tr>
+                    </table>
+                </div>
+                <table id="gridTable"></table>
+            </div>
+        </div>
+    </div>
+</div>

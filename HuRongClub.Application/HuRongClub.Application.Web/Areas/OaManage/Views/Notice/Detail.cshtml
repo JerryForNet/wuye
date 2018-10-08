@@ -1,0 +1,17 @@
+﻿@{
+    ViewBag.Title = "表单页面";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+@model HuRongClub.Application.Entity.OaManage.NoticeEntity
+@section styles{
+    <style type="text/css">
+        .notice-title { font-size: 22px; line-height: 25px; text-align: center; color: #475b64; }
+        .notice-anthor { font-size: 14px; clear: both; text-align: right; margin-top: 10px; margin-right: 25px; }
+        .notice-contents { font-size: 13px; line-height: 28px; font-family: '微软雅黑'; clear: both; margin: 15px auto; width: 560px; }
+    </style>
+}
+<div style="margin-top: 20px;">
+    <div class="notice-title">【@Model.notice_type】@Model.title</div>
+    <div class="notice-anthor">【@Model.author】<span>@Model.create_time</span></div>
+    <div class="notice-contents">@Html.Raw(@Model.contents)</div>
+</div>

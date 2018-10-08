@@ -1,0 +1,193 @@
+﻿@{;
+ViewBag.Title = "列表页面";
+Layout = "~/Views/Shared/_LayoutIndex.cshtml";
+}
+<script>
+    $(function () {
+        InitialPage();
+        GetTree();
+        GetGrid();
+    });
+    //初始化页面
+    function InitialPage() {
+        //layout布局
+        $('#layout').layout({
+            applyDemoStyles: true,
+            onresize: function () {
+                $(window).resize()
+            }
+        });
+        //resize重设布局;
+        $(window).resize(function (e) {
+            window.setTimeout(function () {
+                $('#gridTable').setGridWidth(($('.gridPanel').width()));
+                $('#gridTable').setGridHeight($(window).height() - 141.5);
+                $("#itemTree").setTreeHeight($(window).height() - 52);
+            }, 200);
+            e.stopPropagation();
+        });
+    }
+    var reportCode = "";
+    //加载树
+    function GetTree() {
+        var keyValue = request('keyValue');
+        var item = {
+            height: $(window).height() - 52,
+            param: { keyValue: keyValue },
+            url: "/SysManage/Dict/GetDataItemTreeJson",
+            onnodeclick: function (item) {
+                reportCode = item.id;
+                $('#btn_Search').trigger("click");
+            }
+        };
+        //初始化
+        $("#itemTree").treeview(item);
+    }
+
+    //加载表格
+    function GetGrid() {
+        var selectedRowIndex = 0;
+        var keyValue = request('keyValue');
+        reportCode = $(".bbit-tree-node-text").attr("data-value");
+        var queryJson = {
+            dictid: reportCode
+        }
+        $("#gridTable").jqGrid({
+            url: "../../SysManage/Dictitem/GetPageListByDid",
+            postData: { queryJson: JSON.stringify(queryJson) },
+            height: $(window).height() - 141.5,
+            autowidth: true,
+            datatype: "json",
+            colModel: [
+                { label: 'itemid', name: 'itemid', index: 'itemid', width: 100, align: 'left', sortable: true, hidden: true },
+                 { label: '字典编号', name: 'dictid', index: 'dictid', width: 200, align: 'left', sortable: true },
+                { label: '项目名', name: 'itemname', index: 'itemname', width: 700, align: 'left', sortable: true }
+
+            ],
+            viewrecords: true,
+            rowNum: 3000,
+            rowList: [30, 50, 100],
+            pager: "#gridPager",
+            sortname: 'itemid',
+            sortorder: 'desc',
+            rownumbers: true,
+            shrinkToFit: false,
+            gridview: true,
+            onSelectRow: function () {
+                selectedRowIndex = $('#' + this.id).getGridParam('selrow');
+            },
+            gridComplete: function () {
+                $('#' + this.id).setSelection(selectedRowIndex, false);
+            }
+        });
+        //查询设置
+        $("#queryCondition .dropdown-menu li").click(function () {
+            var text = $(this).find('a').html();
+            var value = $(this).find('a').attr('data-value');
+            $("#queryCondition .dropdown-text").html(text).attr('data-value', value)
+        });
+        //查询事件
+        $("#btn_Search").click(function () {
+            var keyValue = request('keyValue');
+            var queryJson = {
+                dictid: reportCode,
+                keyword: $("#txt_Keyword").val()
+            }
+            $("#gridTable").jqGrid('setGridParam', {
+                url: "/SysManage/Dictitem/GetPageListByDid",
+                postData: { queryJson: JSON.stringify(queryJson) },
+            }).trigger('reloadGrid');
+
+        });
+        //查询回车
+        $('#txt_Keyword').bind('keypress', function (event) {
+            if (event.keyCode == "13") {
+                $('#btn_Search').trigger("click");
+            }
+        });
+    }
+    //新增
+    function btn_add() {
+        dialogOpen({
+            id: 'Form',
+            title: '添加字典详情',
+            url: '/SysManage/Dictitem/Form',
+            width: '600px',
+            height: '400px',
+            callBack: function (iframeId) {
+                top.frames[iframeId].AcceptClick();
+            }
+        });
+    }
+    //编辑
+    function btn_edit() {
+        var keyValue = $("#gridTable").jqGridRowValue('itemid');
+        if (checkedRow(keyValue)) {
+            dialogOpen({
+                id: 'Form',
+                title: '编辑字典详情',
+                url: '/SysManage/Dictitem/Form?keyValue=' + keyValue,
+                width: '600px',
+                height: '400px',
+                callBack: function (iframeId) {
+                    top.frames[iframeId].AcceptClick();
+                }
+            })
+        }
+    }
+    //删除
+    function btn_delete() {
+        var keyValue = $('#gridTable').jqGridRowValue('itemid');
+        if (keyValue) {
+            $.RemoveForm({
+                url: '../../SysManage/Dictitem/RemoveForm',
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    $('#gridTable').trigger('reloadGrid');
+                }
+            })
+        } else {
+            dialogMsg('请选择需要删除的字典详情！', 0);
+        }
+    }
+</script>
+
+<div class="ui-layout" id="layout" style="height: 100%; width: 100%;">
+    <div class="ui-layout-west">
+        <div class="west-Panel">
+            <div class="panel-Title">字典项信息</div>
+            <div id="itemTree"></div>
+        </div>
+    </div>
+    <div class="ui-layout-center">
+        <div class="center-Panel">
+            <div class="panel-Title">字典详情信息</div>
+            <div class="titlePanel">
+                <div class="title-search" style="display:none;">
+                    <table>
+                        <tr>
+                            <td style="padding-left: 2px;">
+                                <input id="txt_Keyword" type="text" class="form-control" placeholder="请输入要查询关键字" style="width: 200px;" />
+                            </td>
+                            <td style="padding-left: 5px;">
+                                <a id="btn_Search" class="btn btn-primary"><i class="fa fa-search"></i>&nbsp;查询</a>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="toolbar">
+                    <div class="btn-group">
+                        <a id="lr-replace" class="btn btn-default" onclick="reload();"><i class="fa fa-refresh"></i>&nbsp;刷新</a>
+                        <a id="lr-add" class="btn btn-default" onclick="btn_add()"><i class="fa fa-plus"></i>&nbsp;新增</a>
+                        <a id="lr-edit" class="btn btn-default" onclick="btn_edit()"><i class="fa fa-pencil-square-o"></i>&nbsp;编辑</a>
+                        <a id="lr-delete" class="btn btn-default" onclick="btn_delete()"><i class="fa fa-trash-o"></i>&nbsp;删除</a>
+                    </div>
+                    <script>$('.toolbar').authorizeButton()</script>
+                </div>
+            </div>
+            <div class="gridPanel">
+                <table id="gridTable"></table>
+            </div>
+        </div>
+    </div>
+</div>

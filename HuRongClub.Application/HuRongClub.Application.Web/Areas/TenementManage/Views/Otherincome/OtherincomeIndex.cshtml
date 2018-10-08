@@ -1,0 +1,355 @@
+﻿@{;
+    ViewBag.Title = "列表页面";
+    Layout = "~/Views/Shared/_Index.cshtml";
+}
+<script>;
+    $(function () {
+        InitialPage();
+        GetGrid();
+
+        $("#StartDate").focus(function () {
+            var $val = $("#StartDate").val();
+            $("#SelectedStartTime").html($val);
+        });
+        $("#EndDate").focus(function () {
+            var $val = $("#EndDate").val();
+            $("#SelectedEndTime").html($val);
+        });
+    });
+    //初始化页面
+    function InitialPage() {
+        //resize重设布局;
+        $(window).resize(function (e) {
+            window.setTimeout(function () {
+                $('#gridTable').setGridWidth(($('.gridPanel').width()));
+                $('#gridTable').setGridHeight($(window).height() - 135);
+            }, 200);
+            e.stopPropagation();
+        });
+
+        //加载楼栋
+        $.SetForm({
+            url: "/TenementManage/Building/GetListJson",
+            success: function (data) {
+                var rows = '<li><a data-value="">==所在楼栋==</a></li>';
+                $('#building_id').find('ul').append(rows);
+                $.each(data, function (id, item) {
+                    console.log(item.id);
+                    var row = '<li><a data-value="' + item.id + '">' + item.text + '</a></li>';
+                    $('#building_id').find('ul').append(row);
+                });
+                $('#building_id').find('li>a').click(function () {
+                    var id = $(this).attr('data-value');
+                    var text = $(this).html();
+                    $('#building_id').find('.dropdown-text').html(text).attr('data-value', id);
+
+                    $('#fee_code').find('.dropdown-text').html("业主单元").attr('data-value', "");
+                    GetList(id);
+                });
+            }
+        });
+        //合同租户
+        $.SetForm({
+            url: "/TenementManage/Rentcontract/GetListBySel",
+            success: function (data) {
+                var rows = '<li><a data-value="">==合同租户==</a></li>';
+                $('#contractid').find('ul').append(rows);
+                $.each(data, function (id, item) {
+                    var row = '<li><a data-value="' + item.id + '">' + item.text + '</a></li>';
+                    $('#contractid').find('ul').append(row);
+                });
+                $('#contractid').find('li>a').click(function () {
+                    var id = $(this).attr('data-value');
+                    var text = $(this).html();
+                    $('#contractid').find('.dropdown-text').html(text).attr('data-value', id);
+
+                    $('#fee_code').find('.dropdown-text').html("==业主单元==").attr('data-value', "");
+                });
+            }
+        });
+        //费用科目
+        $.SetForm({
+            url: "/FinanceManage/Feeitem/GetSelectJson?type=1&group_id=" + encodeURI("应收费用"),
+            success: function (data) {
+                var rows = '<li><a data-value="">==费用科目==</a></li>';
+                $('#feeitemid').find('ul').append(rows);
+                $.each(data, function (id, item) {
+                    var row = '<li><a data-value="' + item.id + '">' + item.text + '</a></li>';
+                    $('#feeitemid').find('ul').append(row);
+                });
+                $('#feeitemid').find('li>a').click(function () {
+                    var id = $(this).attr('data-value');
+                    var text = $(this).html();
+                    $('#feeitemid').find('.dropdown-text').html(text).attr('data-value', id);
+                });
+            }
+        });
+        //收费人
+        $.SetForm({
+            url: "/BaseManage/User/GetListSel?type=1",
+            success: function (data) {
+                var rows = '<li><a data-value="">==收费人==</a></li>';
+                $('#userid').find('ul').append(rows);
+                $.each(data, function (id, item) {
+                    var row = '<li><a data-value="' + item.text + '">' + item.text + '</a></li>';
+                    $('#userid').find('ul').append(row);
+                });
+                $('#userid').find('li>a').click(function () {
+                    var id = $(this).attr('data-value');
+                    var text = $(this).html();
+                    $('#userid').find('.dropdown-text').html(text).attr('data-value', id);
+                });
+            }
+        });
+    }
+
+    //加载房间
+    function GetList(keyValue) {
+        if (keyValue == null || undefined || keyValue == "" || keyValue == "0") {
+            $('#fee_code').find('ul').find("li").remove();
+        }
+        else {
+            $('#fee_code').find('ul').find("li").remove();
+            $.SetForm({
+                url: "/TenementManage/Building/GetRoomTreeJson",
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    var rows = '<li><a data-value="">==业主单元==</a></li>';
+                    $('#fee_code').find('ul').append(rows);
+                    $.each(data, function (id, item) {
+                        if (item.value == "") {
+                            console.dir(item);
+                        }
+                        var row = '<li><a data-value="' + item.value + '">' + item.text + '</a></li>';
+                        $('#fee_code').find('ul').append(row);
+                    });
+                    $('#fee_code').find('li>a').click(function () {
+                        var id = $(this).attr('data-value');
+                        var text = $(this).html();
+                        $('#fee_code').find('.dropdown-text').html(text).attr('data-value', id);
+
+                        $('#contractid').find('.dropdown-text').html("==合同租户==").attr('data-value', "");
+                    });
+                }
+            })
+        }
+    }
+    //加载表格
+    function GetGrid() {
+        var selectedRowIndex = 0;
+        var $gridTable = $('#gridTable');
+        var $queryJsons = {
+            ticket_id:0,
+            state: $("#StartDate").val(),
+            end: $("#EndDate").val(),
+        }
+
+        $gridTable.jqGrid({
+            autowidth: true,
+            height: $(window).height() - 160,
+            url: "/TenementManage/Otherincome/GetPageListJson",
+            postData: { queryJson: JSON.stringify($queryJsons) },
+            datatype: "json",
+            colModel: [
+                { label: '编号', name: 'ticket_id', index: 'ticket_id', width: 100, align: 'left', sortable: true, hidden: true },
+                { label: '编号', name: 'receive_id', index: 'receive_id', width: 100, align: 'left', sortable: true, hidden: true },
+                { label: '类型', name: 'feetype', index: 'feetype', width: 100, align: 'left', sortable: true, hidden: true },
+                { label: '业主/客户', name: 'customer', index: 'customer', width: 350, align: 'left', sortable: true },
+                { label: '收费日期', name: 'receive_date', index: 'receive_date', width: 200, align: 'left', sortable: true, formatter: "date", formatoptions: { newformat: 'Y-m-d' } },
+                { label: '票据号码', name: 'ticket_code', index: 'ticket_code', width: 100, align: 'left', sortable: true },
+                { label: '操作用户', name: 'userid', index: 'userid', width: 120, align: 'left', sortable: true },
+                { label: '收费金额', name: 'fee_money', index: 'fee_money', width: 120, align: 'left', sortable: true, formatter: 'number', formatoptions: { thousandsSeparator: "", decimalPlaces: 2 } },
+                { label: '摘要', name: 'notes', index: 'notes', width: 200, align: 'left', sortable: false },
+            ],
+            viewrecords: true,
+            rowNum: 999999,
+            sortname: 'receive_date',
+            sortorder: 'desc',
+            rownumbers: true,
+            shrinkToFit: false,
+            gridview: true,
+            footerrow: true,
+            ondblClickRow: function () {
+                btn_detail();
+            },
+            onSelectRow: function () {
+                selectedRowIndex = $('#' + this.id).getGridParam('selrow');
+            },
+            gridComplete: function () {
+                $('#' + this.id).setSelection(selectedRowIndex, false);
+
+                var totalamount = $(this).getCol("fee_money", false, "sum");
+                //合计
+                $(this).footerData("set", {
+                    "userid": "合计：",
+                    "fee_money": totalamount,
+                });
+                $('table.ui-jqgrid-ftable td').prevUntil().css("border-right-color", "#fff");
+            }
+        });
+        //查询条件
+        $("#typelist .dropdown-menu li").click(function () {
+            var text = $(this).find('a').html();
+            var value = $(this).find('a').attr('data-value');
+            $("#typelist .dropdown-text").html(text).attr('data-value', value)
+        });
+        //查询事件
+        $("#btn_Search").click(function () {
+            var queryJson = {
+                feeitem_id: $("#feeitemid").find('.dropdown-text').attr('data-value'),
+                userid: $("#userid").find('.dropdown-text').attr('data-value'),
+                ticket_id: $("#typelist").find('.dropdown-text').attr('data-value') + $.trim($("#codelist").val()),
+                owner_id: $("#fee_code").find('.dropdown-text').attr('data-value'),
+                rid: $("#contractid").find('.dropdown-text').attr('data-value'),
+                contractid: $("#contractid").find('.dropdown-text').attr('data-value'),
+                state: $("#StartDate").val(),
+                end: $("#EndDate").val(),
+            }
+            $gridTable.jqGrid('setGridParam', {
+                postData: { queryJson: JSON.stringify(queryJson) }
+            }).trigger('reloadGrid');
+
+            $("#divfilter").click();
+        });
+    }
+    //详情
+    function btn_detail() {
+        var keyValue = $("#gridTable").jqGridRowValue("ticket_id");
+        var type = $("#gridTable").jqGridRowValue("feetype");
+        if (checkedRow(keyValue)) {
+            dialogOpen({
+                id: 'Form',
+                title: '费用明细',
+                url: '/TenementManage/Otherincome/OtherincomeForm?keyValue=' + keyValue + "&type=" + type,
+                width: '800px',
+                height: '460px',
+                btn:null
+            })
+        }
+    }
+</script>
+<div class="titlePanel">
+    <div class="title-search">
+        <table>
+            <tr>
+                <td>查询条件</td>
+                <td style="padding-left: 10px;">
+                    <div class="ui-filter" style="width: 200px;">
+                        <div class="ui-filter-text" id="divfilter">
+                            <strong id="SelectedStartTime">@DateTime.Now.AddDays(-7).ToString("yyyy-MM-dd")</strong> 至 <strong id="SelectedEndTime">@DateTime.Now.ToString("yyyy-MM-dd")</strong>
+                        </div>
+                        <div class="ui-filter-list" style="width: 550px;">
+                            <table class="form" id="filter-form">
+                                <tr>
+                                    <th class="formTitle">收费日期：</th>
+                                    <td class="formValue">
+                                        <input id="Category" type="hidden" value="1" />
+                                        <div style="float: left; width: 45%;">
+                                            <input id="StartDate" type="text" value="@HuRongClub.Util.Time.GetDate(-7)" class="form-control input-datepicker" placeholder="起始日期" onfocus="WdatePicker({  dateFmt: 'yyyy-MM-dd' })" />
+                                        </div>
+                                        <div style="float: left; width: 10%; text-align: center;">至</div>
+                                        <div style="float: left; width: 45%;">
+                                            <input id="EndDate" type="text" value="@HuRongClub.Util.Time.GetToday()" class="form-control input-datepicker" placeholder="结束日期" onfocus="WdatePicker({ minDate: '#F{$dp.$D(\'StartDate\')}', dateFmt: 'yyyy-MM-dd' })" />
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="formTitle">所在楼栋：</td>
+                                    <td class="formValue">
+                                        <div style="float: left;">
+                                            <div id="building_id" class="btn-group">
+                                                <a class="btn btn-default dropdown-text" data-toggle="dropdown">==所在楼栋==</a>
+                                                <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                                                <ul class="dropdown-menu" style="max-height:220px;overflow:auto;overflow-x:hidden;"></ul>
+                                            </div>
+                                         </div>
+                                        <div style="float: left; width: 10px; text-align: center;">&nbsp;</div>
+                                        <div style="float: left;">
+                                            <div id="fee_code" class="btn-group">
+                                                <a class="btn btn-default dropdown-text" data-toggle="dropdown">==业主单元==</a>
+                                                <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                                                <ul class="dropdown-menu" style="max-height:220px;overflow:auto;overflow-x:hidden;"></ul>
+                                            </div>
+                                        </div>
+                                    </td>                                    
+                                </tr>
+                                <tr>
+                                    <td class="formTitle">票据类型：</td>
+                                    <td class="formValue">
+                                        <div style="float: left;">
+                                            <div id="typelist" class="btn-group">
+                                                <a class="btn btn-default dropdown-text" data-toggle="dropdown" data-value="0">票据类型</a>
+                                                <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                                                <ul class="dropdown-menu">
+                                                    <li><a data-value="0">==请选择==</a></li>
+                                                    <li><a data-value="00">收据</a></li>
+                                                    <li><a data-value="01">发票</a></li>
+                                                    <li><a data-value="02">停车发票</a></li>
+                                                    <li><a data-value="04">虹联发票</a></li>
+                                                    <li><a data-value="05">虹联收据</a></li>
+                                                    <li><a data-value="06">新厦发票</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        <div style="float: left; padding-left:5px;">
+                                            <input id="codelist" type="text" class="form-control" placeholder="请输入要查询票据编号" style="width: 200px;" />
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="formTitle">费用科目：</td>
+                                    <td class="formValue">
+                                        <div id="feeitemid" class="btn-group">
+                                            <a class="btn btn-default dropdown-text" data-toggle="dropdown">==费用科目==</a>
+                                            <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                                            <ul class="dropdown-menu" style="max-height:180px;overflow:auto;overflow-x:hidden;"></ul>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="formTitle">合同租户：</td>
+                                    <td class="formValue">
+                                        <div id="contractid" class="btn-group">
+                                            <a class="btn btn-default dropdown-text" data-toggle="dropdown">==合同租户==</a>
+                                            <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                                            <ul class="dropdown-menu" style="max-height:120px;overflow:auto;overflow-x:hidden;"></ul>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="formTitle">收费人：</td>
+                                    <td class="formValue">
+                                        <div id="userid" class="btn-group">
+                                            <a class="btn btn-default dropdown-text" data-toggle="dropdown">==收费人==</a>
+                                            <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                                            <ul class="dropdown-menu" style="max-height:100px;overflow:auto;overflow-x:hidden;"></ul>
+                                        </div>
+                                    </td>
+                                </tr>
+                                
+                                
+                            </table>
+                            <div class="ui-filter-list-bottom">
+                                @*<a id="btn_Reset" class="btn btn-default">&nbsp;重&nbsp;&nbsp;置</a>*@
+                                <a id="btn_Search" class="btn btn-primary">&nbsp;查&nbsp;&nbsp;询</a>
+                            </div>
+                            <div style="height:120px;"></div>
+                        </div>
+
+                    </div>
+                </td>
+            </tr>            
+        </table>
+
+    </div>
+    <div class="toolbar">
+        <div class="btn-group">
+            <a id="lr-replace" class="btn btn-default" onclick="reload()"><i class="fa fa-refresh"></i>&nbsp;刷新</a>
+            <a id="lr-detail" class="btn btn-default" onclick="btn_detail()"><i class="fa fa-list-alt"></i>&nbsp;详情</a>
+        </div>
+    </div>
+</div>
+<div class="gridPanel">
+    <table id="gridTable"></table>
+    <div id="gridPager"></div>
+</div>

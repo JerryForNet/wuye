@@ -1,0 +1,170 @@
+﻿@{;
+ViewBag.Title = "表单页面";
+Layout = "~/Views/Shared/_Form.cshtml";
+}
+<script>
+    var keyValue = request('keyValue');
+    $(function () {
+        initControl();
+    });
+    //初始化控件
+    function initControl() {
+        $("#d_typecode").ComboBox({
+            url: "../../TenementManage/Device/GetDeviceTypeListJson",
+            id: "typecode",
+            text: "typename",
+            description: "==设备类型==",
+            height: "200px",
+            allowSearch: true,
+        });
+        //获取表单
+        if (!!keyValue) {
+            $.SetForm({
+                url: "../../TenementManage/Device/GetFormJson",
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    $("#form1").SetWebControls(data);
+                    $("#d_typecode").ComboBoxSetValue(data.d_typecode);
+                }
+            })
+        }
+        else {
+            var propertyid = top.$.cookie('property_id');
+            $.SetForm({
+                url: "../../TenementManage/Property/GetFormJson",
+                param: { keyValue: propertyid },
+                success: function (data) {
+                    $("#propertyname").val(data.property_name);
+                    $("#propertyid").val(data.property_id);
+                }
+            })
+        }
+
+    }
+    //保存表单;
+    function AcceptClick() {
+        if (!$('#form1').Validform()) {
+            return false;
+        }
+        var postData = $("#form1").GetWebControls(keyValue);
+        $.SaveForm({
+            url: "../../TenementManage/Device/SaveForm?keyValue=" + keyValue,
+            param: postData,
+            loading: "正在保存数据...",
+            success: function () {
+                $.currentIframe().$("#gridTable").trigger("reloadGrid");
+            }
+        })
+    }
+    function dnumberBlur() {
+        if (keyValue==null||keyValue=="") {
+            var d_number = $("#d_number").val();
+            $.SetForm({
+                url: "../../TenementManage/Device/GetFormJson",
+                param: { keyValue: d_number },
+                success: function (data) {
+                    if (data != null && data.d_number == d_number) {
+                        ValidationMessage($("#d_number"), "设备编号已存在")
+                        $("#d_number").focus();
+                    }
+                }
+            })
+        }
+    }
+</script>
+<div style="margin-top: 20px; margin-right: 30px;">
+    <table class="form">
+        <tr>
+            <td class="formTitle">设备编号<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="d_number"@(!string.IsNullOrEmpty(Request["keyValue"])?"disabled":"") onblur="dnumberBlur()" type="text" class="form-control" isvalid="yes" checkexpession="NotNull" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">设备名称<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="d_name" type="text" class="form-control" isvalid="yes" checkexpession="NotNull" maxlength="200" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">设备型号</td>
+            <td class="formValue">
+                <input id="d_standard" type="text" class="form-control" maxlength="200" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">所属物业</td>
+            <td class="formValue">
+                <input id="propertyname" type="text" class="form-control" disabled />
+                <input type="hidden" id="propertyid" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">设备类型<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div id="d_typecode" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull"></div>
+            </td>
+        </tr>
+
+        <tr>
+            <td class="formTitle">安装地点</td>
+            <td class="formValue">
+                <input id="d_place" type="text" class="form-control" maxlength="200" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">使用日期</td>
+            <td class="formValue">
+                <input id="d_usedate" type="text" class="form-control input-datepicker" style="width:120px;" placeholder="使用日期" onfocus="WdatePicker()" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">设备产地</td>
+            <td class="formValue">
+                <input id="d_makeplace" type="text" class="form-control" maxlength="200" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">供应商</td>
+            <td class="formValue">
+                <input id="d_maker" type="text" class="form-control" maxlength="200" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">联系人</td>
+            <td class="formValue">
+                <input id="d_contractman" type="text" class="form-control" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">联系电话</td>
+            <td class="formValue">
+                <input id="d_contractphone" type="text" class="form-control" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">联系地址</td>
+            <td class="formValue">
+                <input id="d_contractaddress" type="text" class="form-control" maxlength="200" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">出厂编号<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="d_origionnumber" type="text" class="form-control" isvalid="yes" checkexpession="NotNull" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">设备原值</td>
+            <td class="formValue">
+                <input id="d_money" type="text" class="form-control" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">检修处理信息</td>
+            <td class="formValue">
+                <input id="d_descript" type="text" class="form-control" />
+            </td>
+        </tr>
+    </table>
+</div>

@@ -1,0 +1,224 @@
+﻿@{;
+    ViewBag.Title = "列表页面";
+    Layout = "~/Views/Shared/_Index.cshtml";
+}
+<script>;
+    $(function () {
+        InitialPage();
+        GetGrid();
+    });
+    //初始化页面
+    function InitialPage() {
+        //resize重设布局;
+        $(window).resize(function (e) {
+            window.setTimeout(function () {
+                $('#gridTable').setGridWidth(($('.gridPanel').width()));
+                $('#gridTable').setGridHeight($(window).height() - 136.5);
+            }, 200);
+            e.stopPropagation();
+        });
+        //加载年份
+        $.SetForm({
+            url: "/TenementManage/DevicePart/GetYearListJson",
+            param:{year:1,startyear:2000},
+            success: function (data) {
+                $.each(data, function (id, item) {
+                    var row = '<li><a data-value="' + item.ytext + '">' + item.yvalue + '</a></li>';
+                    $('#year').find('ul').append(row);
+                });
+                $('#year').find('li>a').click(function () {
+                    var id = $(this).attr('data-value');
+                    var text = $(this).html();
+                    $('#year').find('.dropdown-text').html(text).attr('data-value', id);
+                });
+
+            }
+        });
+        //加载设备类型
+        $.SetForm({
+            url: "/TenementManage/Device/GetDeviceTypeListJson",
+            success: function (data) {
+                $.each(data, function (id, item) {
+                    var row = '<li><a data-value="' + item.typecode + '">' + item.typename + '</a></li>';
+                    $('#d_typecode').find('ul').append(row);
+                });
+                $('#d_typecode').find('li>a').click(function () {
+                    var id = $(this).attr('data-value');
+                    var text = $(this).html();
+                    $('#d_typecode').find('.dropdown-text').html(text).attr('data-value', id);
+                });
+
+            }
+        });
+        //加载保养班组
+        var queryJson = {
+            dictid: "15"
+        }
+        $.SetForm({
+            url: "/SysManage/Dictitem/GetPageListByDid",
+            param: { queryJson: JSON.stringify(queryJson) },
+            success: function (data) {
+                var rows = '<li><a data-value="">请选择</a></li>';
+                $('#groupid').find('ul').append(rows);
+                $.each(data, function (id, item) {
+                    var row = '<li><a data-value="' + item.itemid + '">' + item.itemname + '</a></li>';
+                    $('#groupid').find('ul').append(row);
+                });
+                $('#groupid').find('li>a').click(function () {
+                    var id = $(this).attr('data-value');
+                    var text = $(this).html();
+                    $('#groupid').find('.dropdown-text').html(text).attr('data-value', id);
+                });
+
+            }
+        });
+    }
+    //加载表格
+    function GetGrid() {
+        var selectedRowIndex = 0;
+        var $gridTable = $('#gridTable');
+        $gridTable.jqGrid({
+            autowidth: true,
+            height: $(window).height() - 136.5,
+            url: "../../TenementManage/DevicePart/GetPageListJson",
+            datatype: "json",
+            colModel: [
+                { label: '设备编号', name: 'd_number', index: 'd_number', width: 100, align: 'left', sortable: true },
+                { label: '设备名称', name: 'd_name', index: 'd_name', width: 100, align: 'left', sortable: true },
+                { label: '安装位置', name: 'd_place', index: 'd_place', width:100, align: 'left', sortable: true },
+                 
+                { label: '部件编号', name: 'p_number', index: 'p_number', width: 100, align: 'left', sortable: true },
+                { label: '部件名称', name: 'p_name', index: 'p_name', width: 100, align: 'left',sortable: true  },
+                { label: '部件型号', name: 'p_standard', index: 'p_standard', width: 100, align: 'left',sortable: true  },
+                { label: '部件位置', name: 'p_place', index: 'p_place', width: 100, align: 'left', sortable: true },
+                { label: '所属班组', name: 'itemname', index: 'p_groupid', width: 100, align: 'left', sortable: true },
+
+                { label: '一月', name: 'maintencename1', index: 'maintencename1', width: 60, align: 'left', sortable: true },
+                { label: '二月', name: 'maintencename2', index: 'maintencename2', width: 60, align: 'left', sortable: true },
+                { label: '三月', name: 'maintencename3', index: 'maintencename3', width: 60, align: 'left', sortable: true },
+                { label: '四月', name: 'maintencename4', index: 'maintencename4', width: 60, align: 'left', sortable: true },
+                { label: '五月', name: 'maintencename5', index: 'maintencename5', width: 60, align: 'left', sortable: true },
+                { label: '六月', name: 'maintencename6', index: 'maintencename6', width: 60, align: 'left', sortable: true },
+                { label: '七月', name: 'maintencename7', index: 'maintencename7', width: 60, align: 'left', sortable: true },
+                { label: '八月', name: 'maintencename8', index: 'maintencename8', width: 60, align: 'left', sortable: true },
+                { label: '九月', name: 'maintencename9', index: 'maintencename9', width: 60, align: 'left', sortable: true },
+                { label: '十月', name: 'maintencename10', index: 'maintencename10', width: 60, align: 'left', sortable: true },
+                { label: '十一月', name: 'maintencename11', index: 'maintencename11', width: 60, align: 'left', sortable: true },
+                { label: '十二月', name: 'maintencename12', index: 'maintencename12', width: 60, align: 'left', sortable: true },
+               
+            ],
+            viewrecords: true,
+            rowNum: 30,
+            rowList: [30, 50, 100],
+            pager: "#gridPager",
+            sortname: '',
+            sortorder: 'desc',
+            rownumbers: true,
+            shrinkToFit: false,
+            gridview: true,
+            onSelectRow: function () {
+                selectedRowIndex = $('#' + this.id).getGridParam('selrow');
+            },
+            gridComplete: function () {
+                $('#' + this.id).setSelection(selectedRowIndex, false);
+            }
+        });
+        //查询事件
+        $("#btn_Search").click(function () {
+            var d_typecode = $("#d_typecode").find('.dropdown-text').attr('data-value');
+            var groupid = $("#groupid").find('.dropdown-text').attr('data-value');
+            var year = $("#year").find('.dropdown-text').attr('data-value');
+            if (d_typecode == null || d_typecode == "") {
+                alert("请选择设备类别");
+                return;
+            }
+            if (year == null || year == "") {
+                alert("请选择保养年度");
+                return;
+            }
+            var queryJson = {
+                d_typecode: d_typecode,
+                groupid: groupid,
+                year: year,
+            }
+            $gridTable.jqGrid('setGridParam', {
+                postData: { queryJson: JSON.stringify(queryJson) }
+            }).trigger('reloadGrid');
+        });
+        //查询回车
+        $('#txt_Keyword').bind('keypress', function (event) {
+            if (event.keyCode == "13") {
+                $('#btn_Search').trigger("click");
+            }
+        });
+    }
+    //新增
+    function btn_add() {
+        dialogOpen({
+            id: 'Form',
+            title: '登记保养计划信息',
+            url: '/TenementManage/DevicePart/DevicePartForm',
+            width: '700px',
+            height: '650px',
+            callBack: function (iframeId) {
+                top.frames[iframeId].AcceptClick();
+            }
+        });
+    }
+    //复制
+    function btn_copy() {
+        dialogOpen({
+            id: 'Form',
+            title: '保养计划复制',
+            url: '/TenementManage/DevicePart/DeviceCopy',
+            width: '520px',
+            height: '600px',
+            callBack: function (iframeId) {
+                top.frames[iframeId].AcceptClick();
+            }
+        });
+    }
+</script>
+<div class="titlePanel">
+    <div class="title-search">
+        <table>
+            <tr>
+                <td>
+                    <div id="d_typecode" class="btn-group">
+                        <a class="btn btn-default dropdown-text" data-toggle="dropdown">设备类别</a>
+                        <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                        <ul class="dropdown-menu" style="max-height:480px;overflow:auto;overflow-x:hidden;"></ul>
+                    </div>
+                </td>
+                <td style="padding-left:10px;">
+                    <div id="groupid" class="btn-group">
+                        <a class="btn btn-default dropdown-text" data-toggle="dropdown">保养班组</a>
+                        <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                        <ul class="dropdown-menu" style="max-height:480px;overflow:auto;overflow-x:hidden;"></ul>
+                    </div>
+                </td>
+                <td style="padding-left:10px;">
+                    <div id="year" class="btn-group">
+                        <a class="btn btn-default dropdown-text" data-toggle="dropdown">保养年度</a>
+                        <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                        <ul class="dropdown-menu" style="max-height:480px;overflow:auto;overflow-x:hidden;"></ul>
+                    </div>
+                </td>
+                <td style="padding-left: 10px;">
+                    <a id="btn_Search" class="btn btn-primary"><i class="fa fa-search"></i>查询</a>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div class="toolbar">
+        <div class="btn-group">
+            <a id="lr-edit" class="btn btn-default" onclick="btn_copy()"><i class="fa fa-pencil-square-o"></i>&nbsp;保养计划复制</a>
+            <a id="lr-add" class="btn btn-default" onclick="btn_add()"><i class="fa fa-plus"></i>&nbsp;登记保养计划信息</a>
+        </div>
+        <script>$('.toolbar').authorizeButton()</script>
+    </div>
+</div>
+<div class="gridPanel">
+    <table id="gridTable"></table>
+    <div id="gridPager"></div>
+</div>

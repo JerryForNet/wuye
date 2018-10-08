@@ -1,0 +1,122 @@
+﻿@{
+    ViewBag.Title = "表单页面";
+    Layout = "~/Views/Shared/_FlowForm.cshtml";
+}
+
+<script src="/Content/scripts/plugins/webuploader/webuploader.min.js"></script>
+<script src="/Content/scripts/plugins/webuploader/uploader.js"></script>
+<script>
+    var keyValue = request('keyValue');
+    $(function () {
+        initControl();
+
+        //初始化上传控件
+        $(".upload-File").InitUploader({ filesize: "10240", filepath: "/upload/file/", filetype: 3, sendurl: "/Content/Handler/upload_ajax.ashx", swf: "/Content/scripts/plugins/webuploader/uploader.swf", filetypes: "" });
+    });
+    //初始化控件
+    function initControl() {
+        //获取表单
+        if (!!keyValue) {
+            $.SetForm({
+                url: "../../TenementManage/wy_device_contract/GetFormJson",
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    $("#form1").SetWebControls(data);
+                }
+            })
+        }
+    }
+    //保存表单;
+    function AcceptClick(callback) {
+        if (!$('#form1').Validform()) {
+            return false;
+        }
+        var postData = $("#form1").GetWebControls(keyValue);
+        $.SaveForm({
+            url: "../../TenementManage/wy_device_contract/SaveForm?keyValue=" + keyValue,
+            param: postData,
+            loading: "正在保存数据...",
+            success: function () {
+                //$.currentIframe().$("#gridTable-FixRecord").trigger("reloadGrid");
+                callback("1");
+            }
+        })
+    }
+</script>
+<div style="margin-top: 20px; margin-right: 30px;">
+    <table class="form">
+        <tr>
+            <td class="formTitle">合同编号<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="contractnumber" type="text" class="form-control" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">合同名称<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="contractname" type="text" class="form-control" isvalid="yes" checkexpession="NotNull" />
+            </td>
+        </tr>
+
+        <tr>
+            <td class="formTitle">维修单位<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="fixcompany" type="text" class="form-control" isvalid="yes" checkexpession="NotNull" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">单位联系人</td>
+            <td class="formValue">
+                <input id="linkman" type="text" class="form-control" style="width:120px;" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">联系电话</td>
+            <td class="formValue">
+                <input id="linkphone" type="text" class="form-control" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">合同金额</td>
+            <td class="formValue">
+                <input id="cmoney" type="text" class="form-control" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">合同签定时间<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="signdate" type="text" onfocus="WdatePicker()" class="form-control input-datepicker" isvalid="yes" checkexpession="NotNull" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">合同开始时间<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="begindate" onfocus="WdatePicker()" type="text" class="form-control input-datepicker" isvalid="yes" checkexpession="NotNull" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">合同终止时间<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="enddate" type="text" onfocus="WdatePicker()" class="form-control input-datepicker" isvalid="yes" checkexpession="NotNull" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">合同备注</td>
+            <td class="formValue">
+                <textarea class="form-control" id="fnotes"></textarea>
+                <input type="hidden" id="devicenumber" value="@Request["d_devicenumber"]" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">上传附件</td>
+            <td class="formValue">
+                <div class="file_uploadss">
+                    <input type="text" name="attfile" id="attfile" style="width:300px;" class="form-control upload-path" readonly="readonly" />
+                    <div style="padding-left:5px; float:left;" class="upload-box upload-File"></div>
+                    <div style="padding-left:5px; float:left; line-height:30px;"><a id="aattfile" href="" target="_blank">下载查看</a></div>
+                </div>
+            </td>
+        </tr>
+    </table>
+</div>
+

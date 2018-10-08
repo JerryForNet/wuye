@@ -1,0 +1,214 @@
+﻿@{;
+ViewBag.Title = "表单页面";
+Layout = "~/Views/Shared/_OrderForm.cshtml";
+
+}
+<!--jqgrid表格组件start-->
+<link href="/Content/scripts/plugins/jqgrid/jqgrid.css" rel="stylesheet" />
+<script src="/Content/scripts/plugins/jqgrid/grid.locale-cn.js"></script>
+<script src="/Content/scripts/plugins/jqgrid/jqgrid.min.js"></script>
+<!--表格组件end-->
+<style>
+    body { margin: 0px; }
+    .bills { overflow: hidden; border-radius: 0px; position: relative; background: #FFFFFF; border: 0px solid rgb(204, 204, 204); box-shadow: none; padding: 0px; }
+    .ui-widget-content { border-left: 0px; border-right: 0px; border-bottom: 0px; }
+</style>
+<script>
+    var keyValue = request('keyValue');
+    $(function () {
+        InitialPage();
+        GetOrderEntryGrid();
+        initControl();
+    });
+    //初始化页面
+    function InitialPage() {;
+        //resize重设(表格、树形)宽高
+        $(window).resize(function (e) {
+            window.setTimeout(function () {
+                $('#gridTable').setGridWidth(($('.gridPanel').width()));
+                $('#gridTable').setGridHeight($(window).height() - 240.5);
+            }, 200);
+            e.stopPropagation();
+        });
+    }
+
+    //加载明细表
+    function GetOrderEntryGrid() {
+        var $grid = $('#gridTable');
+        $grid.jqGrid({
+            unwritten: false,
+            datatype: 'local',
+            height: $(window).height() - 190.5,
+            autowidth: true,
+            colModel: [
+                    { label: '物品名称', name: 'fname', width: 180, align: '', sortable: false, resizable: false },
+                    { label: '物品编号', name: 'fgoodsid', width: 180, align: '', sortable: false, resizable: false },
+                     { label: '数量', name: 'fnumber', width: 180, align: '', sortable: false, resizable: false },
+                   { label: '单价', name: 'fprice', width: 180, align: '', sortable: false, resizable: false },
+                  { label: '总价', name: 'fmoney', width: 180, align: '', sortable: false, resizable: false }
+
+            ],
+            pager: false,
+            rownumbers: true,
+            shrinkToFit: false,
+            gridview: true,
+            footerrow: false,
+            gridComplete: function () {
+            }
+        });
+        //默认添加13行 空行
+        for (var i = 1; i < 13; i++) {
+            var rowdata = {
+                fname: '<div class="product"><input name="fname" readonly type="text" class="editable" isvalid="no" checkexpession="NotNull" /><span class="ui-icon-ellipsis"></span></div>',
+                fgoodsid: '<input name="fgoodsid" type="text" readonly class="editable center disabled" /><input name="fgoodsid" type="hidden" />',
+                fnumber: '<input name="fnumber" type="text" class="editable center decimal" isvalid="no" checkexpession="Double" /><input type="hidden" name="fnumber_kc" value="0">',
+                fprice: '<input name="fprice" type="text" class="editable center decimal"  isvalid="no" checkexpession="Double" />',
+                fmoney: '<input name="fmoney" type="text" class="editable center decimal"  isvalid="no" checkexpession="Double" />'
+            }
+            $grid.jqGrid('addRowData', i, rowdata);
+        };
+
+        //物品
+        $('input[name="fname"]').focus(function () {
+            $('.ui-icon-ellipsis').hide();
+            $(this).next('.ui-icon-ellipsis').show();
+            $(this).Contextmenu();
+        });
+        //选择物品事件
+        $('.ui-icon-ellipsis').click(function () {
+            var $ellipsis = $(this);
+            dialogOpen({
+                id: "Options",
+                title: '选择材料',
+                url: "../../RepostryManage/Goodsinfo/OptionIndex",
+                width: "1500px",
+                height: "900px",
+                callBack: function (iframeId) {
+                    top.frames[iframeId].AcceptClick(function (data) {
+                        $ellipsis.parents('[role=row]').find('input[name="fname"]').val(data.fname);
+                        $ellipsis.parents('[role=row]').find('input[name="fprice"]').val(data.fprice);
+                        $ellipsis.parents('[role=row]').find('input[name="fnumber_kc"]').val(data.fcount);
+                        $ellipsis.parents('[role=row]').find('input[name="fcount"]').val(data.fcount);
+                        $ellipsis.parents('[role=row]').find('input[name="fgoodsid"]').val(data.fgoodsid);
+                    });
+                },
+                btn: ['确认选中', '关闭']
+            });
+        });
+        //价格文本框换算
+        $grid.find('.decimal').keyup(function () {
+            var _inputName = $(this).attr('name');
+            var $fnumber = $(this).parents('[role=row]').find('input[name="fnumber"]'); //数量
+            var $fprice = $(this).parents('[role=row]').find('input[name="fprice"]');   //单价
+            var $fmoney = $(this).parents('[role=row]').find('input[name="fmoney"]');   //金额
+
+            //数量*单价=金额
+            $fmoney.val(toDecimal($fnumber.val() * $fprice.val()));
+
+            //合计
+            var TotalAmount = 0.00;
+            $grid.find("tbody tr").each(function (i) {
+                //合计
+                var Amount = $(this).find('td:eq(4)').find('input').val();
+                if (Amount != "" && Amount != undefined) {
+                    TotalAmount += Number(Amount);
+                }
+            });
+
+        });
+
+    }
+    //初始化控件
+    function initControl() {
+        //部门
+        $("#fdeptid").ComboBox({
+            url: "../../PersonnelManage/HrDepartment/GetTreeJson",
+            id: "deptid",
+            text: "deptname",
+            description: "==请选择==",
+            height: "200px",
+            allowSearch: true,
+        });
+        //班组
+        $("#fman").ComboBox({
+            url: "../../SysManage/Dictitem/GetTreeJson?dictid=15",
+            id: "itemid",
+            text: "itemname",
+            description: "==请选择==",
+            height: "200px",
+            allowSearch: true,
+        });
+        //获取表单
+        if (!!keyValue) {
+            $.SetForm({
+                url: "../../RepostryManage/Outbill/GetFormJson",
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    $("#form1").SetWebControls(data.entity);
+                    $("#fdeptid").ComboBoxSetValue(data.fdeptid);
+                    $("#fuserid").ComboBoxSetValue(data.fuserid);
+                    //明细
+                    var childEntity = data.childEntity;
+                    $('#gridTable').find('[role=row]').each(function (i) {
+                        var row = childEntity[i - 1];
+                        if (row != undefined) {
+                            $(this).find('input[name="fname"]').val(row.fname);
+                            $(this).find('input[name="fnumber"]').val(row.fnumber);
+                            $(this).find('input[name="fprice"]').val(row.fprice);
+                            $(this).find('input[name="fmoney"]').val(row.fmoney);
+                            $(this).find('input[name="fgoodsid"]').val(row.fgoodsid);
+                        }
+                    });
+                }
+            })
+        }
+    }
+    //保存表单;
+    function AcceptClick(save_Mode) {
+        if (!$('#form1').Validform()) {
+            return false;
+        }
+        var childEntryJson = [];
+        $('#gridTable').find('[role=row]').each(function (i) {
+            if (!!$(this).find('input[name="fgoodsid"]').val()) {
+                childEntryJson.push({
+                    fnumber: $(this).find('input[name="fnumber"]').val(),
+                    fprice: $(this).find('input[name="fprice"]').val(),
+                    fmoney: $(this).find('input[name="fmoney"]').val(),
+                    fgoodsid: $(this).find('input[name="fgoodsid"]').val(),
+                });
+            }
+        });
+        var postData = $("#form1").GetWebControls(keyValue);
+        postData["strChildEntitys"] = JSON.stringify(childEntryJson);
+        $.SaveForm({
+            url: "../../RepostryManage/Outbill/SaveForm?keyValue=" + keyValue,
+            param: postData,
+            loading: "正在保存数据...",
+            success: function () {
+                if (save_Mode == 1) {
+                    $.currentIframe().$("#gridTable").trigger("reloadGrid");
+                } else {
+                    $.currentIframe().$("#gridTable").trigger("reloadGrid");
+                }
+            }
+        })
+    }
+</script>
+<div class="bills">
+    <div style="overflow-y:auto;margin:60px 10px;">
+        <table class="form" style="width: 100%;">
+            <tr>
+                <th class="formTitle" style="width: 10px;">领用单编号<font face="宋体">*</font></th>
+                <td class="formValue" style="width: 40px;"><input id="foutbillid" type="text" class="form-control" isvalid="yes" checkexpession="NotNull" style="width:150px;"></td>
+                <th class="formTitle" style="width: 10px;">领用部门<font face="宋体">*</font></th>
+                <td class="formValue" style="width: 40px;"> <div id="fdeptid" type="select" class="ui-select" isvalid="yes" style="width:150px;"></div> </td>
+                <th class="formTitle" style="width: 10px;">领用班组<font face="宋体">*</font></th>
+                <td class="formValue" style="width: 40px;"><div id="fman" type="select" class="ui-select" isvalid="yes" style="width:150px;"></div></td>
+            </tr>
+        </table>
+    </div>
+    <div class="gridPanel">
+        <table id="gridTable"></table>
+    </div>
+</div>

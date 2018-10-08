@@ -1,0 +1,265 @@
+﻿@{;
+    ViewBag.Title = "表单页面";
+    Layout = "~/Views/Shared/_OrderForm.cshtml";
+}
+<style>
+    body { margin: 0px; }
+    .bills { overflow: hidden; border-radius: 0px; position: relative; background: #FFFFFF; border: 0px solid rgb(204, 204, 204); box-shadow: none; padding: 0px; }
+    .ui-widget-content { border-left: 0px; border-right: 0px; border-bottom: 0px; }
+</style>
+<script>
+    var keyValue = request('keyValue');
+    $(function () {
+        InitialPage();
+        GetOrderEntryGrid();
+        initControl();
+    });
+    //初始化页面
+    function InitialPage() {;
+        //resize重设(表格、树形)宽高
+        $(window).resize(function (e) {
+            window.setTimeout(function () {
+                $('#gridTable').setGridWidth(($('.gridPanel').width()));
+                $('#gridTable').setGridHeight($(window).height() - 240.5);
+            }, 200);
+            e.stopPropagation();
+        });
+        //票据
+        $("#typelist").ComboBox({
+            description: "==请选择=="
+        });
+        $("#ticketid").ComboBox({
+            description: "==请选择==",
+            height: "260px"
+        });
+
+        //费用币种
+        $("#currency").ComboBox({
+            url: "/TenementManage/Building/GetRoomMedel?dictid=21",
+            id: "itemname",
+            text: "itemname",
+            description: "=====请选择====",
+            height: "170px"
+        });
+
+        $("#typelist-option").find('li').click(function () {
+            var id = $(this).attr('data-value');
+            $("#codelist-option").find(".ui-select-option-content").html("");
+            $("#codelist").attr("data-value", "").attr("data-text", "");
+            $("#codelist").find('.ui-select-text').html('==请选择==').css('color', '#999');
+            if (id != "0" && id != "" && id != undefined) {
+                $("#ticketid").ComboBox({
+                    url: "/TenementManage/Feeticket/GetSelList?status=0&type=" + id,
+                    id: "ticket_id",
+                    text: "ticket_code",
+                    description: "==请选择==",
+                    height: "260px"
+                });
+            }
+
+            // 票据号码默认选中第一个
+            var _dataValue = $("#ticketid-option li").eq(1).attr("data-value");
+            if (_dataValue != undefined && _dataValue != "") {
+                $("#ticketid-option li").eq(1).click();
+            }
+        });
+
+    }
+    //加载明细表
+    function GetOrderEntryGrid() {
+        var $grid = $('#gridTable');
+        $grid.jqGrid({
+            unwritten: false,
+            datatype: 'local',
+            height: $(window).height() - 240.5,
+            autowidth: true,
+            colModel: [
+                { label: 'incomeitem_id', name: 'incomeitem_id', width: 80, align: '', sortable: false, resizable: false, hidden: true },
+                { label: 'incomeid', name: 'incomeid', width: 80, align: '', sortable: false, resizable: false, hidden: true },
+                { label: '费用项目', name: 'feeitem_id', width: 200, align: '', sortable: false, resizable: false },
+                { label: '摘要(Summary)', name: 'subject', width: 460, align: '', sortable: false, resizable: false },
+                { label: '金  额  (Amount)', name: 'fee_income', width: 120, align: '', sortable: false, resizable: false },
+            ],
+            pager: false,
+            rownumbers: true,
+            shrinkToFit: false,
+            gridview: true,
+            footerrow: false,
+            gridComplete: function () {
+                ////合计
+                //$(this).footerData("set", {
+                //    "subject": "合计：",
+                //    "fee_income": "<span id='Totalfee_income'>0.00</span>",
+                //});
+                //$('table.ui-jqgrid-ftable td[aria-describedby="gridTable_fee_income"]').prevUntil().css("border-right-color", "#fff");
+            }
+        });
+        //默认添加13行 空行
+        for (var i = 1; i < 13; i++) {
+            var rowdata = {
+                incomeitem_id: '<input name="incomeitem_id" type="text" class="editable center" />',
+                incomeid: '<input name="incomeid" type="text" class="editable center" />',
+                feeitem_id: '<div class="product"><input name="feeitem_name" readonly type="text" class="editable" isvalid="no" checkexpession="NotNull"/><span class="ui-icon-ellipsis"></span><input name="feeitem_id" type="hidden" /></div>',
+                subject: '<input name="subject" type="text" class="editable" />',
+                fee_income: '<input name="fee_income" type="text" class="editable center decimal"  isvalid="yes" checkexpession="DoubleOrNull" />',
+            }
+            $grid.jqGrid('addRowData', i, rowdata);
+        };
+
+        //费用项目事件
+        $('input[name="feeitem_name"]').focus(function () {
+            $('.ui-icon-ellipsis').hide();
+            $(this).next('.ui-icon-ellipsis').show();
+            $(this).Contextmenu();
+        });
+        //选择费用项目事件
+        $('.ui-icon-ellipsis').click(function () {
+            var $ellipsis = $(this);
+            var $url = ("/FinanceManage/Feeitem/FeeitemIndex?group_id=" + escape("其他收入"))
+            dialogOpen({
+                id: "OptionProduct",
+                title: '选择费用项目',
+                url: $url,
+                width: "600px",
+                height: "460px",
+                callBack: function (iframeId) {
+                    top.frames[iframeId].AcceptClick(function (data) {
+                        $ellipsis.parents('[role=row]').find('input[name="feeitem_name"]').val(data.feeitem_name).attr('data-value', data.feeitem_id);
+                        $ellipsis.parents('[role=row]').find('input[name="feeitem_id"]').val(data.feeitem_id);
+                    });
+                },
+                btn: ['确认选中', '关闭']
+            });
+        });    
+    }
+    //初始化控件
+    function initControl() {
+        //获取表单
+        if (!!keyValue) {
+            $.SetForm({
+                url: "../../TenementManage/Otherincome/GetFormJson",
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    $("#form1").SetWebControls(data.entity);
+                    //明细
+                    var childEntity = data.childEntity;
+                    $('#gridTable').find('[role=row]').each(function (i) {
+                        var row = childEntity[i - 1];
+                        if (row != undefined) {
+                            $(this).find('input[name="incomeitem_id"]').val(row.incomeitem_id);
+                            $(this).find('input[name="incomeid"]').val(row.incomeid);
+                            $(this).find('input[name="feeitem_id"]').val(row.feeitem_id);
+                            $(this).find('input[name="subject"]').val(row.subject);
+                            $(this).find('input[name="fee_income"]').val(row.fee_income);
+                        }
+                    });
+                }
+            })
+        }
+        else {
+            $("#currency").ComboBoxSetValue("人民币");
+        }
+    }
+    //保存表单;
+    function AcceptClick() {
+        if (!$('#form1').Validform()) {
+            return false;
+        }
+        var postData = $("#form1").GetWebControls(keyValue);
+        var childEntryJson = [];
+        var bl = false;
+        
+        $('#gridTable').find('[role=row]').each(function (i) {
+        if (!!$(this).find('input[name="feeitem_id"]').val()) {
+                var $income = $(this).find('input[name="fee_income"]').val();
+                if ($income != "" && $income != undefined) {
+                    childEntryJson.push({
+                        incomeitem_id: $(this).find('input[name="incomeitem_id"]').val(),
+                        incomeid: $(this).find('input[name="incomeid"]').val(),
+                        feeitem_id: $(this).find('input[name="feeitem_id"]').val(),
+                        subject: $(this).find('input[name="subject"]').val(),
+                        fee_income: $(this).find('input[name="fee_income"]').val(),
+                    });
+                    bl = true;
+                }
+            }
+        });
+
+        if (!bl) {
+            dialogMsg('请填写费用明细！', 0);
+            return false;
+        }
+        
+        var save = true;
+        if (save) {
+            save = false;
+            console.log(childEntryJson);
+            $.SaveForm({
+                url: "/TenementManage/Otherincome/SavesForm?keyValue=" + keyValue,
+                param: { "strEntity": JSON.stringify(postData), "strChildEntitys": JSON.stringify(childEntryJson) },
+                loading: "正在保存数据...",
+                close: false,
+                success: function (res) {
+                    $.currentIframe().$("#gridTable").trigger("reloadGrid");
+                    if (!$('#isprint').is(':checked')) {
+                        window.open('/TenementManage/Otherincome/PrintFrom?keyValue=' + res.resultdata + '&paydate=' + $("#feedate").val() + '&total=' + childEntryJson.length);
+                    }
+                    dialogClose();
+                }
+            })
+        }
+    }
+</script>
+<div class="bills">
+    <div style="overflow-y:auto;margin:10px 10px; padding-bottom:15px;">
+        <table class="form" style="width: 100%;">
+            <tr>
+                <td class="formTitle">客户姓名：<font face="宋体">*</font></td>
+                <td class="formValue"><input  type="text" class="form-control" placeholder="输入客户姓名" id="customer"  isvalid="yes" checkexpession="NotNull"></td>
+                <td class="formTitle">所属物业：</td>
+                <td class="formValue"><input  type="text" class="form-control" disabled="disabled" value="@ViewBag.property_name"></td>
+                <td class="formTitle"></td>
+                <td class="formValue">
+                    <div id="currency" type="select" class="ui-select" style="display:none;"></div>
+                </td>
+            </tr>
+            <tr>                
+                <td class="formTitle">收费日期：<font face="宋体">*</font></td>
+                <td class="formValue">
+                    <input id="feedate" type="text" class="form-control input-datepicker" placeholder="收费日期" isvalid="yes" checkexpession="NotNull" onfocus="WdatePicker({dateFmt: 'yyyy-MM-dd' })" />
+                </td>
+                <td class="formTitle">票据类型：</td>
+                <td class="formValue">
+                    <div id="typelist" type="select" class="ui-select">
+                        <ul>
+                            <li data-value="0">==请选择==</li>
+                            <li data-value="00">收据</li>
+                            <li data-value="01">发票</li>
+                            <li data-value="02">停车发票</li>
+                            <li data-value="04">虹联发票</li>
+                            <li data-value="05">虹联收据</li>
+                            <li data-value="06">新厦发票</li>
+                        </ul>
+                    </div>
+                </td>
+                <td class="formTitle">票据号码：<font face="宋体">*</font></td>
+                <td class="formValue">
+                    <div id="ticketid" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull"></div>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div class="gridPanel">
+        <table id="gridTable"></table>
+    </div>
+    <table class="form" style="width: 50%; margin-top: 5px; margin-left:10px;">
+        <tr>
+            <th class="formTitle" style="width: 70px;">不需要发票：</th>
+            <td class="formValue" style="width:50px;">
+                <input id="isprint" type="checkbox" />
+            </td>
+            <th class="formTitle"></th>
+            <td class="formValue"></td>
+        </tr>
+    </table>
+</div>

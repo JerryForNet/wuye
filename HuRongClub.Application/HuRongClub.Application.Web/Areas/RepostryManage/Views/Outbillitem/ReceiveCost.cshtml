@@ -1,0 +1,184 @@
+﻿
+@{
+    ViewBag.Title = "领用费用";
+    Layout = "~/Views/Shared/_Index.cshtml";
+}
+@section styles
+{
+    <link href="~/Content/styles/hurongclub-report.css" rel="stylesheet" />
+}
+@section scripts
+{
+    <script src="~/Content/scripts/plugins/printTable/jquery.printTable.js"></script>
+}
+<script>
+    $(function () {
+        InitialPage();
+        GetData();
+        
+        $(".ui-jqgrid-labels th").css("width", "70px");
+        $("#gridTable_部门").css("width", "140px");
+        $("#gridTable tr").children('td').css("width", "70px");
+        $("#gridTable tr").children('td').eq(0).css("width", "140px");
+        $(".footrow-ltr td").css("width", "70px");
+        $(".footrow-ltr td").eq(0).css("width", "140px");
+    });    
+
+    function GetData() {
+        $.ajax({
+            async: false,
+            url: "../../RepostryManage/Outbillitem/GetGridRows",
+            dataType: "json",
+            success: function (data) {
+                GetGrid(data);
+            }
+        });
+    }
+
+    //初始化页面
+    function InitialPage() {
+        //resize重设布局;
+        $(window).resize(function (e) {
+            window.setTimeout(function () {
+                $('#gridTable').setGridWidth(($('.gridPanel').width()));
+                $('#gridTable').setGridHeight($(window).height() - 234);
+
+                $(".ui-jqgrid-labels th").css("width", "70px");
+                $("#gridTable_部门").css("width", "140px");
+                $("#gridTable tr").children('td').css("width", "70px");
+                $("#gridTable tr").children('td').eq(0).css("width", "140px");
+                $(".footrow-ltr td").css("width", "70px");
+                $(".footrow-ltr td").eq(0).css("width", "140px");
+
+            }, 200);
+            e.stopPropagation();
+        });
+        //查询回车
+        $('#txt_Keyword').bind('keypress', function (event) {
+            if (event.keyCode == "13") {
+                $('#btn_Search').trigger("click");
+            }
+        });
+    }
+
+    //加载表格
+    function GetGrid(data) {
+        var $gridTable = $('#gridTable');
+        var queryJson = "{'StartDate': '" + $("#StartDate").val() + "','EndDate': '" + $("#EndDate").val() + "'}";
+        $gridTable.jqGrid({
+            autowidth: true,
+            height: $(window).height() - 234,
+            url: "../../RepostryManage/Outbillitem/GetReceiveCostJson",
+            postData: { queryJson: queryJson },
+            colModel: data,
+            datatype: "json",
+            viewrecords: true,
+            rowNum: "all",
+            gridview: true,
+            footerrow: true,
+            gridComplete: function () {
+                //合计
+                var col = $("#gridTable").jqGrid('getGridParam', 'colNames');
+                var fmoney = 0;
+                var xml = "";
+
+                for (var i = 0; i < col.length; i++) {
+                    if (i == 0) {
+                        xml += ',"' + col[i] + '": "合计："';
+                    } else {
+                        fmoney = jQuery(this).getCol(col[i], false, 'sum');
+                        xml += ',"' + col[i] + '": "<span>' + fmoney.toFixed(2) + '</span>"';
+                    }
+                }
+                xml = xml.substr(1);
+                xml ="{" + xml + "}";
+                $(this).footerData("set", JSON.parse(xml));
+                $('table.ui-jqgrid-ftable td[aria-describedby="gridTable_location"]').prevUntil().css("border-right-color", "#fff");
+
+            }
+        });
+
+
+
+        //查询事件
+        $("#btn_Search").click(function () {
+            $("#beginTime").html($("#StartDate").val());
+            $("#endTime").html($("#EndDate").val());
+            var queryJson = {
+                StartDate: $("#StartDate").val(),
+                EndDate: $("#EndDate").val()
+            }
+            $gridTable.jqGrid('setGridParam', {
+                postData: { queryJson: JSON.stringify(queryJson) },
+                page: 1
+            }).trigger('reloadGrid');
+        });
+    }
+
+    //打印
+    function btn_print() {
+        //$("#gridPanel").printTable();
+        var total = $('#gridTable').jqGrid('getGridParam', 'records');
+        if (total == 0) {
+            dialogMsg('未找到需要打印数据，请先查询到数据后再按打印操作！', 0);
+            return false;
+        }
+        else {
+            $("#beginTime").html($("#StartDate").val());
+            $("#endTime").html($("#EndDate").val());
+            var queryJson = {
+                StartDate: $("#StartDate").val(),
+                EndDate: $("#EndDate").val()
+            }
+
+            var varData, winView, queryJson;
+            varData = gridPanel.innerHTML;
+            $("#divqueryJson").html(JSON.stringify(queryJson));
+            queryJson = divqueryJson.innerHTML;
+            winView = window.open("/RepostryManage/Outbillitem/previewReceiveCost", "_blank", "location=no,menubar=no,toolbar=yes,status=yes,resizable=yes,scrollbars=yes");
+            return false;
+        }
+    }
+</script>
+@{
+    string beginDate = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
+    string endDate = DateTime.Now.ToString("yyyy-MM-dd");
+}
+<div class="ui-report">
+    <div class="titlePanel">
+
+        <div class="title-search">
+            <table>
+                <tr>
+                    <td>汇总日期：</td>
+                    <td>
+                        <input id="StartDate" value="@(beginDate)" type="text" class="form-control input-datepicker" style="width: 120px;" placeholder="起始日期" onfocus="WdatePicker({  dateFmt: 'yyyy-MM-dd' })" />
+                    </td>
+                    <td>&nbsp;至&nbsp;</td>
+                    <td style="padding-right: 10px;">
+                        <input id="EndDate" value="@(endDate)" type="text" class="form-control input-datepicker" style="width: 120px;" placeholder="结束日期" onfocus="WdatePicker({ minDate: '#F{$dp.$D(\'StartDate\')}', dateFmt: 'yyyy-MM-dd' })" />
+                    </td>
+                    <td style="padding-left: 5px;">
+                        <a id="btn_Search" class="btn btn-primary"><i class="fa fa-search"></i>查询</a>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="toolbar">
+            <div class="btn-group">
+                <a id="lr-replace" class="btn btn-default" onclick="reload();"><i class="fa fa-refresh"></i>&nbsp;刷新</a>
+                <a id="lr-print" class="btn btn-default" onclick="btn_print()"><i class="fa fa-print"></i>&nbsp;打印</a>
+            </div>
+        </div>
+    </div>
+    <div class="gridPanel" id="gridPanel">
+        <div class="printArea">
+            <div class="grid-title">部门（项目）领用材料费用表</div>
+            <div class="grid-subtitle">汇总日期: <label id="beginTime">@(beginDate)</label> 至 <label id="endTime">@(endDate)</label></div>
+            <table id="gridTable"></table>
+        </div>
+    </div>
+</div>
+<div id="divqueryJson" style="display:none;"></div>
+

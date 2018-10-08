@@ -1,0 +1,251 @@
+﻿@{
+    Layout = "~/Views/Shared/_Index.cshtml";
+}
+<script>
+    var obj = new Array();
+    var queryJson = new Array();
+
+    $(function () {
+        InitialPage();
+        
+        InitalPageSelect();
+        GetGrid();
+    });
+    function InitalPageSelect() {
+
+        //加载年月
+        var mydate = new Date();
+        var $year = mydate.getFullYear();
+        var $mouth = mydate.getMonth() + 1;
+        $.SetForm({
+            url: "/TenementManage/Feeincome/GetYear",
+            success: function (data) {
+                $.each(data, function (id, item) {
+                    var row = '<li><a data-value="' + item.id + '">' + item.text + '</a></li>';
+                    $('#YearNum').find('ul').append(row);
+                });
+                $('#YearNum').find('li>a').click(function () {
+                    var id = $(this).attr('data-value');
+                    var text = $(this).html();
+                    $('#YearNum').find('.dropdown-text').html(text).attr('data-value', id);
+                });
+            }
+        });
+        $('#YearNum').find('.dropdown-text').html($year).attr('data-value', $year);
+        $.SetForm({
+            url: "/TenementManage/Feeincome/GetMouth",
+            success: function (data) {
+                $.each(data, function (id, item) {
+                    var row = '<li><a data-value="' + item.id + '">' + item.text + '</a></li>';
+                    $('#MonthNum').find('ul').append(row);
+                });
+                $('#MonthNum').find('li>a').click(function () {
+                    var id = $(this).attr('data-value');
+                    var text = $(this).html();
+                    $('#MonthNum').find('.dropdown-text').html(text).attr('data-value', id);
+                });
+            }
+        });
+        $('#MonthNum').find('.dropdown-text').html($mouth).attr('data-value', $mouth);
+        //加载费用项目
+        $("#FeeName").selectpicker({ noneSelectedText: '请选择费用项目' });
+        $.SetForm({
+            url: "/FinanceManage/Feeitem/GetSelectJson?type=1&group_id=" + encodeURI("应收费用"),
+            success: function (data) {
+
+                var str = "";
+                $.each(data, function (id, item) {
+                    str += "<option value=" + item.id + ">" + item.text + "</option>";
+                });
+                $("#FeeName").append(str);
+                $("#FeeName").selectpicker('refresh');
+            }
+        });
+
+
+    }
+
+
+    //初始化页面
+    function InitialPage() {
+        //resize重设布局;
+        $(window).resize(function (e) {
+            window.setTimeout(function () {
+                $('#gridTable').setGridWidth(($('.gridPanel').width()));
+                $('#gridTable').setGridHeight($(window).height() - 110);
+            }, ($('.gridPanel').width() - 45) / 15);
+            e.stopPropagation();
+        });
+        //费用科目
+        $.SetForm({
+            url: "/FinanceManage/Feeitem/GetSelectJson?group_id=" + encodeURI("应收费用"),
+            success: function (data) {
+                var rows = '<li><a data-value="">请选择</a></li>';
+                $('#feeitem_id').find('ul').append(rows);
+                $.each(data, function (id, item) {
+                    var row = '<li><a data-value="' + item.feeitem_id + '">' + item.feeitem_name + '</a></li>';
+                    $('#feeitem_id').find('ul').append(row);
+                });
+                $('#feeitem_id').find('li>a').click(function () {
+                    var id = $(this).attr('data-value');
+                    var text = $(this).html();
+                    $('#feeitem_id').find('.dropdown-text').html(text).attr('data-value', id);
+                });
+
+            }
+        });
+    }
+    //加载表格
+    function GetGrid() {
+        //var queryJsonstr = "{'YearNum': '" + $('#YearNum').find('.dropdown-text').attr('data-value') + "','MonthNum': '" + $('#MonthNum').find('.dropdown-text').attr('data-value') + "','DMonthNum': '" + $('#txt_Keyword').val() == "" ? 0 : $('#txt_Keyword').val() + "','propertyID': '" + $.cookie('property_id') + "'}";
+
+        var yearNum = $('#YearNum').find('.dropdown-text').attr('data-value');
+        var monthNum = $('#MonthNum').find('.dropdown-text').attr('data-value');
+
+        var queryJsonstr = {
+            YearNum: yearNum == undefined ? "" : yearNum,
+            MonthNum: monthNum == undefined ? "" : monthNum,
+            DMonthNum: $('#txt_Keyword').val() == "" ? 0 : $('#txt_Keyword').val(),
+            propertyID: $.cookie('property_id')
+        };
+
+        console.log(queryJsonstr);
+
+        var selectedRowIndex = 0;
+        var $gridTable = $('#gridTable');
+        $('#gridTable').GridUnload();
+        $gridTable.jqGrid({
+            autowidth: true,
+            height: $(window).height() - 110,
+            url: "../../RepostryManage/Feereport/GetArrearslistJson",
+            postData: { queryJson: JSON.stringify(queryJsonstr) },
+            datatype: "json",
+            //colNames: ['住户类型', '楼栋', '单元号', '业主', '租户', '费用笔数', '欠款总额'],
+            colModel: [
+                { label: '住户类型', name: 'Type_name', width: ($('.gridPanel').width() - 45) / 5, align: 'center', sortable: false },
+                { label: '楼栋', name: 'building_name', width: ($('.gridPanel').width() - 45) / 5, align: 'center', sortable: false },
+                { label: '单元号', name: 'room_name', width: ($('.gridPanel').width() - 45) / 5, align: 'center', sortable: false },
+                { label: '单元号编码', name: 'room_id', width: ($('.gridPanel').width() - 45) / 5, align: 'center', sortable: false, hidden: true },
+                { label: '业主', name: 'owner_name', width: ($('.gridPanel').width() - 45) / 5, align: 'center', sortable: false },
+                { label: '租户', name: 'CustomerName', width: ($('.gridPanel').width() - 45) / 5, align: 'center', sortable: false },
+                { label: '租客编码', name: 'rentcontract_id', width: ($('.gridPanel').width() - 45) / 5, align: 'center', sortable: false, hidden: true },
+                { label: '费用笔数', name: 'CountNum', width: ($('.gridPanel').width() - 45) / 5, align: 'center', sortable: false },
+                { label: '欠款总额', name: 'ArrearageAmount', width: ($('.gridPanel').width() - 45) / 5, align: 'center', sortable: false, formatter: "number", formatoptions: { thousandsSeparator: "", decimalPlaces: 2 }, summaryType: 'sum', summaryTpl: '欠款合计：{0}' }
+            ],
+            pager: false,
+            rowNum: 'all',
+            shrinkToFit: false,
+            gridview: true,
+            footerrow: false,
+            grouping: true,
+            groupingView: {
+                groupField: ['Type_name', 'building_name'],
+                groupColumnShow: [false, false],
+                groupText: ['<b>{0} - {1} 条记录</b>', '<b>{0} - {1} 条记录</b>'],
+                groupCollapse: true,
+                groupOrder: ['asc', 'asc'],
+                groupSummary: [true, false]
+            },
+            ondblClickRow: function () {
+                var Type_name = $("#gridTable").jqGridRowValue("Type_name");
+                var YearNum= $('#YearNum').find('.dropdown-text').attr('data-value');
+                var MonthNum = $('#MonthNum').find('.dropdown-text').attr('data-value');
+                var DMonthNum = $('#txt_Keyword').val() == "" ? 0 : $('#txt_Keyword').val();
+                var propertyID = $.cookie('property_id');
+                var _feeitemId = $("#feeitem_id").find('.dropdown-text').attr('data-value');
+                var urllink = '';
+                console.log(Type_name);
+
+                if (Type_name == "业主")
+                {
+                    var roomid = $("#gridTable").jqGridRowValue("room_id");
+                    urllink = '/RepostryManage/Feereport/ArrearsDetail?type=1&keyvalue=' + roomid + '&YearNum=' + YearNum + '&MonthNum=' + MonthNum + '&DMonthNum=' + DMonthNum + '&propertyID=' + propertyID + '&feeitemId=' + _feeitemId;
+                }
+                else if (Type_name == "租客")
+                {
+                    var rentcontract_id = $("#gridTable").jqGridRowValue("rentcontract_id");
+                    urllink = '/RepostryManage/Feereport/ArrearsDetail?type=2&keyvalue=' + rentcontract_id + '&YearNum=' + YearNum + '&MonthNum=' + MonthNum + '&DMonthNum=' + DMonthNum + '&propertyID=' + propertyID + '&feeitemId=' + _feeitemId;
+                }
+
+                console.log(urllink);
+
+                dialogOpen({
+                    id: 'Form',
+                    title: '欠费详细',
+                    url: urllink,
+                    width: '660px',
+                    height: '60%',
+                    btn: null
+                });
+            }
+        });
+        $("#btn_Search").click(function () {
+            queryJson = {
+                YearNum: $('#YearNum').find('.dropdown-text').attr('data-value'),
+                MonthNum: $('#MonthNum').find('.dropdown-text').attr('data-value'),
+                DMonthNum: $('#txt_Keyword').val() == "" ? 0 : $('#txt_Keyword').val(),
+                propertyID: $.cookie('property_id'),
+                feeitemId: $("#feeitem_id").find('.dropdown-text').attr('data-value')
+            }
+
+            $('#gridTable').jqGrid('setGridParam', {
+                datatype: 'json',
+                postData: { queryJson: JSON.stringify(queryJson) },
+                page: 1
+            }).trigger('reloadGrid');
+        });
+    }
+
+    function btn_Export() {
+       var _queryJson = {
+            YearNum: $('#YearNum').find('.dropdown-text').attr('data-value'),
+            MonthNum: $('#MonthNum').find('.dropdown-text').attr('data-value'),
+            DMonthNum: $('#txt_Keyword').val() == "" ? 0 : $('#txt_Keyword').val(),
+            propertyID: $.cookie('property_id'),
+            feeitemId: $("#feeitem_id").find('.dropdown-text').attr('data-value')
+        }
+       location.href = "/RepostryManage/Feereport/ExportArrears?queryJson=" + JSON.stringify(_queryJson);
+    }
+
+</script>
+<div class="titlePanel">
+    <div class="title-search">
+        <table>
+            <tr>
+                <td>
+                    <div id="YearNum" class="btn-group">
+                        <a class="btn btn-default dropdown-text" data-toggle="dropdown">请选择年度</a>
+                        <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                        <ul class="dropdown-menu"></ul>
+                    </div>
+                </td>
+                <td>
+                    <div id="MonthNum" class="btn-group">
+                        <a class="btn btn-default dropdown-text" data-toggle="dropdown">请选择月份</a>
+                        <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                        <ul class="dropdown-menu"></ul>
+                    </div>
+                </td>
+                <td style="padding-left: 2px;">
+                    <input id="txt_Keyword" type="text" class="form-control" placeholder="请输入超期月数" style="width: 200px;" />
+                </td>
+                <td style="padding-left:5px;">
+                    <div id="feeitem_id" class="btn-group">
+                        <a class="btn btn-default dropdown-text" data-toggle="dropdown">费用科目</a>
+                        <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                        <ul class="dropdown-menu" style="max-height:480px;overflow:auto; overflow-x:hidden;"></ul>
+                    </div>
+                </td>
+                <td style="padding-left: 5px;">
+                    <a id="btn_Search" class="btn btn-primary"><i class="fa fa-search"></i>&nbsp;查询</a>
+                    <a id="btn_Export" class="btn btn-primary" onclick="btn_Export()"><i class="fa fa-download"></i>&nbsp;导出</a>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+</div>
+<div class="gridPanel">
+    <table id="gridTable"></table>
+</div>
+

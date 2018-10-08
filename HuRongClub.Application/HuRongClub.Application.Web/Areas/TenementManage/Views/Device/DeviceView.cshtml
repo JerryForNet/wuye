@@ -1,0 +1,578 @@
+﻿@{;
+    ViewBag.Title = "表单页面";
+    Layout = "~/Views/Shared/_FlowForm.cshtml";
+}
+<!--jqgrid表格组件start-->
+<link href="/Content/scripts/plugins/jqgrid/jqgrid.css" rel="stylesheet" />
+<script src="/Content/scripts/plugins/jqgrid/grid.locale-cn.js"></script>
+<script src="/Content/scripts/plugins/jqgrid/jqgrid.min.js"></script>
+<!--表格组件end-->
+<script src="/Content/scripts/plugins/webuploader/webuploader.min.js"></script>
+<script src="/Content/scripts/plugins/webuploader/uploader.js"></script>
+<script>
+    var keyValue = request('keyValue');
+    $(function () {
+        initControl();
+        GetGridDevicePart();
+        GetGridFixContract();
+        GetGridFixRecord();
+
+        GetGridMaintence();
+        //初始化上传控件
+        $(".upload-File").InitUploader({ filesize: "10240", filepath: "/upload/file/", filetype: 3, sendurl: "/Content/Handler/upload_ajax.ashx", swf: "/Content/scripts/plugins/webuploader/uploader.swf", filetypes: "" });
+        //部件信息
+        $.SetForm({
+            url: "/TenementManage/DevicePart/GetListJson?queryJson=" + JSON.stringify({
+                d_devicenumber: keyValue
+            }),
+            success: function (data) {
+                $.each(data, function (id, item) {
+                    var row = '<li><a data-value="' + item.p_number + '">' + item.p_name + '</a></li>';
+                    $('#p_number').find('ul').append(row);
+                });
+                $('#p_number').find('li>a').click(function () {
+                    var p_number = $(this).attr('data-value');
+                    var text = $(this).html();
+                    $('#p_number').find('.dropdown-text').html(text).attr('data-value', p_number);
+                    var queryJson = {
+                        p_number: p_number
+                    }
+                    
+                    $('#gridTable-Maintence').jqGrid('setGridParam', {
+                        postData: { queryJson: JSON.stringify(queryJson) }
+                    }).trigger('reloadGrid');
+                });
+
+            }
+        });
+    });
+    //初始化控件
+    function initControl() {
+        //获取合同基本信息表单
+        if (!!keyValue) {
+            $.SetForm({
+                url: "/TenementManage/Device/GetFormJson",
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    $("#form1").SetWebControls(data);
+                }
+            })
+        }
+
+    }
+
+    function GetGridDevicePart() {
+            var selectedRowIndex = 0;
+            var $gridTable = $('#gridTable-Devicepart');
+            $gridTable.jqGrid({
+                autowidth: true,
+                height: $(window).height() - 200,
+                url: "../../TenementManage/DevicePart/GetListJson?queryJson=" + JSON.stringify({
+                    d_devicenumber: keyValue
+                }),
+                datatype: "json",
+                colModel: [
+                    {
+                        label: '部件名', name: 'p_name', index: 'd_number', width: 200, align: 'left', sortable: true
+                    },
+                    { label: '部件编号', name: 'p_number', index: 'typename', width: 160, align: 'left', sortable: true },
+                    { label: '部件型号', name: 'p_standard', index: 'd_name', width: 160, align: 'left', sortable: true },
+                    { label: '安装地点', name: 'p_place', index: 'd_standard', width: 320, align: 'left', sortable: true }
+                ],
+                viewrecords: true,
+                rowNum: 1000,
+                rowList: [30, 50, 100],
+                sortname: '',
+                sortorder: 'desc',
+                rownumbers: true,
+                shrinkToFit: false,
+                gridview: true,
+                onSelectRow: function () {
+                    selectedRowIndex = $('#' + this.id).getGridParam('selrow');
+                },
+                gridComplete: function () {
+                    $('#' + this.id).setSelection(selectedRowIndex, false);
+                }
+            });
+    }
+    function GetGridFixContract() {
+        var selectedRowIndex = 0;
+        var $gridTable = $('#gridTable-FixContract');
+        $gridTable.jqGrid({
+            autowidth: true,
+            height: $(window).height() - 200,
+            url: "../../TenementManage/wy_device_contract/GetListJson?queryJson=" + JSON.stringify({
+                devicenumber: keyValue
+            }),
+            datatype: "json",
+            colModel: [
+                { label: 'pkeyid', name: 'pkeyid', index: 'pkeyid', width: 100, align: 'left', hidden: true },
+
+                {
+                    label: '合同编号', name: 'contractnumber', index: 'contractnumber', width: 100, align: 'left', sortable: true
+                },
+                { label: '合同名称', name: 'contractname', index: 'contractname', width: 100, align: 'left', sortable: true },
+                { label: '维修单位', name: 'fixcompany', index: 'fixcompany', width: 100, align: 'left', sortable: true },
+                { label: '单位联系人', name: 'linkman', index: 'linkman', width: 100, align: 'left', sortable: true },
+                { label: '联系电话', name: 'linkphone', index: 'linkphone', width: 100, align: 'left', sortable: true },
+                { label: '合同金额', name: 'cmoney', index: 'cmoney', width: 100, align: 'left', sortable: true },
+                { label: '合同签定时间', name: 'signdate', index: 'signdate', width: 100, align: 'left', sortable: true },
+                { label: '合同开始时间', name: 'begindate', index: 'begindate', width: 100, align: 'left', sortable: true },
+                { label: '合同终止时间', name: 'enddate', index: 'enddate', width: 100, align: 'left', sortable: true },
+                { label: '合同备注', name: 'fnotes', index: 'fnotes', width: 100, align: 'left', sortable: true },
+                { label: '附件', name: 'p_place', index: 'd_standard', width: 100, align: 'left', sortable: true },
+            ],
+            viewrecords: true,
+            rowNum: 1000,
+            rowList: [30, 50, 100],
+            sortname: '',
+            sortorder: 'desc',
+            rownumbers: true,
+            shrinkToFit: false,
+            gridview: true,
+            onSelectRow: function () {
+                selectedRowIndex = $('#' + this.id).getGridParam('selrow');
+            },
+            gridComplete: function () {
+                $('#' + this.id).setSelection(selectedRowIndex, false);
+            }
+        });
+    }
+    function GetGridFixRecord() {
+        var selectedRowIndex = 0;
+        var $gridTable = $('#gridTable-FixRecord');
+        $gridTable.jqGrid({
+            autowidth: true,
+            height: $(window).height() - 200,
+            url: "../../TenementManage/wy_DeviceFix/GetListJson?queryJson=" + JSON.stringify({
+                devicenumber: keyValue
+            }),
+            datatype: "json",
+            colModel: [
+                { label: 'DeviceFixID', name: 'DeviceFixID', index: 'DeviceFixID', width: 100, align: 'left',hidden:true },
+
+                {
+                    label: '维修时间', name: 'FixDate', index: 'FixDate', width: 150, align: 'left', sortable: true
+                },
+                { label: '维修人员', name: 'Fixer', index: 'Fixer', width: 300, align: 'left', sortable: true },
+                { label: '维修情况', name: 'Content', index: 'Content', width: 350, align: 'left', sortable: true }
+            ],
+            viewrecords: true,
+            rowNum: 1000,
+            rowList: [30, 50, 100],
+            sortname: '',
+            sortorder: 'desc',
+            rownumbers: true,
+            shrinkToFit: false,
+            gridview: true,
+            onSelectRow: function () {
+                selectedRowIndex = $('#' + this.id).getGridParam('selrow');
+            },
+            gridComplete: function () {
+                $('#' + this.id).setSelection(selectedRowIndex, false);
+            }
+        });
+    }
+    function GetGridMaintence() {
+        var selectedRowIndex = 0;
+        var $gridTable = $('#gridTable-Maintence');
+        $gridTable.jqGrid({
+            autowidth: true,
+            height: $(window).height() - 200,
+            postData: { queryJson: JSON.stringify({ p_number: '' }) },
+            url: "../../TenementManage/devicemaintence/GetListJson",
+            datatype: "json",
+            colModel: [
+                { label: 'classid', name: 'classid', index: 'classid', width: 100, align: 'left', hidden: true },
+                {
+                    label: '保养名称', name: 'maintencename', index: 'maintencename', width: 350, align: 'left', sortable: true
+                },
+                { label: ' 保养内容', name: 'maintence', index: 'maintence', width: 490, align: 'left', sortable: true }
+            ],
+            viewrecords: true,
+            rowNum: 1000,
+            rowList: [30, 50, 100],
+            sortname: '',
+            sortorder: 'desc',
+            rownumbers: true,
+            shrinkToFit: false,
+            gridview: true,
+            onSelectRow: function () {
+                selectedRowIndex = $('#' + this.id).getGridParam('selrow');
+            },
+            gridComplete: function () {
+                $('#' + this.id).setSelection(selectedRowIndex, false);
+            }
+        });
+    }
+    //删除部件信息
+    function part_delete() {
+        var keyValue = $('#gridTable-Devicepart').jqGridRowValue('p_number');
+        if (keyValue) {
+            $.RemoveForm({
+                url: '../../TenementManage/DevicePart/RemoveForm',
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    $('#gridTable-Devicepart').trigger('reloadGrid');
+                }
+            })
+        } else {
+            dialogMsg('请选择需要删除的部件信息！', 0);
+        }
+    }
+    //新增部件信息
+    function part_add() {
+        dialogOpen({
+            id: 'partForm',
+            title: '添加部件信息',
+            url: '/TenementManage/DevicePart/DevicePartAdd?d_devicenumber='+keyValue,
+            width: '500px',
+            height: '350px',
+            callBack: function (iframeId) {
+                top.frames[iframeId].AcceptClick(function (data) {
+                    if (data == "1") {
+                        $("#gridTable-Devicepart").trigger("reloadGrid");
+                    }
+                });
+            }
+        });
+    }
+    //编辑部件信息
+    function part_edit() {
+        var keyValue = $('#gridTable-Devicepart').jqGridRowValue('p_number');
+        if (checkedRow(keyValue)) {
+            dialogOpen({
+                id: 'partForm',
+                title: '编辑设备台账',
+                url: '/TenementManage/DevicePart/DevicePartAdd?keyValue=' + keyValue + '&d_devicenumber='+keyValue,
+                width: '500px',
+                height: '350px',
+                callBack: function (iframeId) {
+                    top.frames[iframeId].AcceptClick(function (data) {
+                        if (data == "1") {
+                            $("#gridTable-Devicepart").trigger("reloadGrid");
+                        }
+                    });
+                }
+            })
+        }
+    }
+    //删除合同
+    function FixContract_delete() {
+        var pkeyid = $('#gridTable-FixContract').jqGridRowValue('pkeyid');
+        if (pkeyid) {
+            $.RemoveForm({
+                url: '../../TenementManage/wy_device_contract/RemoveForm',
+                param: { keyValue: pkeyid },
+                success: function (data) {
+                    $('#gridTable-FixContract').trigger('reloadGrid');
+                }
+            })
+        } else {
+            dialogMsg('请选择需要删除的合同！', 0);
+        }
+    }
+    //新增合同
+    function FixContract_add() {
+        dialogOpen({
+            id: 'ContractForm',
+            title: '新增合同',
+            url: '/TenementManage/wy_device_contract/wy_device_contractForm?d_devicenumber=' + keyValue,
+            width: '500px',
+            height: '600px',
+            //btn: null,
+            callBack: function (iframeId) {
+                top.frames[iframeId].AcceptClick(function (data) {
+                    if (data == "1") {
+                        $("#gridTable-FixContract").trigger("reloadGrid");
+                    }
+                });
+            }
+        });
+    }
+    //编辑合同
+    function FixContract_edit() {
+        var pkeyid = $('#gridTable-FixContract').jqGridRowValue('pkeyid');
+        if (checkedRow(pkeyid)) {
+            dialogOpen({
+                id: 'ContractForm',
+                //btn: null,
+                title: '编辑合同',
+                url: '/TenementManage/wy_device_contract/wy_device_contractForm?keyValue=' + pkeyid + '&d_devicenumber=' + keyValue,
+                width: '500px',
+                height: '600px',
+                callBack: function (iframeId) {
+                    top.frames[iframeId].AcceptClick(function (data) {
+                        if (data == "1") {
+                            $("#gridTable-FixContract").trigger("reloadGrid");
+                        }
+                    });
+                }
+            })
+        }
+    }
+    //删除维修记录
+    function FixRecord_delete() {
+        var DeviceFixID = $('#gridTable-FixRecord').jqGridRowValue('DeviceFixID');
+        if (DeviceFixID) {
+            $.RemoveForm({
+                url: '../../TenementManage/wy_DeviceFix/RemoveForm',
+                param: { keyValue: DeviceFixID },
+                success: function (data) {
+                    $('#gridTable-FixRecord').trigger('reloadGrid');
+                }
+            })
+        } else {
+            dialogMsg('请选择需要删除的维修记录！', 0);
+        }
+    }
+    //新增维修记录
+    function FixRecord_add() {
+        dialogOpen({
+            id: 'FixRecordForm',
+            title: '新增维修记录',
+            url: '/TenementManage/wy_DeviceFix/wy_DeviceFixForm?d_devicenumber=' + keyValue,
+            width: '600px',
+            height: '360px',
+            //btn: null,
+            callBack: function (iframeId) {
+                top.frames[iframeId].AcceptClick(function (data) {
+                    if (data == "1") {
+                        $("#gridTable-FixRecord").trigger("reloadGrid");
+                    }
+                });
+            }
+        });
+    }
+    //编辑维修记录
+    function FixRecord_edit() {
+        var DeviceFixID = $('#gridTable-FixRecord').jqGridRowValue('DeviceFixID');
+        if (checkedRow(DeviceFixID)) {
+            dialogOpen({
+                id: 'FixRecordForm',
+                //btn: null,
+                title: '编辑维修记录',
+                url: '/TenementManage/wy_DeviceFix/wy_DeviceFixForm?keyValue=' + DeviceFixID + '&d_devicenumber=' + keyValue,
+                width: '600px',
+                height: '360px',
+                callBack: function (iframeId) {
+                    top.frames[iframeId].AcceptClick(function (data) {
+                        if (data == "1") {
+                            $("#gridTable-FixRecord").trigger("reloadGrid");
+                        }
+                    });
+                }
+            })
+        }
+    }
+    //删除部件保养信息
+    function Maintence_delete() {
+        var classid = $('#gridTable-Maintence').jqGridRowValue('classid');
+        if (classid) {
+            $.RemoveForm({
+                url: '../../TenementManage/devicemaintence/RemoveForm',
+                param: { keyValue: classid },
+                success: function (data) {
+                    $('#gridTable-Maintence').trigger('reloadGrid');
+                }
+            })
+        } else {
+            dialogMsg('请选择需要删除的Device！', 0);
+        }
+    }
+    //新增部件保养信息
+    function Maintence_add() {
+        var p_number = $('#p_number').find('.dropdown-text').attr('data-value');
+        if (!!p_number) {
+            dialogOpen({
+                id: 'MaintenceForm',
+                title: '新增部件保养信息',
+                url: '/TenementManage/devicemaintence/DeviceMaintenceForm?p_number=' + p_number,
+                width: '600px',
+                height: '300px',
+                callBack: function (iframeId) {
+                    top.frames[iframeId].AcceptClick(function (data) {
+                        if (data == "1") {
+                            $("#gridTable-Maintence").trigger("reloadGrid");
+                        }
+                    });
+                }
+            });
+        }
+        else {
+            dialogMsg('请选择需要部件编号！', 0);
+        }
+    }
+    //编辑部件保养信息
+    function Maintence_edit() {
+        var classid = $('#gridTable-Maintence').jqGridRowValue('classid');
+        if (checkedRow(DeviceFixID)) {
+            dialogOpen({
+                id: 'MaintenceForm',
+                title: '编辑部件保养信息',
+                url: '/TenementManage/wy_DeviceFix/wy_DeviceFixForm?keyValue=' + classid + '&p_number=' + p_number,
+                width: '500px',
+                height: '700px',
+                callBack: function (iframeId) {
+                    top.frames[iframeId].AcceptClick(function (data) {
+                        if (data == "1") {
+                            $("#gridTable-Maintence").trigger("reloadGrid");
+                        }
+                    });
+                }
+            })
+        }
+    }
+</script>
+<div style="margin-top: 10px; margin-right: 10px;">
+    <table class="form">
+        <tr>
+            <td class="formTitle">设备编号：<font face="宋体"></font></td>
+            <td class="formValue">
+                <input id="d_number" type="text" class="form-control" disabled />
+            </td>
+            <td class="formTitle">设备名称：</td>
+            <td class="formValue">
+                <input id="d_name" type="text" class="form-control" disabled />
+            </td>
+            <td class="formTitle">安装地点：</td>
+            <td class="formValue">
+                <input id="d_place" type="text" class="form-control" disabled />
+            </td>
+        </tr>
+       
+        </table>
+        <ul class="nav nav-tabs">
+            <li class="active"><a href="#BaseInfo" data-toggle="tab">设备基本信息</a></li>
+            <li><a href="#Devicepart" data-toggle="tab">设备部件</a></li>
+            <li><a href="#FixContract" data-toggle="tab">维修合同</a></li>
+            <li><a href="#FixRecord" data-toggle="tab">维修记录</a></li>
+            <li><a href="#Maintence" data-toggle="tab">设备部件保养内容备注</a></li>
+        </ul>
+        <div class="step-content" style="border-left: none; border-bottom: none; border-right: none;">
+            <div class="step-pane active" id="BaseInfo" style="margin-left: 0px; margin-top: 15px; margin-right: 30px;">
+                <table class="form">
+                    <tr>
+                        <td class="formTitle">设备型号：<font face="宋体"></font></td>
+                        <td class="formValue">
+                            <input id="d_standard" type="text" class="form-control" disabled />
+                        </td>
+                        <td class="formTitle">所属物业：</td>
+                        <td class="formValue">
+                            <input id="propertyname" type="text" class="form-control" disabled />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="formTitle">设备类型：</td>
+                        <td class="formValue">
+                            <input id="typename" type="text" class="form-control" disabled />
+                        </td>
+                       
+                    </tr>
+                    <tr>
+                        <td class="formTitle">使用日期：<font face="宋体"></font></td>
+                        <td class="formValue">
+                            <input id="d_usedate" type="text" class="form-control" disabled />
+                        </td>
+                        <td class="formTitle">设备产地：<font face="宋体"></font></td>
+                        <td class="formValue">
+                            <input id="d_makeplace" type="text" class="form-control" disabled />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="formTitle">供应商：</td>
+                        <td class="formValue">
+                            <input id="d_maker" type="text" class="form-control" disabled />
+                        </td>
+                        <td class="formTitle">联系人：</td>
+                        <td class="formValue">
+                            <input id="d_contractman" type="text" class="form-control" disabled />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="formTitle">联系电话：</td>
+                        <td class="formValue">
+                            <input id="d_contractphone" type="text" class="form-control" disabled />
+                        </td>
+                        <td class="formTitle">联系地址：</td>
+                        <td class="formValue">
+                            <input id="d_contractaddress" type="text" class="form-control" disabled />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="formTitle">出厂编号：</td>
+                        <td class="formValue">
+                            <input id="d_origionnumber" type="text" class="form-control" disabled />
+                        </td>
+                        <td class="formTitle">设备原值：</td>
+                        <td class="formValue">
+                            <input id="d_money" type="text" class="form-control" disabled />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="formTitle">检修处理信息：</td>
+                        <td class="formValue" colspan="3">
+                            <textarea id="d_descript" class="form-control" disabled></textarea>
+                        </td>
+
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="step-pane" id="Devicepart" style="margin: 5px;">
+                <div style="height: 40px; line-height: 33px; text-align: right;">
+                    <div class="btn-group">
+                        <a id="part_add" class="btn btn-default" onclick="part_add()"><i class="fa fa-plus"></i>&nbsp;新增</a>
+                        <a id="lr-edit" class="btn btn-default" onclick="part_edit()"><i class="fa fa-pencil-square-o"></i>&nbsp;编辑</a>
+                        <a id="part_delete" class="btn btn-default" onclick="part_delete()"><i class="fa fa-trash-o"></i>&nbsp;删除</a>
+                    </div>
+                </div>
+                <table id="gridTable-Devicepart"></table>
+            </div>
+            <div class="step-pane" id="FixContract" style="margin: 5px;">
+                <div style="height: 40px; line-height: 33px; text-align: right;">
+                    <div class="btn-group">
+                        <a id="FixContract_add" class="btn btn-default" onclick="FixContract_add()"><i class="fa fa-plus"></i>&nbsp;新增</a>
+                        <a id="FixContract_edit" class="btn btn-default" onclick="FixContract_edit()"><i class="fa fa-pencil-square-o"></i>&nbsp;编辑</a>
+                        <a id="FixContract_delete" class="btn btn-default" onclick="FixContract_delete()"><i class="fa fa-trash-o"></i>&nbsp;删除</a>
+                    </div>
+                </div>
+                <table id="gridTable-FixContract"></table>
+            </div>
+            <div class="step-pane" id="FixRecord" style="margin: 5px;">
+                <div style="height: 40px; line-height: 33px; text-align: right;">
+                    <div class="btn-group">
+                        <a id="FixRecord_add" class="btn btn-default" onclick="FixRecord_add()"><i class="fa fa-plus"></i>&nbsp;新增</a>
+                        <a id="FixRecord_edit" class="btn btn-default" onclick="FixRecord_edit()"><i class="fa fa-pencil-square-o"></i>&nbsp;编辑</a>
+                        <a id="FixRecord_delete" class="btn btn-default" onclick="FixRecord_delete()"><i class="fa fa-trash-o"></i>&nbsp;删除</a>
+                    </div>
+                </div>
+                <table id="gridTable-FixRecord"></table>
+            </div>
+            <div class="step-pane" id="Maintence" style="margin: 5px;">
+                <div class="title-search" style="width:360px; float:left; margin-left:50px;">
+                    <table>
+                        <tr>
+                            <td>
+                                <div id="p_number" class="btn-group" style="padding-right:20px; max-height:260px;">
+                                    <a class="btn btn-default dropdown-text" data-toggle="dropdown">部件编号</a>
+                                    <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                                    <ul class="dropdown-menu" style="max-height:260px;overflow:auto;overflow-x:hidden;"></ul>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div style="height: 40px; line-height: 33px; text-align: right;">
+                    <div class="btn-group">
+                        <a class="btn btn-default" onclick="Maintence_add()"><i class="fa fa-plus"></i>&nbsp;新增</a>
+                        <a class="btn btn-default" onclick="Maintence_delete()"><i class="fa fa-trash-o"></i>&nbsp;删除</a>
+                        @*<a  class="btn btn-default" onclick="Maintence_edit()"><i class="fa fa-pencil-square-o"></i>&nbsp;编辑</a>
+                        <a class="btn btn-default" onclick="Maintence_delete()"><i class="fa fa-trash-o"></i>&nbsp;删除</a>*@
+                    </div>
+                </div>
+                <table id="gridTable-Maintence"></table>
+            </div>
+        </div>
+</div>

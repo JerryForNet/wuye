@@ -1,0 +1,65 @@
+﻿@{
+    ViewBag.Title = "档案导出管理";
+    Layout = "~/Views/Shared/_FlowForm.cshtml";
+}
+<style type="text/css">
+    .formValue ul li { float:left; width:200px; line-height:25px;}
+</style>
+<script>
+    var queryJson = request('queryJson');
+
+    //保存表单
+    function AcceptClick(callback) {
+        
+        var $field = "";
+        $($("input[name='check_name']:checked")).each(function () {
+            $field += this.value + ',';
+        });
+        if ($field != "") {
+            $field = $field.substring(0, ($field.length - 1));
+        }
+        callback($field)
+        //location.href = "/PersonnelManage/Employinfo/GetEmployinfoExport?field=" + $field + "&queryJson=" + JSON.stringify(queryJson);
+
+        dialogClose();
+    }
+</script>
+<div style="margin-left: 10px; margin-right: 10px;">
+    <div class="tab-content" style="padding-top: 15px;">
+        <div id="BaseInfo" style="padding-right: 30px;">
+            <table class="form">
+                <tr>
+                    <td class="formTitle" style="vertical-align: top;">选择导出字段</td>
+                    <td class="formValue">
+                        <div id="divPY" style="margin-top: -7px;">
+                            <ul>
+                                <li><input type="checkbox" name="check_name" value="empcode" id="cb0" /><label for="cb0">&nbsp;工号</label></li>
+                                <li><input type="checkbox" name="check_name" value="empname" id="cb1" /><label for="cb1">&nbsp;姓名</label></li>
+                                <li><input type="checkbox" name="check_name" value="sex" id="cb2" /><label for="cb2">&nbsp;性别</label></li>
+                                <li><input type="checkbox" name="check_name" value="deptname" id="cb3" /><label for="cb3">&nbsp;部门</label></li>
+                                <li><input type="checkbox" name="check_name" value="indate" id="cb4" /><label for="cb4">&nbsp;进公司时间</label></li>
+                                <li><input type="checkbox" name="check_name" value="hiredate" id="cb5" /><label for="cb5">&nbsp;合同开始日期</label></li>
+                                <li><input type="checkbox" name="check_name" value="firedate" id="cb6" /><label for="cb6">&nbsp;合同结束日期</label></li>
+                                <li><input type="checkbox" name="check_name" value="address" id="cb7" /><label for="cb7">&nbsp;家庭地址</label></li>
+                                <li><input type="checkbox" name="check_name" value="postcode" id="cb8" /><label for="cb8">&nbsp;邮编</label></li>
+                                <li><input type="checkbox" name="check_name" value="homephone" id="cb9" /><label for="cb9">&nbsp;家庭电话</label></li>
+                                <li><input type="checkbox" name="check_name" value="mobilephone" id="cb10" /><label for="cb10">&nbsp;手机</label></li>
+                                <li><input type="checkbox" name="check_name" value="identityno" id="cb11" /><label for="cb11">&nbsp;身份证号</label></li>
+                                <li><input type="checkbox" name="check_name" value="birthday" id="cb12" /><label for="cb12">&nbsp;出生日期</label></li>
+                                <li><input type="checkbox" name="check_name" value="p_name" id="cb13" /><label for="cb13">&nbsp;政治面貌</label></li>
+                                <li><input type="checkbox" name="check_name" value="c_name" id="cb14" /><label for="cb14">&nbsp;职务</label></li>
+                                <li><input type="checkbox" name="check_name" value="d_name" id="cb15" /><label for="cb15">&nbsp;学历</label></li>
+                                <li><input type="checkbox" name="check_name" value="du_name" id="cb16" /><label for="cb16">&nbsp;职称</label></li>
+                                <li><input type="checkbox" name="check_name" value="t_name" id="cb17" /><label for="cb17">&nbsp;技术等级</label></li>
+                                <li><input type="checkbox" name="check_name" value="j_name" id="cb18" /><label for="cb18">&nbsp;岗位</label></li>
+                                <li><input type="checkbox" name="check_name" value="ca_name" id="cb19" /><label for="cb19">&nbsp;职级</label></li>
+                                <li><input type="checkbox" name="check_name" value="co_name" id="cb20" /><label for="cb20">&nbsp;用工来源</label></li>
+                                <li><input type="checkbox" name="check_name" value="contracttype" id="cb21" /><label for="cb21">&nbsp;用工性质</label></li>
+                            </ul>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>

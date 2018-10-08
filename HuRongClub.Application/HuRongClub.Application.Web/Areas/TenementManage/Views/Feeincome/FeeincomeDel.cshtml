@@ -1,0 +1,167 @@
+﻿@{;
+    ViewBag.Title = "删除界面";
+    Layout = "~/Views/Shared/_OrderForm.cshtml";
+}
+<style>
+    .ui-jqgrid .form-control { width:100%; }
+    .ui-jqgrid .ui-jqgrid-view input { font-size:12px; }
+    .brs { border:1px solid #ccc;}
+</style>
+<script>
+    var keyValue = request('keyValue');
+    $(function () {
+        InitialPage;
+        GetOrderEntryGrid();
+        InitControl();
+    });
+    //初始化页面url: 
+    function InitialPage() {;
+        //resize重设(表格、树形)宽高
+        $(window).resize(function (e) {
+            window.setTimeout(function () {
+                $('#gridTable').setGridWidth(($('.gridPanel').width()));
+            }, 200);
+            e.stopPropagation();
+        });
+    }
+    //加载明细表
+    function GetOrderEntryGrid() {
+        var $grid = $('#gridTable');
+        $grid.jqGrid({
+            unwritten: false,
+            datatype: "local",
+            height: '100%',
+            autowidth: true,
+            colModel: [
+                { label: 'income_id', name: 'income_id', width: 100, align: 'left', sortable: false, resizable: false, hidden: true },
+                { label: 'owner_id', name: 'owner_id', width: 100, align: 'left', sortable: false, resizable: false, hidden: true },
+                { label: 'room_id', name: 'room_id', width: 100, align: 'left', sortable: false, resizable: false, hidden: true },
+                { label: 'rentcontract_id', name: 'rentcontract_id', width: 100, align: 'left', sortable: false, resizable: false, hidden: true },
+                { label: 'feeitem_id', name: 'feeitem_id', width: 100, align: 'left', sortable: false, resizable: false, hidden: true },
+                { label: 'fee_year', name: 'fee_year', width: 100, align: 'left', sortable: false, resizable: false, hidden: true },
+                { label: 'fee_month', name: 'fee_month', width: 100, align: 'left', sortable: false, resizable: false, hidden: true },
+                { label: '所属物业', name: 'property_name', width: 200, align: 'left', sortable: false, resizable: false },
+                { label: '费用科目', name: 'feeitem_name', width: 150, align: 'left', sortable: false, resizable: false },
+                { label: '应收年月', name: 'fee_years', width: 100, align: 'left', sortable: false, resizable: false },
+                { label: '应收费用', name: 'fee_income', width: 100, align: 'left', sortable: false, resizable: false },
+                { label: '备注', name: 'memo', width: 100, align: 'left', sortable: false, resizable: false },
+            ],
+            pager: false,
+            rownumbers: true,
+            shrinkToFit: false,
+            gridview: true,
+            footerrow: true,
+            gridComplete: function () {
+                //合计
+                $(this).footerData("set", {
+                    "fee_years": "合计：",
+                    "fee_income": "<span id='Totalfee_income'>0.00</span>",
+                });
+                $('table.ui-jqgrid-ftable td[aria-describedby="gridTable_fee_income"]').prevUntil().css("border-right-color", "#fff");
+            }
+        });
+        var $total = keyValue.split(',').length;
+
+        for (var i = 0; i < $total; i++) {
+            var rowdata = {
+                income_id: '<input name="income_id" type="text" class="editable center decimal disabled"  readonly="readonly" />',
+                owner_id: '<input name="owner_id" type="text" class="editable center decimal disabled"  readonly="readonly" />',
+                room_id: '<input name="room_id" type="text" class="editable center decimal disabled"  readonly="readonly" />',
+                rentcontract_id: '<input name="rentcontract_id" type="text" class="editable center decimal disabled"  readonly="readonly" />',
+                feeitem_id: '<input name="feeitem_id" type="text" class="editable center decimal disabled"  readonly="readonly" />',
+                fee_year: '<input name="fee_year" type="text" class="editable center decimal disabled"  readonly="readonly" />',
+                fee_month: '<input name="fee_month" type="text" class="editable center decimal disabled"  readonly="readonly" />',
+                property_name: '<input name="property_name" type="text" class="editable center decimal disabled"  readonly="readonly" />',
+                feeitem_name: '<input name="feeitem_name" type="text" class="editable center decimal disabled" readonly="readonly" />',
+                fee_years: '<input name="fee_years" type="text" class="editable center decimal disabled"  readonly="readonly"/>',
+                fee_income: '<input name="fee_income" type="text" class="editable center decimal disabled"  readonly="readonly" />',
+                memo: '<input name="memo" type="text" class="editable center decimal disabled brs" />',
+            }
+            $grid.jqGrid('addRowData', i, rowdata);
+        };
+        
+    }
+    //初始化控件
+    function InitControl() { 
+        //获取表单
+        if (!!keyValue) {
+            $.SetForm({
+                url: "/TenementManage/Feeincome/GetListsJson?type=5&owner_id=" + keyValue,
+                success: function (data) {
+                    var orderEntry = data;
+                    //合计
+                    var TotalPrice = 0.00;
+                    $("#gridTable").find('[role=row]').each(function (i) {
+                        var row = orderEntry[i - 1];
+                        if (row != undefined) {
+                            $(this).find('input[name="income_id"]').val(row.income_id);
+                            $(this).find('input[name="owner_id"]').val(row.owner_id);
+                            $(this).find('input[name="room_id"]').val(row.room_id);
+                            $(this).find('input[name="rentcontract_id"]').val(row.rentcontract_id);
+                            $(this).find('input[name="feeitem_id"]').val(row.feeitem_id);
+                            $(this).find('input[name="fee_year"]').val(row.fee_year);
+                            $(this).find('input[name="fee_month"]').val(row.fee_month);
+                            $(this).find('input[name="property_name"]').val(row.property_name);
+                            $(this).find('input[name="feeitem_name"]').val(row.feeitem_name);
+                            $(this).find('input[name="fee_years"]').val(row.fee_years.split(' ')[0]);
+                            $(this).find('input[name="fee_income"]').val(row.fee_income);
+
+                            if (row.fee_income != "" && row.fee_income != undefined) {
+                                TotalPrice += Number(row.fee_income);
+                            }
+                        }
+                    });
+
+                    $("#Totalfee_income").text(toDecimal(TotalPrice));
+                }
+            });
+        }
+    }
+    //保存表单;
+    function AcceptClick() {
+        if (!$('#form1').Validform()) {
+            return false;
+        }
+
+        var FeeincomeEntryJson = [];
+        $("#gridTable").find('[role=row]').each(function (i) {
+            if (!!$(this).find('input[name="income_id"]').val()) {
+                FeeincomeEntryJson.push({
+                    income_id: $(this).find('input[name="income_id"]').val(),
+                    owner_id: $(this).find('input[name="owner_id"]').val(),
+                    room_id: $(this).find('input[name="room_id"]').val(),
+                    rentcontract_id: $(this).find('input[name="rentcontract_id"]').val(),
+                    owner_id: $(this).find('input[name="owner_id"]').val(),
+                    fee_year: $(this).find('input[name="fee_year"]').val(),
+                    fee_month: $(this).find('input[name="fee_month"]').val(),
+                    feeitem_id: $(this).find('input[name="feeitem_id"]').val(),
+                    fee_income: $(this).find('input[name="fee_income"]').val(),
+                    fee_years: $(this).find('input[name="fee_years"]').val(),
+                    memo: $(this).find('input[name="memo"]').val()
+                });
+            }
+        });
+        var postData = $("#form1").GetWebControls(keyValue);
+        postData["FeeincomeEntryJson"] = JSON.stringify(FeeincomeEntryJson);
+        $.RemoveForm({
+            url: "/TenementManage/Feeincome/RemovesForm?keyValue=" + keyValue,
+            param: postData,
+            loading: "正在保存数据...",
+            success: function () {
+                if (request('type') == "1") {
+                    $.currentIframe().$("#gridTablesRent").trigger("reloadGrid");
+                }
+                else {
+                    $.currentIframe().$("#gridTable").trigger("reloadGrid");
+                }
+
+                dialogClose();
+            }
+        })
+    }
+</script>
+<div style="margin-top: 20px; margin-right: 30px;">
+    <div class="gridPanel">
+        <table id="gridTable"></table>
+    </div>
+</div>

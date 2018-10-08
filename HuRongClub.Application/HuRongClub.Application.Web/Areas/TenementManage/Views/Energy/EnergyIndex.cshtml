@@ -1,0 +1,182 @@
+﻿@{;
+ViewBag.Title = "列表页面";
+Layout = "~/Views/Shared/_Index.cshtml";
+}
+<script>
+    $(function () {
+        InitialPage();
+        GetGrid();
+
+        // 查询
+        $("#btn_Search").click(function () {
+            $("#gridTable").jqGrid('setGridParam', { datatype: 'json' }).trigger('reloadGrid'); // #1
+        });
+    });
+    //初始化页面
+    function InitialPage() {
+        //resize重设布局;
+        $(window).resize(function (e) {
+            window.setTimeout(function () {
+                $('#gridTable').setGridWidth(($('.gridPanel').width())-10);
+                $('#gridTable').setGridHeight($(window).height() - 135);
+            }, 200);
+            e.stopPropagation();
+        });
+    }
+    //加载表格
+    function GetGrid() {
+        var selectedRowIndex = 0;
+        var $gridTable = $('#gridTable');
+        $gridTable.jqGrid({
+            height: $(window).height() - 135,
+            width:$(window).width() - 20,
+            url: "../../TenementManage/Energy/GetListJson",
+            datatype: "local",
+            colModel: [
+                { label: 'FEnergyID', name: 'FEnergyID', index: 'FEnergyID', hidden: true, align: 'center', sortable: false },
+                { label: '日期', name: 'FDate', index: 'FDate', align: 'center', sortable: false, formatter: "date", formatoptions: { newformat: 'Y-m-d' } },
+                { label: '用电数', name: 'FEletricity', index: 'FEletricity', align: 'center', sortable: false },
+                { label: '金额', name: 'FEmoney', index: 'FEmoney',align: 'center', sortable: false, formatter: 'number', formatoptions: { thousandsSeparator: "", decimalPlaces: 2 } },
+                { label: '用水数', name: 'FWater', index: 'FWater', align: 'center', sortable: false },
+                { label: '金额', name: 'FWmoney', index: 'FWmoney', align: 'center', sortable: false, formatter: 'number', formatoptions: { thousandsSeparator: "", decimalPlaces: 2 } },
+                { label: '用油数', name: 'FOil', index: 'FOil', align: 'center', sortable: false },
+                { label: '金额', name: 'FOmoney', index: 'FOmoney', align: 'center', sortable: false, formatter: 'number', formatoptions: { thousandsSeparator: "", decimalPlaces: 2 } },
+                { label: '用气数', name: 'FGas', index: 'FGas', align: 'center', sortable: false },
+                { label: '金额', name: 'FGmoney', index: 'FGmoney', align: 'center', sortable: false, formatter: 'number', formatoptions: { thousandsSeparator: "", decimalPlaces: 2 } },
+                { label: '小计', name: 'Subtotal', index: 'Subtotal', align: 'center', sortable: false, formatter: 'number', formatoptions: { thousandsSeparator: "", decimalPlaces: 2 } }
+            ],
+            pager: false,
+            rowNum: 'all',
+            shrinkToFit: false,           
+            viewrecords: true,
+            gridview: true,
+            footerrow: true,
+            onSelectRow: function () {
+                selectedRowIndex = $('#' + this.id).getGridParam('selrow');
+            },
+            gridComplete: function () {
+                $('#' + this.id).setSelection(selectedRowIndex, false);
+
+                var totalFEletricity = $(this).getCol("FEletricity", false, "sum");
+                var totalFEmoney = $(this).getCol("FEmoney", false, "sum");
+                var totalFWater = $(this).getCol("FWater", false, "sum");
+                var totalFWmoney = $(this).getCol("FWmoney", false, "sum");
+                var totalFOil = $(this).getCol("FOil", false, "sum");
+                var totalFOmoney = $(this).getCol("FOmoney", false, "sum");
+                var totalFGas = $(this).getCol("FGas", false, "sum");
+                var totalFGmoney = $(this).getCol("FGmoney", false, "sum");
+                var totalSubtotal = $(this).getCol("Subtotal", false, "sum");
+                //合计
+                $(this).footerData("set", {
+                    "FDate": "合计：",
+                    "FEletricity": totalFEletricity,
+                    "FEmoney": totalFEmoney,
+                    "FWater": totalFWater,
+                    "FWmoney": totalFWmoney,
+                    "FOil": totalFOil,
+                    "FOmoney": totalFOmoney,
+                    "FGas": totalFGas,
+                    "FGmoney": totalFGmoney,
+                    "Subtotal": totalSubtotal,
+                });
+                $('table.ui-jqgrid-ftable td').prevUntil().css("border-right-color", "#fff");
+
+            }
+        });
+
+        //查询事件
+        $("#btn_Search").click(function () {
+            var queryJson = {
+                StartDate: $("#StartDate").val(),
+                EndDate: $("#EndDate").val(),
+                owner_name: $("#owner_name").val()
+            }
+            $gridTable.jqGrid('setGridParam', {
+                postData: { queryJson: JSON.stringify(queryJson) },
+                page: 1
+            }).trigger('reloadGrid');
+        });
+        //查询回车
+        $('#txt_Keyword').bind('keypress', function (event) {
+            if (event.keyCode == "13") {
+                $('#btn_Search').trigger("click");
+            }
+        });
+    }
+    //新增
+    function btn_add() {
+        dialogOpen({
+            id: 'Form',
+            title: '能耗登记',
+            url: '/TenementManage/Energy/EnergyForm',
+            width: '600px',
+            height: '350px',
+            callBack: function (iframeId) {
+                top.frames[iframeId].AcceptClick();
+            }
+        });
+    }
+    //编辑
+    function btn_edit() {
+        var keyValue = $("#gridTable").jqGridRowValue("FEnergyID");
+        if (checkedRow(keyValue)) {
+            dialogOpen({
+                id: 'Form',
+                title: '能耗编辑',
+                url: '/TenementManage/Energy/EnergyForm?keyValue=' + keyValue,
+                width: '600px',
+                height: '350px',
+                callBack: function (iframeId) {
+                    top.frames[iframeId].AcceptClick();
+                }
+            })
+        }
+    }
+    //删除
+    function btn_delete() {
+        var keyValue = $("#gridTable").jqGridRowValue("FEnergyID");
+        if (keyValue) {
+            $.RemoveForm({
+                url: '../../TenementManage/Energy/RemoveForm',
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    $('#gridTable').trigger('reloadGrid');
+                }
+            })
+        } else {
+            dialogMsg('请选择需要删除的Energy！', 0);
+        }
+    }
+</script>
+<div class="titlePanel">
+    <div class="title-search">
+        <table>
+            <tr>
+                <td>日期：</td>
+                <td>
+                    <input id="StartDate" type="text" class="form-control input-datepicker" style="width:120px;" placeholder="起始日期" onfocus="WdatePicker({  dateFmt: 'yyyy-MM-dd' })" />
+                </td>
+                <td>&nbsp;至&nbsp;</td>
+                <td style="padding-right:10px;">
+                    <input id="EndDate" type="text" class="form-control input-datepicker" style="width:120px;" placeholder="结束日期" onfocus="WdatePicker({ minDate: '#F{$dp.$D(\'StartDate\')}', dateFmt: 'yyyy-MM-dd' })" />
+                </td>
+                <td style="padding-left: 5px;">
+                    <a id="btn_Search" class="btn btn-primary"><i class="fa fa-search"></i>查询</a>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div class="toolbar">
+        <div class="btn-group">
+            <a id="lr-replace" class="btn btn-default" onclick="reload()"><i class="fa fa-refresh"></i>&nbsp;刷新</a>
+            <a id="lr-add" class="btn btn-default" onclick="btn_add()"><i class="fa fa-plus"></i>&nbsp;新增</a>
+            <a id="lr-edit" class="btn btn-default" onclick="btn_edit()"><i class="fa fa-pencil-square-o"></i>&nbsp;编辑</a>
+            <a id="lr-delete" class="btn btn-default" onclick="btn_delete()"><i class="fa fa-trash-o"></i>&nbsp;删除</a>
+        </div>
+        <script>$('.toolbar').authorizeButton()</script>
+    </div>
+</div>
+<div class="gridPanel">
+    <table id="gridTable"></table>
+    <div id="gridPager"></div>
+</div>

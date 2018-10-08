@@ -1,0 +1,444 @@
+﻿@{;
+    ViewBag.Title = "入户页面";
+    Layout = "~/Views/Shared/_OrderForm.cshtml";
+}
+<!--jqgrid表格组件start-->
+<link href="/Content/scripts/plugins/jqgrid/jqgrid.css" rel="stylesheet" />
+<script src="/Content/scripts/plugins/jqgrid/grid.locale-cn.js"></script>
+<script src="/Content/scripts/plugins/jqgrid/jqgrid.min.js"></script>
+<!--表格组件end-->
+
+<script src="/Content/scripts/plugins/webuploader/webuploader.min.js"></script>
+<script src="/Content/scripts/plugins/webuploader/uploader.js"></script>
+<style type="text/css">
+    body { margin:0px;}
+    .brs { border:1px solid #ccc;}
+</style>
+<script>;
+    $(function () {
+        InitialPage();
+        getGridCost();
+        
+        //初始化上传控件
+        $(".upload-File").InitUploader({ filesize: "10240", filepath: "/upload/file/", filetype: 3, sendurl: "/Content/Handler/upload_ajax.ashx", swf: "/Content/scripts/plugins/webuploader/uploader.swf", filetypes: "xls" });
+    });
+    //初始化页面
+    function InitialPage() {
+        //resize重设布局;
+        $(window).resize(function (e) {
+            window.setTimeout(function () {
+                $('#gridTable').setGridWidth(($('.gridPanel').width())-20);
+            }, 200);
+            e.stopPropagation();
+        });
+
+        $("#wizard-steps").css("height", $(window).height()-60)
+
+        //加载楼栋
+        $.SetForm({
+            url: "/TenementManage/Building/GetListJson",
+            success: function (data) {
+                $.each(data, function (id, item) {
+                    var row = '<li><a data-value="' + item.id + '">' + item.text + '</a></li>';
+                    $('#building_id').find('ul').append(row);
+
+                    $('#building_ids').find('ul').append(row);
+                });
+                $('#building_id').find('li>a').click(function () {
+                    var id = $(this).attr('data-value');
+                    var text = $(this).html();
+                    $('#building_id').find('.dropdown-text').html(text).attr('data-value', id);
+                    $('#room_id').find('.dropdown-text').html("==入住房间单元==");
+                    GetList(id);
+                    $("#room_name").val("");
+                    $("#building_dim").val("");
+                    $("#room_dim").val("");
+                    $("#room_number").val("");
+                    $("#gridTable-Cost").clearGridData();
+                });
+                $('#building_ids').find('li>a').click(function () {
+                    var id = $(this).attr('data-value');
+                    var text = $(this).html();
+                    $('#building_ids').find('.dropdown-text').html(text).attr('data-value', id);
+
+                    loadDown();
+                });
+            }
+        });
+    }
+    //加载房间
+    function GetList(keyValue) {
+        if (keyValue == null || undefined || keyValue == "" || keyValue == "0") {
+            $('#room_id').find('ul').find("li").remove();
+        }
+        else {
+            $('#room_id').find('ul').find("li").remove();
+            $.SetForm({
+                url: "/TenementManage/Building/GetRoomTreeJson",
+                param: { keyValue: keyValue, Type:2 },
+                success: function (data) {
+                    $.each(data, function (id, item) {
+                        var row = '<li><a data-value="' + item.id + '">' + item.text + '</a></li>';
+                        $('#room_id').find('ul').append(row);
+                    });
+                    $('#room_id').find('li>a').click(function () {
+                        var id = $(this).attr('data-value');
+                        var text = $(this).html();
+                        $('#room_id').find('.dropdown-text').html(text).attr('data-value', id);
+
+                        if (id != "" && id != undefined) {
+                            $.SetForm({
+                                url: "/TenementManage/Building/GetRoomFormJson",
+                                param: { keyValue: id },
+                                success: function (data) {
+                                    $("#room_name").val(data.room_name);
+                                    $("#building_dim").val(data.building_dim);
+                                    $("#room_dim").val(data.room_dim);
+                                    $("#room_number").val(data.room_number);
+                                }
+                            });
+                        }
+                    });
+                }
+            })
+        }
+    }
+
+    /*单元收费标准being==================================*/
+    var buttonJson = "";
+    function getGridCost() {
+        var $owner_id = $("#owner_id").val();
+        var $room_id = $('#room_id').find('.dropdown-text').attr('data-value');
+        $.ajax({
+            url: "/TenementManage/Owner_fee/GetListByRoomJson?keyValue=" + $room_id + "&owner_id=" + $owner_id,
+            type: "get",
+            dataType: "json",
+            success: function (data) {
+                buttonJson = data;
+            },
+        });
+        var $grid = $("#gridTable-Cost");
+        $grid.jqGrid({
+            unwritten: false,
+            url: "/TenementManage/Owner_fee/GetListByRoomJson?keyValue=" + $room_id + "&owner_id=" + $owner_id,
+            datatype: "json",
+            height: $(window).height() - 165,
+            width: $(window).width() - 30,
+            colModel: [
+                { label: "业主收费ID", name: "owner_feeid", hidden: true },
+                { label: "业主编号", name: "owner_id", hidden: true },
+                { label: "费用科目编号", name: "fee_code", hidden: true },
+                { label: "房间编号", name: "room_id", hidden: true },
+                { label: "业主", name: "owner_name", width: 140, align: "left", sortable: false },
+                { label: "费用科目", name: "feeitem_name", width: 200, align: "left", sortable: true },
+                { label: "起交日期", name: "start_date", width: 200, align: "left", sortable: true, formatter: "date", formatoptions: { newformat: 'Y-m-d' } },
+                { label: "费用金额", name: "fee_money", width: 200, align: "left", sortable: true, formatter: 'number', formatoptions: { thousandsSeparator: "", decimalPlaces: 2 } },
+                { label: "费用规则", name: "fee_rule", width: 200, align: "left", sortable: true },
+            ],
+            rowNum: 1000,
+            rownumbers: true
+        });
+        //处理Json
+        function ButtonListToListTreeJson(buttonJson) {
+            $.ajax({
+                url: "/TenementManage/Owner_fee/ListToListTreeJson",
+                data: { moduleColumnJson: JSON.stringify(buttonJson) },
+                type: "post",
+                dataType: "json",
+                success: function (data) {
+                    $grid.clearGridData();
+                    $grid[0].addJSONData(data);
+                },
+            });
+        }
+        //新增
+        $("#lr-add-cost").click(function () {
+            var $owner_id = $("#owner_id").val();
+            var $owner_name = $("#owner_name").val();
+            var $building_dim = $("#building_dim").val();
+            var $room_id = $('#room_id').find('.dropdown-text').attr('data-value');
+            if (!!$room_id) {
+                dialogOpen({
+                    id: "buttonForm",
+                    title: '添加收费标准',
+                    url: '/TenementManage/Owner_fee/RoomForm?owner_id=' + $owner_id + "&room_id=" + $room_id + "&owner_name=" + $owner_name + "&building_dim=" + $building_dim,
+                    width: "500px",
+                    height: "360px",
+                    callBack: function (iframeId) {
+                        top.frames[iframeId].AcceptClick(function (data) {
+                            buttonJson.push(data);
+                            ButtonListToListTreeJson(buttonJson);
+                        });
+                    }
+                });
+            }
+        })
+        //删除
+        $("#lr-delete-cost").click(function () {
+            var owner_feeid = $("#gridTable-Cost").jqGridRowValue("owner_feeid");
+            if (checkedRow(owner_feeid)) {
+                $.RemoveForm({
+                    url: "/TenementManage/Owner_fee/RemoveForm",
+                    param: { keyValue: owner_feeid },
+                    success: function (data) {
+                        $.each(buttonJson, function (i) {
+                            if (buttonJson[i].owner_feeid == owner_feeid) {
+                                buttonJson.splice(i, 1);
+                                ButtonListToListTreeJson(buttonJson);
+                                return false;
+                            }
+                        });
+                    }
+                })
+            }
+        });
+    }
+    /*单元收费标准end====================================*/
+    
+    //保存resultdata
+    function btn_Owner() {
+        if (!$('#OwnerInfo').Validform()) {
+            return false;
+        }
+        var $room_id = $('#room_id').find('.dropdown-text').attr('data-value');
+        if ($room_id == undefined || $room_id == "") {
+            dialogMsg('请选择入住房间单元！', 0);
+            return false;
+        }
+
+        var postData = $("#OwnerInfo").GetWebControls("");
+        postData["room_id"] = $room_id;
+        $.SaveForm({
+            url: "/TenementManage/Owner/SaveForm",
+            param: postData,
+            loading: "正在保存数据...",
+            close: false,
+            success: function (data) {
+                $("#abtn").hide();
+                $("#owner_id").val(data.resultdata);
+            }
+        })
+    }
+    
+    //点击下载
+    function loadDown() {
+        var $bid = $("#building_ids").find('.dropdown-text').attr('data-value');
+        if ($bid == "" || $bid == undefined || $bid == "0") {
+            dialogMsg('请选择所属楼栋！', 0);
+            return false;
+        }
+        else {
+            $.SetForm({
+                url: "/TenementManage/Building/GetRoomTreeJson",
+                param: { keyValue: $bid, Type: 2 },
+                success: function (data) {
+                    if (data.length > 0) {
+                        location.href = "/TenementManage/Owner/GetUnitInfo?building_id=" + $bid;
+                    }
+                    else {
+                        dialogMsg('未找到该楼栋下空房间！', 0);
+                        return false;
+                    }
+                }
+            });
+        }
+    }
+    //导入
+    function btn_signin() {
+        var $bid = $("#building_ids").find('.dropdown-text').attr('data-value');
+        if ($bid == "" || $bid == undefined || $bid == "0") {
+            dialogMsg('请选择所属楼栋！', 0);
+            return false;
+        }
+        var $file = $.trim($("#attfile").val());
+        if ($file == undefined || $file == "") {
+            dialogMsg('请选择上传批量进户EXCEL文件！', 0);
+            return false;
+        }
+        $.SaveForm({
+            url: "/TenementManage/Owner/BatchFrom",
+            param: { building_id: $bid, file: $file },
+            success: function (data) {
+                $('#building_ids').find('.dropdown-text').html("所属楼栋").attr('data-value', "");
+                $("#attfile").val("");
+            }
+        });
+    }
+</script>
+
+<ul class="nav nav-tabs">
+    <li class="active"><a href="#OwnerInfo" data-toggle="tab">业主入户登记</a></li>
+    <li><a href="#TenantInfo" data-toggle="tab">收费标准登记</a></li>
+    <li><a href="#BatchInfo" data-toggle="tab">批量入户</a></li>
+</ul>
+<div class="step-content" id="wizard-steps" style="border-left: none; border-bottom: none; border-right: none;background: #fff;">
+    <div class="step-pane active" id="OwnerInfo">
+        <div style="padding-top:20px; padding-left:30px;">
+            <table class="form" style="width: 80%; ">
+                <tr>
+                    <th class="formTitle">楼栋：</th>
+                    <td class="formValue">
+                        <div id="building_id" class="btn-group">
+                            <a class="btn btn-default dropdown-text" data-toggle="dropdown">==所属楼栋==</a>
+                            <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                            <ul class="dropdown-menu" style="max-height:480px;overflow:auto;overflow-x:hidden;"></ul>
+                        </div>
+                    </td>
+                    <th class="formTitle">入住房间单元：</th>
+                    <td class="formValue">
+                        <div id="room_id" class="btn-group">
+                            <a class="btn btn-default dropdown-text" data-toggle="dropdown">==入住房间单元==</a>
+                            <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                            <ul class="dropdown-menu" style="max-height:480px;overflow:auto;overflow-x:hidden;"></ul>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">业主姓名：<font face="宋体">*</font></th>
+                    <td class="formValue">
+                        <input id="owner_name" type="text" class="form-control owname" isvalid="yes" checkexpession="NotNull" />
+                    </td>
+                    <th class="formTitle">房间名称：</th>
+                    <td class="formValue">
+                        <input id="room_name" type="text" class="form-control" readonly="readonly" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">建筑面积：</th>
+                    <td class="formValue">
+                        <input id="building_dim" type="text" class="form-control" readonly="readonly" />
+                    </td>
+                    <th class="formTitle">使用面积：</th>
+                    <td class="formValue">
+                        <input id="room_dim" type="text" class="form-control" readonly="readonly" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">入住日期：<font face="宋体">*</font></th>
+                    <td class="formValue">
+                        <input id="in_date" type="text" class="form-control input-datepicker"  isvalid="yes" checkexpession="NotNull" onfocus="WdatePicker({dateFmt: 'yyyy-MM-dd' })"/>
+                    </td>
+                    <th class="formTitle">房间号：</th>
+                    <td class="formValue">
+                        <input id="room_number" type="text" class="form-control" readonly="readonly" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">登记日期：<font face="宋体">*</font></th>
+                    <td class="formValue">
+                        <input id="sign_date" type="text" class="form-control input-datepicker"  isvalid="yes" checkexpession="NotNull" onfocus="WdatePicker({dateFmt: 'yyyy-MM-dd' })"/>
+                    </td>
+                    <th class="formTitle">业主电话：</th>
+                    <td class="formValue">
+                        <input id="owner_tel" type="text" class="form-control" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">业主证件名称：</th>
+                    <td class="formValue">
+                        <input id="owner_cardtype" type="text" class="form-control" value="身份证" />
+                    </td>
+                    <th class="formTitle">证件号码：</th>
+                    <td class="formValue">
+                        <input id="owner_cardno" type="text" class="form-control" />
+                    </td>
+
+                </tr>
+                <tr>
+                    <th class="formTitle">同住人：</th>
+                    <td class="formValue">
+                        <input id="link1_name" type="text" class="form-control" />
+                    </td>
+                    <td colspan="2">
+                        <table>
+                            <tr>
+                                <th class="formTitle">同住人电话：</th>
+                                <td class="formValue">
+                                    <input id="link1_tel" type="text" class="form-control" />
+                                </td>
+                                <th class="formTitle">关系：</th>
+                                <td class="formValue">
+                                    <input id="link1_mark" type="text" class="form-control" />
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>                
+                <tr>
+                    <th class="formTitle">同住人2：</th>
+                    <td class="formValue">
+                        <input id="link2_name" type="text" class="form-control" />
+                    </td>
+                    <td colspan="2">
+                        <table>
+                            <tr>
+                                <th class="formTitle">同住人电话2：</th>
+                                <td class="formValue">
+                                    <input id="link2_tel" type="text" class="form-control" />
+                                </td>
+                                <th class="formTitle">关系：</th>
+                                <td class="formValue">
+                                    <input id="link2_mark" type="text" class="form-control" />
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>                
+                <tr>
+                    <th class="formTitle">备注：</th>
+                    <td class="formValue" colspan="3">
+                        <textarea id="remark" class="form-control"></textarea>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="4">
+                        <div style="margin-top:20px; margin-left:100px;"><a id="abtn" class="btn btn-default" onclick="btn_Owner()">&nbsp;保 存&nbsp;</a></div>
+                    </td>
+                </tr>
+            </table>
+            <input type="hidden" id="owner_id" value="" />
+        </div>
+    </div>
+    <div class="step-pane" id="TenantInfo">
+        <div style="height: 50px; line-height: 33px; text-align: left; padding-left:20px; padding-top:10px;">
+            <div class="btn-group">
+                <a id="lr-add-cost" class="btn btn-default"><i class="fa fa-plus"></i>&nbsp;新增</a>
+                <a id="lr-delete-cost" class="btn btn-default"><i class="fa fa-trash-o"></i>&nbsp;删除</a>
+            </div>
+        </div>
+        <div class="gridPanel">
+            <table id="gridTable-Cost"></table>
+        </div>
+    </div>
+    <div class="step-pane" id="BatchInfo">
+        <div style="padding-top:20px; padding-left:30px;">
+            <table class="form" style="width: 80%; ">
+                <tr>
+                    <th class="formTitle">楼栋：</th>
+                    <td class="formValue">
+                        <div id="building_ids" class="btn-group">
+                            <a class="btn btn-default dropdown-text" data-toggle="dropdown">==所属楼栋==</a>
+                            <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                            <ul class="dropdown-menu" style="max-height:480px;overflow:auto;overflow-x:hidden;"></ul>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">导入文件：</th>
+                    <td class="formValue">
+                        <div class="file_uploadss">
+                            <input type="text" name="attfile" id="attfile" style="width:335px;" class="form-control upload-path" readonly="readonly" />
+                            <div style="padding-left:5px; float:left;" class="upload-box upload-File"></div>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+            <div class="toolbar">
+                <div class="btn-group" style="margin-top:20px; margin-left:50px;">
+                    <a id="lr-signin" class="btn btn-default" onclick="btn_signin()"><i class="fa fa-sign-in"></i>&nbsp;导&nbsp;入</a>
+                    <a class="btn btn-default" onclick="loadDown()"><i class="fa fa-download"></i>&nbsp;重新下载</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

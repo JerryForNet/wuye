@@ -1,0 +1,234 @@
+﻿@{;
+    ViewBag.Title = "发票作废页面";
+    Layout = "~/Views/Shared/_Index.cshtml";
+}
+<script src="/Content/scripts/plugins/Amount/ArabiaToChinese.js"></script>
+<style type="text/css">
+    body { background-color:#fff;}
+    .formTitle {  text-align:right; padding-right:5px;}
+</style>
+<script>
+    var keyValue = "";
+    var $type = "";
+    $(function () {
+        InitialPage();
+        //GetGrid();
+    });
+    //初始化页面
+    function InitialPage() {
+        //resize重设布局;
+        $(window).resize(function (e) {
+            window.setTimeout(function () {
+                $('#gridTable').setGridWidth(($('.gridPanel').width()));
+                $('#gridTable').setGridHeight($(window).height() - 320);
+            }, 200);
+            e.stopPropagation();
+        });
+
+        $("#typelist .dropdown-menu li").click(function () {
+            var text = $(this).find('a').html();
+            var value = $(this).find('a').attr('data-value');
+            $("#typelist .dropdown-text").html(text).attr('data-value', value);
+        });
+    }
+    //加载表格
+    function GetGrid() {
+        var $grid = $("#gridTable");
+        $grid.jqGrid({
+            unwritten: true,
+            url: "/TenementManage/Otherincome/GetListOtherJson",
+            postData: { receive_id: keyValue, type: $type },
+            datatype: "json",
+            height: $(window).height() - 320,
+            width: $(window).width() - 21,
+            colModel: [
+                { label: "费用项目", name: "feeitem_name", align: "left", width: 300, sortable: false },
+                { label: "摘要", name: "subject", align: "left", width: 300, sortable: false },
+                { label: "费用金额", name: "check_money", align: "left", width: 200, sortable: false, formatter: 'number', formatoptions: { thousandsSeparator: "", decimalPlaces: 2 } },
+            ],
+            viewrecords: true,
+            rowNum: 1000,
+            gridview: true,
+            footerrow: true,
+            gridComplete: function () {
+                var totalamount = $(this).getCol("check_money", false, "sum");
+                //合计
+                $(this).footerData("set", {
+                    "subject": "合计： 大写：" + Arabia_to_Chinese(totalamount) + "     小写：",
+                    "check_money": totalamount,
+                });
+                $('table.ui-jqgrid-ftable td').prevUntil().css("border-right-color", "#fff");
+                $('table.ui-jqgrid-ftable td[aria-describedby="gridTable_subject"]').css("text-align", "right");
+            }
+        });
+
+    }
+    //查询
+    function btn_Search() {
+        var $typelist = $("#typelist").find('.dropdown-text').attr('data-value');
+        var $codelist = $.trim($("#codelist").val());
+        if ($typelist == "0"){
+            dialogMsg('请选择票据类型！', 0);
+            return false;
+        }
+        if ($codelist == "") {
+            dialogMsg('请输入票据编号！', 0);
+            return false;
+        }
+        var $keyid = $typelist + $codelist;
+
+        $('#gridTable').clearGridData();
+        $("#propertyname").val("");
+        $("#ownername").val("");
+        $("#receive_date").val("");
+        $("#ticket_code").val("");
+        $("#pay_mode").val("");
+        $("#pay_notes").val("");
+        $("#hd_typelist").val("");
+        $("#hd_codelist").val("");
+        $.SetForm({
+            url: "/TenementManage/Feereceive/GetToVoidInfoJosn?keyValue=" + $keyid,
+            success: function (data) {
+                $("#divTabel").SetWebControls(data);
+                keyValue = $keyid; //data.receive_id;
+                $type = data.type;
+
+                $("#hd_typelist").val($typelist);
+                $("#hd_codelist").val($codelist);
+                $("#hd_type").val($type);
+
+                if ($("#divList").is(":hidden")) {
+                    GetGrid();
+                    $("#btn_Tovoid").show();
+                    $("#divTabel").show();
+                    $("#divTitle").show();
+                    $("#divList").show();
+                }
+                else {
+                    $("#gridTable").jqGrid('setGridParam', {
+                        postData: { receive_id: keyValue, type: $type }
+                    }).trigger('reloadGrid');
+                }
+            }
+        });
+        
+    }
+
+    //终止/作废
+    function btn_Tovoid() {
+        var $typelist = $("#hd_typelist").val();
+        var $codelist = $.trim($("#hd_codelist").val());
+        if ($typelist == "") {
+            dialogMsg('请选择票据类型！', 0);
+            return false;
+        }
+        if ($codelist == "") {
+            dialogMsg('请输入票据编号！', 0);
+            return false;
+        }
+        var $keyValue = $typelist + $codelist;
+        var $hd_type = $("#hd_type").val();
+        if ($keyValue) {
+            $.ConfirmAjax({
+                url: '/TenementManage/Feereceive/ToVoidForm',
+                param: { keyValue: $keyValue, Type: $hd_type },
+                msg: '您确定要作废此发票吗？',
+                success: function (data) {
+                    $('#gridTable').clearGridData();
+                    $("#propertyname").val("");
+                    $("#ownername").val("");
+                    $("#receive_date").val("");
+                    $("#ticket_code").val("");
+                    $("#pay_mode").val("");
+                    $("#pay_notes").val("");
+                    $("#hd_typelist").val("");
+                    $("#hd_codelist").val("");
+
+                    $("#codelist").val("");
+                    $("#typelist .dropdown-text").html("票据类型").attr('data-value', "0");
+                }
+            });
+        } else {
+            dialogMsg('请选择需作废发票！', 0);
+        }
+    }
+    
+</script>
+<div class="titlePanel">
+    <div class="title-search">
+        <table>
+            <tr>
+                <td>
+                    <div id="typelist" class="btn-group">
+                        <a class="btn btn-default dropdown-text" data-toggle="dropdown" data-value="0">票据类型</a>
+                        <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+                            <li><a data-value="00">收据</a></li>
+                            <li><a data-value="01">发票</a></li>
+                            <li><a data-value="02">停车发票</a></li>
+                            <li><a data-value="04">虹联发票</a></li>
+                            <li><a data-value="05">虹联收据</a></li>
+                            <li><a data-value="06">新厦发票</a></li>
+                        </ul>
+                    </div>
+                </td>
+                <td style="padding-left:5px;">
+                    <input id="codelist" type="text" class="form-control" placeholder="请输入要查询票据编号" style="width: 200px;" />
+                </td>
+                <td style="padding-left: 5px;">
+                    <a id="btn_Search" class="btn btn-primary" onclick="btn_Search()"><i class="fa fa-search"></i>&nbsp;查询</a>
+                    <a id="btn_Tovoid" class="btn btn-primary" onclick="btn_Tovoid()" style="display:none;"><i class="fa fa-times-circle"></i>&nbsp;终止/作废</a>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+</div>
+
+<div id="divTabel" class="titlePanel" style="height:150px; line-height:30px; display:none;">
+    <table style="width:90%; margin-left:30px;">
+        <tr>
+            <th class="formTitle" colspan="4" style="text-align:center; line-height:35px; height:35px;">客 户 收 费 单</th>
+        </tr>
+        <tr>
+            <th class="formTitle">物 业：</th>
+            <td class="formValue">
+                <input id="propertyname" type="text" class="form-control" readonly="readonly" />
+            </td>
+            <th class="formTitle">业主：</th>
+            <td class="formValue">
+                <input id="ownername" type="text" class="form-control" readonly="readonly" />
+            </td>
+        </tr>
+        <tr>
+            <th class="formTitle">收费日期：</th>
+            <td class="formValue">
+                <input id="receive_date" type="text" class="form-control" readonly="readonly" />
+            </td>
+            <th class="formTitle">票据号码：</th>
+            <td class="formValue">
+                <input id="ticket_code" type="text" class="form-control" readonly="readonly" />
+            </td>
+        </tr>
+        <tr>
+            <th class="formTitle">支付方式：</th>
+            <td class="formValue">
+                <input id="pay_mode" type="text" class="form-control" readonly="readonly" />
+            </td>
+            <th class="formTitle">其它说明：</th>
+            <td class="formValue">
+                <input id="pay_notes" type="text" class="form-control" readonly="readonly" />
+            </td>
+        </tr>
+    </table>
+    <input type="hidden" id="receive_id" />
+    <input type="hidden" id="hd_typelist" />
+    <input type="hidden" id="hd_codelist" />
+    <input type="hidden" id="hd_type" />
+</div>
+<div id="divTitle" class="titlePanel" style="height:35px; line-height:35px; text-align:center; display:none;">应 收 收 入 明 细</div>
+
+<div id="divList" class="gridPanel" style="display:none;">
+    <table id="gridTable"></table>
+    <div id="gridPager"></div>
+</div>

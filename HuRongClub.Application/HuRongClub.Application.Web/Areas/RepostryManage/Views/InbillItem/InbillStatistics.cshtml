@@ -1,0 +1,327 @@
+﻿@{;
+ViewBag.Title = "入库统计";
+Layout = "~/Views/Shared/_Index.cshtml";
+}
+@section styles
+{
+    <link href="~/Content/styles/hurongclub-report.css" rel="stylesheet" />
+}
+@section scripts
+{
+    <script src="~/Content/scripts/plugins/printTable/jquery.printTable.js"></script>
+}
+@{
+    string beginDate = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd");
+    string endDate = DateTime.Now.ToString("yyyy-MM-dd");
+}
+<script>
+    $(function () {
+        InitialPage();
+        GetGrid();
+        //时间默认值
+        //$("#StartDate").val('@(beginDate)');
+    });
+
+    //初始化页面
+    function InitialPage() {
+        //resize重设布局;
+        $(window).resize(function (e) {
+            window.setTimeout(function () {
+                $('#gridTable').setGridWidth(($('.gridPanel').width()));
+                $('#gridTable').setGridHeight($(window).height() - 108.5);
+            }, 200);
+            e.stopPropagation();
+        });
+
+        //加载大类
+        $.SetForm({
+            url: "/RepostryManage/Goodstype/GetListJson?fparentcode=0",
+            success: function (data) {
+                var rows = '<li><a data-value="">所有大类</a></li>';
+                $('#building_id').find('ul').append(rows);
+                $.each(data, function (id, item) {
+                    var row = '<li><a data-value="' + item.id + '">' + item.text + '</a></li>';
+                    $('#building_id').find('ul').append(row);
+                });
+                $('#building_id').find('li>a').click(function () {
+                    var id = $(this).attr('data-value');
+                    var text = $(this).html();
+                    $('#building_id').find('.dropdown-text').html(text).attr('data-value', id);
+                    $('#fee_code').find('.dropdown-text').html("所有小类");
+                    $('#fee_code').find('ul').find("li").remove();
+                    $('#fee_good').find('.dropdown-text').html("所有物品");
+                    if (id == null || undefined || id == "" || id == "0") {
+                        $('#fee_code').find('ul').find("li").remove();
+                        $('#fee_good').find('ul').find("li").remove();
+                    } else {
+                        $.SetForm({
+                            url: "/RepostryManage/Goodstype/GetListJson?fparentcode=" + id,
+                            success: function (data) {
+                                var rows = '<li><a data-value="">所有小类</a></li>';
+                                $('#fee_code').find('ul').append(rows);
+                                $.each(data, function (id, item) {
+                                    var row = '<li><a data-value="' + item.id + '">' + item.text + '</a></li>';
+                                    $('#fee_code').find('ul').append(row);
+                                });
+                                $('#fee_code').find('li>a').click(function () {
+                                    var id = $(this).attr('data-value');
+                                    var text = $(this).html();
+                                    $('#fee_code').find('.dropdown-text').html(text).attr('data-value', id);
+                                    $('#fee_good').find('.dropdown-text').html("所有物品");
+                                    $('#fee_good').find('ul').find("li").remove();
+                                    Getgood(id);
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+        });
+        //查询条件设置
+        $("#queryCondition .dropdown-menu li").click(function () {
+            var text = $(this).find('a').html();
+            var value = $(this).find('a').attr('data-value');
+            $("#queryCondition .dropdown-text").html(text).attr('data-value', value)
+        });
+        $.SetForm({ //供应商
+            url: "../../RepostryManage/Provider/GetListJson",
+            success: function (data) {
+                var rows = '<li><a data-value="">请选择</a></li>';
+                $('#Provider').find('ul').append(rows);
+                $.each(data, function (id, item) {
+                    var row = '<li><a data-value="' + item.fproviderid + '">' + item.fname + '</a></li>';
+                    $('#Provider').find('ul').append(row);
+                });
+                $('#Provider').find('li>a').click(function () {
+                    var id = $(this).attr('data-value');
+                    var text = $(this).html();
+                    $('#Provider').find('.dropdown-text').html(text).attr('data-value', id);
+                    $('#department').html(text);
+                });
+            }
+        });
+    }
+
+    //加载物品
+    function Getgood(keyValue) {
+        if (keyValue == null || undefined || keyValue == "" || keyValue == "0") {
+            $('#fee_good').find('ul').find("li").remove();
+        } else {
+            $.SetForm({
+                url: "/RepostryManage/Goodsinfo/GetListJson?fgoodsid=" + keyValue,
+                success: function (data) {
+                    var rows = '<li><a data-value="">所有物品</a></li>';
+                    $('#fee_good').find('ul').append(rows);
+                    $.each(data, function (id, item) {
+                        var row = '<li><a data-value="' + item.id + '">' + item.text + '</a></li>';
+                        $('#fee_good').find('ul').append(row);
+                    });
+                    $('#fee_good').find('li>a').click(function () {
+                        var id = $(this).attr('data-value');
+                        var text = $(this).html();
+                        $('#fee_good').find('.dropdown-text').html(text).attr('data-value', id);
+                    });
+                }
+            });
+        }
+    }
+
+    //加载表格
+    function GetGrid() {
+        var $gridTable = $('#gridTable');
+        var queryJson = "{'StartDate': '" + $("#StartDate").val() + "','EndDate': '" + $("#EndDate").val() + "'}";
+        $gridTable.jqGrid({
+            autowidth: true,
+            height:$(window).height() - 262,
+            url: "../../RepostryManage/InbillItem/GetStatisticsJson",
+            postData: { queryJson: queryJson },
+            datatype: "json",
+            colModel: [
+                { label: '入库单编号', name: 'finbillid', index: 'finbillid', align: 'center', sortable: true },
+                { label: '入库时间', name: 'findate', index: 'findate', sortable: true },
+                { label: '材料编号', name: 'fgoodsid', index: 'fgoodsid', align: 'left', sortable: true },
+                { label: '名称规格', name: 'fname', index: 'fname', align: 'left', sortable: true },
+                { label: '单位', name: 'funit', index: 'funit', align: 'center', sortable: false },
+                { label: '采购单价', name: 'fprice', index: 'fprice', align: 'left', sortable: false },
+                { label: '数量', name: 'fnumber', index: 'fnumber', align: 'left', sortable: true },
+                { label: '总金额', name: 'fmoney', index: 'fmoney', align: 'left', sortable: true },
+                { label: '供应商', name: 'fprovider', index: 'fprovider', align: 'left', sortable: true }
+            ],
+            viewrecords: true,
+            rowNum: 'all',
+            sortname: 'finbillid',
+            sortorder: 'asc',
+            gridview: true,
+            footerrow: true,
+            gridComplete: function () {
+                //合计
+                var fmoney = jQuery(this).getCol('fmoney', false, 'sum');
+                $(this).footerData("set", {
+                    "fnumber": "合计：",
+                    "fmoney": "<span id='TotalAmount'>" + fmoney.toFixed(2) + "</span>"
+                });
+                $('table.ui-jqgrid-ftable td[aria-describedby="gridTable_location"]').prevUntil().css("border-right-color", "#fff");
+            }
+        });
+
+        //查询事件
+        $("#btn_Search").click(function () {
+            var startDate = $("#StartDate").val();
+            var endTime = $("#EndDate").val();
+            $("#beginTime").html(startDate);
+            $("#endTime").html(endTime);
+            var provider = $("#Provider").find('.dropdown-text').attr('data-value'); //供应商
+            var billid = $("#Billid").val(); //入库单编号
+            var queryType = $("#queryCondition").find('.dropdown-text').attr('data-value'); //查询方式
+            var largeClass = $("#building_id").find('.dropdown-text').attr('data-value'); //大类
+            var smallClass = $("#fee_code").find('.dropdown-text').attr('data-value'); //小类
+            var goods = $("#fee_good").find('.dropdown-text').attr('data-value'); //物品
+
+            var queryJson = {
+                StartDate: startDate,
+                EndDate: endTime,
+                Provider: provider, //供应商
+                Billid: billid, //入库单编号
+                QueryType: queryType, //查询方式
+                LargeClass: largeClass, //大类
+                SmallClass: smallClass, //小类
+                Goods: goods //物品
+            }
+            $gridTable.jqGrid('setGridParam', {
+                postData: { queryJson: JSON.stringify(queryJson) },
+                page: 1
+            }).trigger('reloadGrid');
+        });
+        //查询回车
+        $('#txt_Keyword').bind('keypress', function (event) {
+            if (event.keyCode == "13") {
+                $('#btn_Search').trigger("click");
+            }
+        });
+    }
+
+    //打印
+    function btn_print() {        
+        var total = $('#gridTable').jqGrid('getGridParam', 'records');
+        if (total == 0) {
+            dialogMsg('未找到需要打印数据，请先查询到数据后再按打印操作！', 0);
+            return false;
+        }
+        else {
+            var startDate = $("#StartDate").val();
+            var endTime = $("#EndDate").val();
+            $("#beginTime").html(startDate);
+            $("#endTime").html(endTime);
+            var provider = $("#Provider").find('.dropdown-text').attr('data-value'); //供应商
+            var billid = $("#Billid").val(); //入库单编号
+            var queryType = $("#queryCondition").find('.dropdown-text').attr('data-value'); //查询方式
+            var largeClass = $("#building_id").find('.dropdown-text').attr('data-value'); //大类
+            var smallClass = $("#fee_code").find('.dropdown-text').attr('data-value'); //小类
+            var goods = $("#fee_good").find('.dropdown-text').attr('data-value'); //物品
+
+            var queryJson = {
+                StartDate: startDate,
+                EndDate: endTime,
+                Provider: provider, //供应商
+                Billid: billid, //入库单编号
+                QueryType: queryType, //查询方式
+                LargeClass: largeClass, //大类
+                SmallClass: smallClass, //小类
+                Goods: goods //物品
+            }
+
+            var varData, winView, queryJson;
+            varData = gridPanel.innerHTML;
+            $("#divqueryJson").html(JSON.stringify(queryJson));
+            queryJson = divqueryJson.innerHTML;
+            winView = window.open("/RepostryManage/InbillItem/previewInbillStatiscs", "_blank", "location=no,menubar=no,toolbar=yes,status=yes,resizable=yes,scrollbars=yes");
+            return false;
+        }
+    }
+</script>
+
+<div class="ui-report">
+    <div class="titlePanel" style="height: 85px;padding-top:7px;">
+        <div class="title-search">
+            <table style="line-height: 35px">
+                <tr>
+                    <td>统计时间：</td>
+                    <td>
+                        <input id="StartDate" type="text" value="@(beginDate)" class="form-control input-datepicker" style="width: 120px;" placeholder="起始日期" onfocus="WdatePicker({  dateFmt: 'yyyy-MM-dd' })" />
+                    </td>
+                    <td>&nbsp;至</td>
+                    <td style="padding-right: 10px;">
+                        <input id="EndDate" value="@(endDate)" type="text" class="form-control input-datepicker" style="width: 120px;" placeholder="结束日期" onfocus="WdatePicker({ minDate: '#F{$dp.$D(\'StartDate\')}', dateFmt: 'yyyy-MM-dd' })" />
+                    </td>
+                    <td>&nbsp;供应商：</td>
+                    <td>
+                        <div id="Provider" class="btn-group">
+                            <a class="btn btn-default dropdown-text" data-toggle="dropdown">请选择</a>
+                            <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                            <ul class="dropdown-menu" style="max-height: 480px; overflow: auto; overflow-x: hidden;"></ul>
+                        </div>
+                    </td>
+                    <td>&nbsp;入库单编号：</td>
+                    <td><input id="Billid" type="text" class="form-control"></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>查询类别：</td>
+                    <td>
+                        <div id="queryCondition" class="btn-group">
+                            <a class="btn btn-default dropdown-text" data-toggle="dropdown">所有</a>
+                            <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                            <ul class="dropdown-menu">
+                                <li><a data-value="0">所有</a></li>
+                                <li><a data-value="1">大类</a></li>
+                                <li><a data-value="2">小类</a></li>
+                                <li><a data-value="3">物品</a></li>
+                            </ul>
+                        </div>
+                    </td>
+                    <td>&nbsp;大类：</td>
+                    <td>
+                        <div id="building_id" class="btn-group">
+                            <a class="btn btn-default dropdown-text" data-toggle="dropdown">所有大类</a>
+                            <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                            <ul class="dropdown-menu" style="max-height: 480px; overflow: auto; overflow-x: hidden;"></ul>
+                        </div>
+                    </td>
+                    <td>&nbsp;小类：</td>
+                    <td>
+                        <div id="fee_code" class="btn-group">
+                            <a class="btn btn-default dropdown-text" data-toggle="dropdown">所有小类</a>
+                            <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                            <ul class="dropdown-menu" style="max-height: 480px; overflow: auto; overflow-x: hidden;"></ul>
+                        </div>
+                    </td>
+                    <td>&nbsp;物品：</td>
+                    <td>
+                        <div id="fee_good" class="btn-group">
+                            <a class="btn btn-default dropdown-text" data-toggle="dropdown">所有物品</a>
+                            <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                            <ul class="dropdown-menu" style="max-height: 480px; overflow: auto; overflow-x: hidden;"></ul>
+                        </div>
+                    </td>
+                    <td style="padding-left: 5px;">
+                        <a id="btn_Search" class="btn btn-primary"><i class="fa fa-search"></i>&nbsp;查询</a>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div class="toolbar">
+            <div class="btn-group">
+                <a id="lr-replace" class="btn btn-default" onclick="reload();"><i class="fa fa-refresh"></i>&nbsp;刷新</a>
+                <a id="lr-print" class="btn btn-default" onclick="btn_print()"><i class="fa fa-print"></i>&nbsp;打印</a>
+            </div>
+        </div>
+    </div>
+    <div class="gridPanel" id="gridPanel">
+        <div class="printArea">
+            <div class="grid-title">物品采购入库查询统计结果</div>
+            <div class="grid-subtitle">入库日期: <label id="beginTime">@(beginDate)</label> 至 <label id="endTime">@(endDate)</label></div>
+            <table id="gridTable"></table>
+        </div>
+    </div>
+</div>
+<div id="divqueryJson" style="display:none;"></div>

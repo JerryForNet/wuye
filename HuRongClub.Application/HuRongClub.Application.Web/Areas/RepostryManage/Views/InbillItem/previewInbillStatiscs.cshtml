@@ -1,0 +1,79 @@
+﻿@{
+    ViewBag.Title = "打印预览";
+    Layout = "~/Views/Shared/_Index.cshtml";
+}
+
+<link href="/Content/styles/hurongclub-report.css" rel="stylesheet" />
+<script src="/Content/scripts/plugins/printTable/jquery.printTable.js"></script>
+<style>
+    body { width: 100%; background-color: #ccc; margin: 0px auto; padding: 0px; }
+    .ui-report .gridPanel { box-shadow: none; border: none; }
+</style>
+<script>
+	window.onload = function () {
+	    $('#gridTable').setGridWidth(($('.gridPanel').width()));
+	}
+	$(function () {
+	    GetGrid();
+	});
+
+	//加载表格
+	function GetGrid() {
+	    var arguments = window.dialogArguments;
+	    var queryJson;
+	    queryJson = window.opener.divqueryJson.innerHTML;
+
+	    var _json = JSON.parse(queryJson);
+	    $("#beginTime").html(_json.StartDate);
+	    $("#endTime").html(_json.EndDate);
+	    var $gridTable = $('#gridTable');
+	    $gridTable.jqGrid({
+	        autowidth: true,
+	        height: '100%',
+	        url: "/RepostryManage/InbillItem/GetStatisticsJson",
+	        postData: { queryJson: queryJson },
+	        datatype: "json",
+	        colModel: [
+                { label: '入库单编号', name: 'finbillid', index: 'finbillid', width: "100", align: 'center', sortable: true },
+                { label: '入库时间', name: 'findate', index: 'findate', width: "100", sortable: false },
+                { label: '材料编号', name: 'fgoodsid', index: 'fgoodsid', width: "100", align: 'left', sortable: false },
+                { label: '名称规格', name: 'fname', index: 'fname', align: 'left', sortable: true },
+                { label: '单位', name: 'funit', index: 'funit', width: "80", align: 'center', sortable: false },
+                { label: '采购单价', name: 'fprice', index: 'fprice', width: "100", align: 'left', sortable: false },
+                { label: '数量', name: 'fnumber', index: 'fnumber', width: "100", align: 'left', sortable: false },
+                { label: '总金额', name: 'fmoney', index: 'fmoney', width: "100", align: 'left', sortable: false },
+                { label: '供应商', name: 'fprovider', index: 'fprovider', align: 'left', sortable: false }
+	        ],
+	        viewrecords: true,
+	        rowNum: 'all',
+	        sortname: 'finbillid',
+	        sortorder: 'asc',
+	        gridview: true,
+	        footerrow: true,
+	        gridComplete: function () {
+	            //合计
+	            var fmoney = jQuery(this).getCol('fmoney', false, 'sum');
+	            $(this).footerData("set", {
+	                "fnumber": "合计：",
+	                "fmoney": "<span id='TotalAmount'>" + fmoney.toFixed(2) + "</span>"
+	            });
+	            $('table.ui-jqgrid-ftable td[aria-describedby="gridTable_location"]').prevUntil().css("border-right-color", "#fff");
+
+	            //加载后打印
+	            window.print();
+	        }
+	    });
+	}
+</script>
+
+<div class="ui-report">
+    <div style="margin:0 auto; width:900px; background-color:#ffffff;">
+        <div class="gridPanel" id="gridPanel" style="min-height:780px;">
+            <div class="printArea">
+                <div class="grid-title" style="text-align:center; font-size:18px; padding-top:15px; font-weight:bold;">物品采购入库查询统计结果</div>
+                <div class="grid-subtitle" style="line-height:30px;">入库日期: <label id="beginTime"></label> 至 <label id="endTime"></label></div>
+                <table id="gridTable"></table>
+            </div>
+        </div>
+    </div>
+</div>

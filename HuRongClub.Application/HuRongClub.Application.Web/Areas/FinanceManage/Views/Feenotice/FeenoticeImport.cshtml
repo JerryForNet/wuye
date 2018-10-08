@@ -1,0 +1,52 @@
+﻿@{
+    ViewBag.Title = "批量导入列表";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+<script src="/Content/scripts/plugins/webuploader/webuploader.min.js"></script>
+<script src="/Content/scripts/plugins/webuploader/uploader.js"></script>
+<script>
+    $(function () {
+        //初始化上传控件
+        $(".upload-File").InitUploader({ filesize: "10240", filepath: "/upload/file/", filetype: 3, sendurl: "/Content/Handler/upload_ajax.ashx", swf: "/Content/scripts/plugins/webuploader/uploader.swf", filetypes: "xls" });
+    });
+    //保存表单;
+    function AcceptClick() {
+        var $file = $.trim($("#attfile").val());
+        if ($file == undefined || $file == "") {
+            dialogMsg('请选择上传进账导出EXCEL文件！', 0);
+            return false;
+        }
+
+        var postData = $("#form1").GetWebControls();
+        $.SaveForm({
+            url: "/FinanceManage/Feenotice/ImportForm",
+            param: postData,
+            loading: "正在保存数据...",
+            success: function () {
+                $.currentIframe().$("#gridTable").trigger("reloadGrid");
+            }
+        })
+    }
+</script>
+<div style="margin-top: 20px; margin-right: 30px;">
+    <table class="form">
+        <tr>
+            <td class="formTitle">导入文件<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div class="file_uploadss">
+                    <input type="text" name="attfile" id="attfile" style="width:335px;" class="form-control upload-path"  />
+                    <div style="padding-left:5px; float:left;" class="upload-box upload-File"></div>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <div class="toolbar">
+                    <div class="btn-group" style="margin-top:20px; margin-left:30px;">
+                        <a class="btn btn-default" target="_blank" href="/Content/uploadFile/feenotice.xls"><i class="fa fa-download"></i>&nbsp;下载模版</a>
+                    </div>
+                </div>
+            </td>
+        </tr>   
+    </table>
+</div>

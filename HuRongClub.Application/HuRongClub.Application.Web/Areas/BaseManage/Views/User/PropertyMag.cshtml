@@ -1,0 +1,93 @@
+﻿@{
+    ViewBag.Title = "管辖物业管理";
+    Layout = "~/Views/Shared/_FlowForm.cshtml";
+}
+<style type="text/css">
+    .formValue ul li { float:left; width:200px; line-height:25px;}
+</style>
+<script>
+    var keyValue = request('keyValue');
+    var instanceId = "";
+    var formId = "";
+    $(function () {
+        $("#Account").val(request('RealName'));
+        initControl();
+    })
+    //初始化控件
+    function initControl() {
+        $.SetForm({
+            url: "/TenementManage/Property/GetListJson",
+            success: function (data) {
+                var $html = "<ul>";
+                $.each(data, function (index, item) {
+                    $html += '<li><input type="checkbox" name="check_name" value="' + item.property_id + '" id="cb' + item.property_id + '" /><label for="cb' + item.property_id + '">&nbsp;' + item.property_name + '</label></li>';
+                });
+                $html += " </ul>";
+                $("#divPY").html($html);
+            }
+        });
+
+        //获取表单
+        if (!!keyValue) {
+            $.SetForm({
+                url: "/BaseManage/User/GetFormJson",
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    var $UserProperty = data.UserProperty;
+                    if ($UserProperty != "" && $UserProperty != undefined) {
+                        var $UserPropertys = $UserProperty.split(',');
+                        for (var i = 0; i < $UserPropertys.length; i++) {
+                            $("#cb" + $UserPropertys[i]).attr("checked", "checked");
+                        }
+                    }
+                }
+            });
+        }
+
+
+    }
+    //保存表单
+    function AcceptClick() {
+        
+        var $UserProperty = "";
+        $($("input[name='check_name']:checked")).each(function () {
+            $UserProperty += this.value + ',';
+        });
+        if ($UserProperty != "") {
+            $UserProperty = $UserProperty.substring(0, ($UserProperty.length - 1));
+        }
+
+        $.SaveForm({
+            url: "/BaseManage/User/UpdateUserProperty",
+            param: { "keyValue": keyValue, "UserProperty": $UserProperty },
+            loading: "正在保存数据...",
+            success: function (data) {
+                //$.currentIframe().$("#gridTable").trigger("reloadGrid");
+            }
+        })
+    }
+</script>
+<div style="margin-left: 10px; margin-right: 10px;">
+    <div class="tab-content" style="padding-top: 15px;">
+        <div id="BaseInfo" style="padding-right: 30px;">
+            <table class="form">
+                <tr>
+                    <td class="formTitle">姓名</td>
+                    <td class="formValue">
+                        <input id="Account" type="text" class="form-control" readonly="readonly"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="formTitle" colspan="2">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td class="formTitle" style="vertical-align: top;">管辖物业</td>
+                    <td class="formValue">
+                        <div id="divPY" style=" margin-top: -7px;"></div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>
+

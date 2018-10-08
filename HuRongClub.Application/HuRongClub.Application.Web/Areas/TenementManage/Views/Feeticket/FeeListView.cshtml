@@ -1,0 +1,138 @@
+﻿@{;
+ViewBag.Title = "表单页面";
+Layout = "~/Views/Shared/_Form.cshtml";
+}
+<!--jqgrid表格组件start-->
+<link href="/Content/scripts/plugins/jqgrid/jqgrid.css" rel="stylesheet" />
+<script src="/Content/scripts/plugins/jqgrid/grid.locale-cn.js"></script>
+<script src="/Content/scripts/plugins/jqgrid/jqgrid.min.js"></script>
+<!--表格组件end-->
+<script src="/Content/scripts/plugins/Amount/ArabiaToChinese.js"></script>
+<script>
+    var keyValue = request('keyValue');
+    $(function () {
+        initControl();
+        getGrid();
+    });
+    //初始化控件
+    function initControl() {
+        //类型
+        $("#ticket_type").ComboBox({
+            description: "==请选择==",
+        });
+        //部门
+        $("#dept_id").ComboBox({
+            url: "../../PersonnelManage/HrDepartment/GetTreeJson",
+            id: "deptid",
+            text: "deptname",
+            description: "==请选择==",
+            height: "200px",
+            allowSearch: true,
+        });
+        //获取表单
+        if (!!keyValue) {
+            $.SetForm({
+                url: "../../TenementManage/Feeticket/GetCostByTicketId",
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    $("#form1").SetWebControls(data);
+                }
+            })
+        }
+    }
+
+    $.fn.serializeJson = function () {
+        var serializeObj = {};
+        $(this.serializeArray()).each(function () {
+            serializeObj[this.name] = this.value;
+        });
+        return serializeObj;
+    };
+
+    function getGrid() {
+        var $grid = $("#gridTable");
+        $grid.jqGrid({
+            unwritten: false,
+            url: "/TenementManage/Feeticket/GetOherIncomeList?keyValue=" + $("#incomeid").val(),
+            postData: { queryJson: JSON.stringify($("#form1").serializeJson()) },
+            datatype: "json",
+            height: $(window).height() - 235,
+            autowidth: true,    
+            colModel: [
+                { label: "费用项目", name: "fn", align: "left", width: 100, sortable: false },
+                { label: "摘要", name: "subject", align: "left", sortable: false },
+                { label: "费用金额", name: "check_money", align: "left", width: 100, sortable: false, formatter: 'number', formatoptions: { thousandsSeparator: "", decimalPlaces: 2 } },
+            ],
+            viewrecords: true,
+            rowNum: 1000,
+            gridview: true,
+            footerrow: true,
+            gridComplete: function () {
+                var totalamount = $(this).getCol("check_money", false, "sum").toFixed(2);
+                //合计
+                $(this).footerData("set", {
+                    "subject": "合计： 大写：" + Arabia_to_Chinese(totalamount) + "     小写：",
+                    "check_money": totalamount,
+                });
+                $('table.ui-jqgrid-ftable td').prevUntil().css("border-right-color", "#fff");
+                $('table.ui-jqgrid-ftable td[aria-describedby="gridTable_subject"]').css("text-align", "right");
+            }
+        });
+    }
+
+    //保存表单;
+    function AcceptClick() {
+        if (!$('#form1').Validform()) {
+            return false;
+        }
+        var postData = $("#form1").GetWebControls(keyValue);
+        postData["codeend"] = $("#ticket_code_end").val(); //价格类型
+        $.SaveForm({
+            url: "../../TenementManage/Feeticket/SaveForm?keyValue=" + keyValue,
+            param: postData,
+            loading: "正在保存数据...",
+            success: function () {
+                $.currentIframe().$("#gridTable").trigger("reloadGrid");
+            }
+        })
+    }
+</script>
+<div style="margin-top: 20px; margin-right: 10px; margin-left:10px;">
+    <table class="form">
+        <tr>
+            <td class="formTitle">物业：</td>
+            <td class="formValue" colspan='3'>
+                <input id="property_name" type="text" class="form-control" readonly="readonly" />
+            </td>
+            <td class="formTitle">业主：</td>
+            <td class="formValue" colspan='3'>
+                <input id="ownername" type="text" class="form-control" readonly="readonly" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">收费日期：</td>
+            <td class="formValue" colspan='3'>
+                <input id="receive_date" type="text" class="form-control" readonly="readonly" />
+            </td>
+            <td class="formTitle">票据号码：</td>
+            <td class="formValue" colspan='3'>
+                <input id="ticket_code" type="text" class="form-control" readonly="readonly" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">支付方式：</td>
+            <td class="formValue" colspan='3'>
+                <input id="pay_mode" type="text" class="form-control" readonly="readonly" />
+            </td>
+            <td class="formTitle">其它说明：</td>
+            <td class="formValue" colspan='3'>
+                <input id="pay_" type="text" class="form-control" readonly="readonly" />
+            </td>
+        </tr>
+    </table>
+    <input type="hidden" name="incomeid" id="incomeid" />
+    <input type="hidden" name="receive_id" id="receive_id">
+    <input type="hidden" name="is_income" id="is_income">
+    <input type="hidden" name="is_otherIncome" id="is_otherIncome">
+    <table id="gridTable"></table>
+</div>

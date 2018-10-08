@@ -1,0 +1,109 @@
+﻿@{;
+ViewBag.Title = "租赁合同费用生成";
+Layout = "~/Views/Shared/_Index.cshtml";
+}
+<style>
+    html, body { height: 95%; }
+</style>
+
+<script src="~/Content/scripts/plugins/datepicker/WdatePicker.js"></script>
+<script>
+    $(function () {
+        InitialPage();
+    });
+    //初始化页面
+    function InitialPage() {
+        // 加载年下拉框
+        var $years = [];
+        var $currentYear = new Date().getFullYear();
+        for (var i = 0; i < 5; i++) {
+            $years[i] = $currentYear - 5 + i;
+        }
+        for (var i = 0; i <= 5; i++) {
+            $years[i + 5] = $currentYear + i;
+        }
+        for (var i = 0; i < $years.length; i++) {
+            $("#sel_year").append('<option value="' + $years[i] + '">' + $years[i] + '</option>');
+        }
+
+        // 加载月下拉框
+        var $month = [];
+        for (var i = 1; i < 13; i++) {
+            $month[i - 1] = i;
+        }
+        for (var i = 0; i < $month.length; i++) {
+            $("#sel_month").append('<option value="' + $month[i] + '">' + $month[i] + '</option>');
+        }
+
+        //获取表单
+        $.SetForm({
+            url: "/TenementManage/Option/GetFormJson",
+            param: { keyValue: "" },
+            success: function (data) {
+                data.sel_year = new Date().getFullYear();
+                data.sel_month = new Date().getMonth() + 1;
+
+                console.dir(data);
+                $("#tbform").SetWebControls(data);
+            }
+        })
+
+        var _width = $(document).width() - 40;
+        var _height = $(document).height() - 40;
+        $("#pageayout").width(_width).height(_height);
+    }
+    //新增
+    function btn_add() {
+        if (!$('#tbform').Validform()) {
+            return false;
+        }
+        var postData = $("#tbform").GetWebControls();
+        postData.propertyID = $.cookie('property_id');
+        $.SaveForm({
+            url: "/TenementManage/Rentcontract/SaveContractIncomeForm?param=" + JSON.stringify(postData),
+            param: postData,
+            loading: "正在保存数据...",
+            success: function () {
+                $.currentIframe().$("#gridTable").trigger("reloadGrid");
+            }
+        })
+    }
+</script>
+
+<div id="pageayout" class="border" style="background: #fff; margin:10px;">
+    <table class="form" id="tbform" style="width: 80%; margin:10px; ">
+        <tr>
+            <th class="formTitle">年度：</th>
+            <td class="formValue">
+                <div style="float: left;">
+                    <select id="sel_year" name="sel_year" style="width:150px;"></select>
+                </div>
+                <div style="float: left; width:50px;text-align:center; line-height:30px;">月份：</div>
+                <div style="float: left;">
+                    <select id="sel_month" name="sel_month" style="width:100px;"></select>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <th class="formTitle">本次汇率：</th>
+            <td class="formValue">
+                <input id="option_exchange" type="text" class="form-control" placeholder="本次汇率" isvalid="yes" checkexpession="Double" />
+            </td>
+        </tr>
+        <tr>
+            <th class="formTitle">费用精确位：</th>
+            <td class="formValue">
+                <select id="option_point" style="width:200px;">
+                    <option value="0">元</option>
+                    <option value="1">角</option>
+                    <option value="2">分</option>
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="4">
+                <div style="margin-top:20px; margin-left:95px;"><a class="btn btn-default" onclick="btn_add()">&nbsp;生 成&nbsp;</a></div>
+            </td>
+        </tr>
+    </table>
+</div>

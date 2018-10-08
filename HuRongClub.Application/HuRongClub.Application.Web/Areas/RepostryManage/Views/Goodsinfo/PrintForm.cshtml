@@ -1,0 +1,80 @@
+﻿@{
+    ViewBag.Title = "打印预览";
+    Layout = "~/Views/Shared/_Index.cshtml";
+}
+
+<link href="/Content/styles/hurongclub-report.css" rel="stylesheet" />
+<script src="/Content/scripts/plugins/printTable/jquery.printTable.js"></script>
+<style>
+    body { width: 100%; background-color: #ccc; margin: 0px auto; padding: 0px; }
+    .ui-report .gridPanel { box-shadow: none; border: none; }
+</style>
+<script>
+	
+	$(function () {
+	    GetGrid();
+
+	    window.onload = function () {
+	        $('#gridTable').setGridWidth(($('.gridPanel').width()) - 10);
+
+	        //window.print();
+	    }
+	});
+
+	//加载表格
+	function GetGrid() {
+	    var arguments = window.dialogArguments;
+	    var queryJson;
+	    queryJson = window.opener.divqueryJson.innerHTML;
+	    
+	    var $gridTable = $('#gridTable');
+
+	    $gridTable.jqGrid({
+	        autowidth: true,
+	        height: '100%',
+	        url: "/RepostryManage/Goodsinfo/GetPageListJson",
+	        postData: { queryJson: queryJson },
+	        datatype: "json",
+
+	        colModel: [
+                { label: '材料编号', name: 'fgoodsid', index: 'fgoodsid', width: 100, align: 'left', sortable: true },
+                { label: '单位', name: 'funit', index: 'funit', width: 50, align: 'left', sortable: false },
+                { label: '名称规格', name: 'fname1', index: 'fname1', width: 320, align: 'left', sortable: true },
+                { label: '库存数量', name: 'fcount', index: 'fcount', width: 60, align: 'left', sortable: false },
+                { label: '平均价格', name: 'fprice', index: 'fprice', width: 60, align: 'left', sortable: false },
+                { label: '总金额', name: 'fmoney', index: 'fmoney', width: 100, align: 'left', sortable: false },
+                { label: '存放位置', name: 'fplace', index: 'fplace', width: 200, align: 'left', sortable: false }
+	        ],
+	        viewrecords: true,
+	        rowNum: 'all',
+	        sortname: 'fprice',
+	        sortorder: 'desc',
+	        gridview: true,
+	        footerrow: true,
+	        gridComplete: function () {
+	            var totalfcount = $(this).getCol("fcount", false, "sum");
+	            var totalsource_money = $(this).getCol("fmoney", false, "sum");
+	            //合计
+	            $(this).footerData("set", {
+	                "fname1": "合计：",
+	                "fcount": totalfcount,
+	                "fmoney": toDecimal(totalsource_money),
+	            });
+	            $('table.ui-jqgrid-ftable td').prevUntil().css("border-right-color", "#fff");
+                //加载后打印
+	            window.print();
+	        }
+	    });
+	}
+</script>
+
+<div class="ui-report">
+    <div style="margin:0 auto; width:900px; background-color:#ffffff;">
+        <div class="gridPanel" id="gridPanel" style="min-height:780px;">
+            <div class="printArea">
+                <div class="grid-title" style="text-align:center; font-size:18px; padding:15px; font-weight:bold;">物资库存记录</div>                
+                <table id="gridTable"></table>
+            </div>
+        </div>
+    </div>
+</div>

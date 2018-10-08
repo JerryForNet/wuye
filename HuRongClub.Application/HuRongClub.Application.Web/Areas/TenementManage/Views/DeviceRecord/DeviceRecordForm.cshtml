@@ -1,0 +1,260 @@
+﻿@{;
+ViewBag.Title = "表单页面";
+Layout = "~/Views/Shared/_Form.cshtml";
+}
+<script>
+    var keyValues = request('keyValue').split(",");
+    var i = 0;
+    $(function () {
+        initControl();
+    });
+    //初始化控件
+    function initControl() {
+        $("#fnumber").val(keyValues[i]);
+
+        //获取表单
+        if (!!keyValues[i]) {
+            //$("#btn_BaseInfo_bc").remove();
+
+            bind(JSON.stringify({
+                fnumber: keyValues[i]
+            }));
+        }
+        //保养编号
+        $.SetForm({
+            url: "/TenementManage/DeviceRecord/GetRecordCombobox?queryJson=" + JSON.stringify({
+                fstatusid: 0
+            }),
+            success: function (data) {
+                var rows = '<li><a data-value="">保养单单号          计划保养年月          部件编号          部件名称          部件规格型号          安装位置</a></li>';
+                $('#f_number').find('ul').append(rows);
+                if (data.length > 0) {
+                    $.each(data, function (id, item) {
+                        var fnumber = '';
+                        var fyearmonth = '';
+                        var p_number = '';
+                        var p_name = '';
+                        var p_standard = '';
+                        var p_place = '';
+                        if (item.fnumber != null && item.fnumber != '') {
+                            fnumber = item.fnumber;
+                        }
+                        if (item.fyearmonth != null && item.fyearmonth != '') {
+                            fyearmonth = item.fyearmonth;
+                        }
+                        if (item.p_number != null && item.p_number != '') {
+                            p_number = item.p_number;
+                        }
+                        if (item.p_name != null && item.p_name != '') {
+                            p_name = item.p_name;
+                        }
+                        if (item.p_standard != null && item.p_standard != '') {
+                            p_standard = item.p_standard;
+                        }
+                        if (item.p_place != null && item.p_place != '') {
+                            p_place = item.p_place;
+                        }
+
+                        var rowmonth = '<li><a data-value="' + fnumber + '">' + fnumber + '          ' + fyearmonth + '          ' + p_number + '          ' + '          ' + p_name + '          ' + p_standard + '          ' + p_place + '</a></li>';
+                        $('#f_number').find('ul').append(rowmonth);
+                        if (fnumber==keyValues[i]) {
+                            $('#f_number').find('.dropdown-text').html(fnumber + '          ' + fyearmonth + '          ' + p_number + '          ' + '          ' + p_name + '          ' + p_standard + '          ' + p_place).attr('data-value', fnumber);
+                        }
+                    });
+                }
+                $('#f_number').find('li>a').click(function () {
+                    var id = $(this).attr('data-value');
+                    if (id != '') {
+                        var text = $(this).html();
+                        $('#f_number').find('.dropdown-text').html(text).attr('data-value', id);
+                        $("#fnumber").val(id);
+                        keyValues[i] = id;
+                        bind(JSON.stringify({
+                            fnumber: id
+                        }));
+                    }
+                });
+            }
+        })
+
+    }
+    function bind(str) {
+        $.SetForm({
+            url: "/TenementManage/DeviceRecord/GetRecordCombobox?queryJson=" +str ,
+            success: function (data) {
+                if (data.length > 0) {
+                    $.each(data, function (id, item) {
+                        $("#p_number").val(item.p_number);
+                        $("#p_name").val(item.p_name);
+                        $("#p_place").val(item.p_place);
+                        $("#p_standard").val(item.p_standard);
+                        if (i == 0) {
+                            $("#fdate").val(formatDate(item.fdate, 'yyyy-MM-dd'));
+                        }
+                        $.SetForm({
+                            url: "/TenementManage/wy_device_plan/GetListJson?queryJson=" + JSON.stringify({
+                                planid: item.fplanid
+                            }),
+                            success: function (data) {
+                                if (data.length > 0) {
+                                    $.each(data, function (id, item) {
+                                        $("#maintencename").val(item.maintencename);
+                                        $("#maintence").val(item.maintence);
+                                        $("#finfo").val(item.maintence);
+                                    });
+                                }
+                            }
+                        })
+                        $.SetForm({
+                            url: "/TenementManage/DeviceRecord/GetListJson?queryJson=" + JSON.stringify({
+                                fpartnumber: item.p_number,
+                                fstatusid:1
+                            }),
+                            success: function (data) {
+                                if (data.rows.length > 0) {
+                                    data = data.rows;
+                                    console.log(data);
+                                    // “空” 表示新增
+                                    if (keyValues != "") {
+                                        $("#fman").val(data[0].fman);
+                                        $("#fdate").val(formatDate(data[0].fdate, 'yyyy-MM-dd'));
+                                        if (data.length > 1) {
+                                            $("#lastman").val(data[1].fman);
+                                            $("#lastdate").val(formatDate(data[1].fdate, 'yyyy-MM-dd'));
+                                        } else {
+                                            $("#lastman").val("");
+                                            $("#lastdate").val("");
+                                        }
+                                        
+                                    } else {
+                                        $("#fman").val(data[0].fman);
+                                        $("#lastman").val(data[0].fman);
+                                        $("#lastdate").val(formatDate(data[0].fdate, 'yyyy-MM-dd'));
+                                    }
+
+                                    
+                                    //$.each(data, function (id, item) {
+                                    //    $("#lastman").val(item.fman);
+                                    //    $("#fman").val(item.fman);
+                                    //    $("#lastdate").val(formatDate(item.fdate, 'yyyy-MM-dd'));
+                                    //});
+                                }
+                            }
+                        })
+                    });
+                }
+            }
+        })
+    }
+    //保存表单;
+    function SaveClick() {
+        if (keyValues[i]==""||keyValues[i]==null) {
+            ValidationMessage($("#f_number"), "请选择保养单编号");
+            return;
+        }
+        if (!$('#form1').Validform()) {
+            return false;
+        }
+        var postData = $("#form1").GetWebControls(keyValues[i]);
+        $.SaveForm({
+            url: "../../TenementManage/DeviceRecord/SaveForm?keyValue=" + keyValues[i],
+            param: postData,
+            loading: "正在保存数据...",
+            close: false,
+            success: function () {
+                i++;
+                if (i >= keyValues.length) {
+                    $.currentIframe().$("#gridTable").trigger("reloadGrid");
+                    //dialogClose();
+                } else {
+                    initControl();
+                }
+            }
+        })
+    }
+
+    //关闭
+    function onClose() {
+        var index = top.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+        top.layer.close(index);
+    }
+</script>
+<div style="margin-top: 20px; margin-right: 30px;">
+    <table class="form">
+        <tr>
+            <td class="formTitle">保养单编号</td>
+            <td class="formValue" colspan="3">
+                <div id="f_number" class="btn-group">
+                    <a class="btn btn-default dropdown-text" data-toggle="dropdown">请选择</a>
+                    <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                    <ul class="dropdown-menu" style="max-height:480px;overflow:auto;overflow-x:hidden;"></ul>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">部件名称</td>
+            <td class="formValue">
+                <input id="p_name" type="text" class="form-control"  disabled/>
+                <input type="hidden"  id="fnumber" value=""/>
+            </td>
+            <td class="formTitle">型号规格<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="p_standard" type="text" class="form-control" disabled />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">部件编号</td>
+            <td class="formValue">
+                <input id="p_number" type="text" class="form-control" disabled />
+            </td>
+            <td class="formTitle">安装位置</td>
+            <td class="formValue">
+                <input id="p_place" type="text" class="form-control" disabled />
+            </td>
+        </tr>
+        <tr>
+
+
+            <td class="formTitle">计划保养等级</td>
+            <td class="formValue">
+                <input id="maintencename" type="text" class="form-control" disabled />
+            </td>
+            <td class="formTitle">计划保养内容</td>
+            <td class="formValue">
+                <input id="maintence" type="text" class="form-control" disabled />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">上次保养时间</td>
+            <td class="formValue">
+                <input id="lastdate" type="text" class="form-control" disabled />
+            </td>
+            <td class="formTitle">上次保养人</td>
+            <td class="formValue">
+                <input id="lastman" type="text" class="form-control" disabled />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">本次保养时间</td>
+            <td class="formValue">
+                <input id="fdate" type="text" class="form-control input-datepicker" style="width:120px;" onfocus="WdatePicker()" isvalid="yes" checkexpession="NotNull" />
+
+            </td>
+            <td class="formTitle">本次保养人</td>
+            <td class="formValue">
+                <input id="fman" type="text" class="form-control" isvalid="yes" checkexpession="NotNull" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">保养内容</td>
+            <td colspan="3">
+                <textarea class="form-control" id="finfo" isvalid="yes" checkexpession="NotNull"></textarea>
+            </td>
+            </tr>
+</table>
+</div>
+<div class="form-button btn1">
+    <a class="btn btn-danger layui-layer-close1" onclick="onClose();">关闭</a>
+    <a id="btn_BaseInfo_bc" class="btn btn-success" onclick="SaveClick();">保存</a>
+</div>
+

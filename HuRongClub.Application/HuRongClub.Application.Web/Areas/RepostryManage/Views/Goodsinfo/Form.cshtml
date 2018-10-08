@@ -1,0 +1,126 @@
+﻿@{;
+    ViewBag.Title = "表单页面";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+<script>
+    var keyValue = request('keyValue');
+    $(function () {
+        initControl();
+    });
+    //初始化控件
+    function initControl() {
+        //加载大类
+        $("#divBigType").ComboBox({
+            url: "/RepostryManage/Goodstype/GetListJson?type=1&fparentcode=0",
+            id: "id",
+            text: "text",
+            description: "==请选择==",
+            height: "300px"
+        }).bind("change", function () {
+
+            var value = $(this).attr('data-value');
+
+            $("#divMinType").attr("data-value", "").attr("data-text", "");
+            $("#divMinType").find(".ui-select-text").html("==请选择==");
+            //加载小类
+            $("#divMinType").ComboBox({
+                url: "/RepostryManage/Goodstype/GetListJson?type=1&fparentcode=" + value,
+                id: "id",
+                text: "text",
+                description: "==请选择==",
+                height: "300px"
+            });
+        });
+
+        //角色
+        $("#divMinType").ComboBox({
+            description: "==请选择==",
+            height: "300px"
+        });
+
+
+        //获取表单
+        if (!!keyValue) {
+            $.SetForm({
+                url: "../../RepostryManage/Goodsinfo/GetFormJson",
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    $("#form1").SetWebControls(data);
+
+                    var fid = data.fgoodsid;
+                    if (fid != undefined && fid != null && fid != "") {
+                        var fids = fid.split('-');
+                        var fidtype = fids[0].substring(0, 3);
+
+                        $("#divBigType").ComboBoxSetValue(fidtype).trigger("change");
+                        $("#divMinType").ComboBoxSetValue(fids[0]);
+
+                        $("#divBigType").attr("disabled", "disabled");
+                        $("#divMinType").attr("disabled", "disabled");
+                    }                    
+                }
+            })
+        }
+    }
+    //保存表单;
+    function AcceptClick() {
+        if (!$('#form1').Validform()) {
+            return false;
+        }
+        var postData = $("#form1").GetWebControls(keyValue);
+        var tid = $("#divMinType").attr("data-value");
+        $.SaveForm({
+            url: "../../RepostryManage/Goodsinfo/SaveForm?keyValue=" + keyValue + "&tid=" + tid,
+            param: postData,
+            loading: "正在保存数据...",
+            success: function () {
+                $.currentIframe().$("#gridTable").trigger("reloadGrid");
+            }
+        })
+    }
+</script>
+<div style="margin-top: 20px; margin-right: 30px;">
+    <table class="form">
+        <tr>
+            <td class="formTitle">物品类型：<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div style="float:left; width:48%;">
+                    <div id="divBigType" type="select" class="ui-select"></div>
+                </div>
+                <div style="float:left;width:49%; margin-left:13px;">
+                    <div id="divMinType" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull"></div>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">名称规格：<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="fname" type="text" class="form-control" isvalid="yes" checkexpession="NotNull">
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">单位：</td>
+            <td class="formValue">
+                <input id="funit" type="text" class="form-control" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">最小库存数：<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="fmincount" type="text" class="form-control" value="0" isvalid="yes" checkexpession="DoubleOrNull" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">最大库存数：<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="fmaxcount" type="text" class="form-control" value="0" isvalid="yes" checkexpession="DoubleOrNull" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">存放位置：</td>
+            <td class="formValue">
+                <input id="fplace" type="text" class="form-control" />
+            </td>
+        </tr>       
+    </table>
+</div>

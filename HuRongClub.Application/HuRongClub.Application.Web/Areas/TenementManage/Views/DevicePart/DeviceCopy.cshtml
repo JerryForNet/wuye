@@ -1,0 +1,66 @@
+﻿@{;
+    ViewBag.Title = "保养计划复制";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+<script>
+    $(function () {
+        initControl();
+    });
+    //初始化控件
+    function initControl() {
+        $("#fromyear").ComboBox({
+            url: "/TenementManage/DevicePart/GetYearListJson?year=2&startyear=2000",
+            id: "ytext",
+            text: "yvalue",
+            description: "==原保养年度==",
+            height: "200px",
+            allowSearch: true,
+        });
+
+        $("#toyear").ComboBox({
+            url: "/TenementManage/DevicePart/GetYearListJson?year=2&startyear=2000",
+            id: "ytext",
+            text: "yvalue",
+            description: "==目的保养年度==",
+            height: "200px",
+            allowSearch: true,
+        });
+    }
+    //保存表单;
+    function AcceptClick() {
+        if (!$('#form1').Validform()) {
+            return false;
+        }
+        
+        var fromyear = $("#fromyear").attr('data-value');
+        var toyear = $("#toyear").attr('data-value');
+        if (fromyear == toyear) {
+            ValidationMessage($("#fromyear"), "原保养年度和目的保养年度不能相同");
+            return false;
+        }
+        var postData = { fromyear: fromyear, toyear: toyear };
+        $.SaveForm({
+            url: "../../TenementManage/DevicePart/CopyDevicePlan",
+            param: postData,
+            loading: "正在保存数据...",
+            success: function () {
+                $.currentIframe().$("#gridTable").trigger("reloadGrid");
+            }
+        })
+    }
+</script>
+<div style="margin-top: 20px; margin-right: 30px;">
+    <table class="form">
+        <tr>
+            <td class="formTitle">原保养年度<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div id="fromyear" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull"></div>
+
+            </td>
+            <td class="formTitle">目的保养年度<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div id="toyear" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull"></div>
+            </td>
+        </tr>
+    </table>
+</div>

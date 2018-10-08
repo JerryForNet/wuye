@@ -1,0 +1,205 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{C10920FE-8C74-4993-A7F4-1DA189DA842C}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>HuRongClub.Application.Entity</RootNamespace>
+    <AssemblyName>HuRongClub.Application.Entity</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\</SolutionDir>
+    <RestorePackages>true</RestorePackages>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+    <DocumentationFile>bin\Debug\HuRongClub.Application.Entity.xml</DocumentationFile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AccountEntity.cs" />
+    <Compile Include="AuthorizeManage\ModuleFormEntity.cs" />
+    <Compile Include="AuthorizeManage\ModuleFormInstanceEntity.cs" />
+    <Compile Include="AuthorizeManage\ViewModel\AuthorizeUrlModel.cs" />
+    <Compile Include="BaseEntity.cs" />
+    <Compile Include="FinanceManage\FeeitemEntity.cs" />
+    <Compile Include="FinanceManage\FeenoticeEntity.cs" />
+    <Compile Include="FinanceManage\InnerbillEntity.cs" />
+    <Compile Include="FinanceManage\InnerbillitemEntity.cs" />
+    <Compile Include="FinanceManage\ViewModel\FeeticketModel.cs" />
+    <Compile Include="FinanceManage\ViewModel\InnerbillModel.cs" />
+    <Compile Include="OaManage\NoticeEntity.cs" />
+    <Compile Include="OaManage\ViewModel\WeekplanModel.cs" />
+    <Compile Include="OaManage\WeekplanEntity.cs" />
+    <Compile Include="PersonnelManage\EmployexchangeEntity.cs" />
+    <Compile Include="PersonnelManage\EmployfamilyEntity.cs" />
+    <Compile Include="PersonnelManage\EmployresumeEntity.cs" />
+    <Compile Include="PersonnelManage\HrDepartmentEntity.cs" />
+    <Compile Include="PersonnelManage\EmployinfoEntity.cs" />
+    <Compile Include="PersonnelManage\PaydetailEntity.cs" />
+    <Compile Include="PersonnelManage\PayitemEntity.cs" />
+    <Compile Include="PersonnelManage\PayrollEntity.cs" />
+    <Compile Include="PersonnelManage\ViewModel\EmployinfoListEntity.cs" />
+    <Compile Include="PersonnelManage\ViewModel\PayDetailListEntity.cs" />
+    <Compile Include="RepostryManage\GoodsinfoEntity.cs" />
+    <Compile Include="RepostryManage\GoodstypeEntity.cs" />
+    <Compile Include="RepostryManage\InbillEntity.cs" />
+    <Compile Include="RepostryManage\InbillItemEntity.cs" />
+    <Compile Include="RepostryManage\LblistEntity.cs" />
+    <Compile Include="RepostryManage\MonthcheckEntity.cs" />
+    <Compile Include="RepostryManage\OutbillEntity.cs" />
+    <Compile Include="RepostryManage\OutbillitemEntity.cs" />
+    <Compile Include="RepostryManage\ProviderEntity.cs" />
+    <Compile Include="RepostryManage\tb_wh_inbill_itemEntity.cs" />
+    <Compile Include="RepostryManage\ViewModel\ArraersDetailModel.cs" />
+    <Compile Include="RepostryManage\ViewModel\ArraersViewModel.cs" />
+    <Compile Include="RepostryManage\ViewModel\ArrearsExportEntity.cs" />
+    <Compile Include="RepostryManage\ViewModel\Arrears_detailModel.cs" />
+    <Compile Include="RepostryManage\ViewModel\Arrears_rentdetailModel.cs" />
+    <Compile Include="RepostryManage\ViewModel\billStatisticsModel.cs" />
+    <Compile Include="RepostryManage\ViewModel\ChargeModel.cs" />
+    <Compile Include="RepostryManage\ViewModel\DelayanaModel.cs" />
+    <Compile Include="RepostryManage\ViewModel\DelayDetail.cs" />
+    <Compile Include="RepostryManage\ViewModel\DistrictModel.cs" />
+    <Compile Include="RepostryManage\ViewModel\GoodsinfoModel.cs" />
+    <Compile Include="RepostryManage\ViewModel\billItemModel.cs" />
+    <Compile Include="RepostryManage\ViewModel\InbillModel.cs" />
+    <Compile Include="RepostryManage\ViewModel\InbillItemByfinidModel.cs" />
+    <Compile Include="RepostryManage\ViewModel\MonthcheckModel.cs" />
+    <Compile Include="RepostryManage\ViewModel\OutbillgoodModel.cs" />
+    <Compile Include="RepostryManage\ViewModel\OutbillitemModel.cs" />
+    <Compile Include="RepostryManage\ViewModel\OutStatisticsModel.cs" />
+    <Compile Include="RepostryManage\ViewModel\ProviderModel.cs" />
+    <Compile Include="RepostryManage\ViewModel\ReceiveCostModel.cs" />
+    <Compile Include="RepostryManage\ViewModel\RentreportEntity.cs" />
+    <Compile Include="RepostryManage\WhProviderEntity.cs" />
+    <Compile Include="SysManage\Accounts_UsersEntity.cs" />
+    <Compile Include="SysManage\DictEntity.cs" />
+    <Compile Include="SysManage\DictitemEntity.cs" />
+    <Compile Include="SystemManage\CodeRuleEntity.cs" />
+    <Compile Include="SystemManage\CodeRuleFormatEntity.cs" />
+    <Compile Include="SystemManage\CodeRuleSeedEntity.cs" />
+    <Compile Include="AuthorizeManage\AuthorizeEntity.cs" />
+    <Compile Include="BaseManage\UserRelationEntity.cs" />
+    <Compile Include="AuthorizeManage\AuthorizeDataEntity.cs" />
+    <Compile Include="SystemManage\DataBaseBackupEntity.cs" />
+    <Compile Include="SystemManage\DataBaseTableFieldEntity.cs" />
+    <Compile Include="SystemManage\DataBaseLinkEntity.cs" />
+    <Compile Include="AuthorizeManage\FilterIPEntity.cs" />
+    <Compile Include="AuthorizeManage\FilterTimeEntity.cs" />
+    <Compile Include="SystemManage\AreaEntity.cs" />
+    <Compile Include="AuthorizeManage\ModuleEntity.cs" />
+    <Compile Include="AuthorizeManage\ModuleButtonEntity.cs" />
+    <Compile Include="AuthorizeManage\ModuleColumnEntity.cs" />
+    <Compile Include="BaseManage\UserEntity.cs" />
+    <Compile Include="BaseManage\DepartmentEntity.cs" />
+    <Compile Include="BaseManage\OrganizeEntity.cs" />
+    <Compile Include="BaseManage\RoleEntity.cs" />
+    <Compile Include="SystemManage\DataItemEntity.cs" />
+    <Compile Include="SystemManage\DataItemDetailEntity.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SystemManage\LogEntity.cs" />
+    <Compile Include="SystemManage\ViewModel\DataItemModel.cs" />
+    <Compile Include="TenementManage\BuildingEntity.cs" />
+    <Compile Include="TenementManage\DeviceEntity.cs" />
+    <Compile Include="TenementManage\DeviceMaintenceEntity.cs" />
+    <Compile Include="TenementManage\DevicePartEntity.cs" />
+    <Compile Include="TenementManage\DeviceRecordEntity.cs" />
+    <Compile Include="TenementManage\EnergyEntity.cs" />
+    <Compile Include="TenementManage\FeechangelogEntity.cs" />
+    <Compile Include="TenementManage\FeecheckEntity.cs" />
+    <Compile Include="TenementManage\FeeincomeCutEntity.cs" />
+    <Compile Include="TenementManage\FeeincomeEntity.cs" />
+    <Compile Include="TenementManage\FeereceiveEntity.cs" />
+    <Compile Include="TenementManage\FeeticketEntity.cs" />
+    <Compile Include="TenementManage\FixmaterialEntity.cs" />
+    <Compile Include="TenementManage\FixReportEntity.cs" />
+    <Compile Include="TenementManage\OptionEntity.cs" />
+    <Compile Include="TenementManage\OtherincomeEntity.cs" />
+    <Compile Include="TenementManage\OtherincomeitemEntity.cs" />
+    <Compile Include="TenementManage\OwnerEntity.cs" />
+    <Compile Include="TenementManage\Owner_feeEntity.cs" />
+    <Compile Include="TenementManage\PropertyEntity.cs" />
+    <Compile Include="TenementManage\RentcontractEntity.cs" />
+    <Compile Include="TenementManage\RentfeeitemEntity.cs" />
+    <Compile Include="TenementManage\RoomEntity.cs" />
+    <Compile Include="TenementManage\ViewModel\AccountTZEntity.cs" />
+    <Compile Include="TenementManage\ViewModel\ActualEntity.cs" />
+    <Compile Include="TenementManage\ViewModel\CostInfoEntity.cs" />
+    <Compile Include="TenementManage\ViewModel\DeviceRecordModel.cs" />
+    <Compile Include="TenementManage\ViewModel\DevicePlanModel.cs" />
+    <Compile Include="TenementManage\ViewModel\EnergyListEntity.cs" />
+    <Compile Include="TenementManage\ViewModel\OtherIncomeEntity.cs" />
+    <Compile Include="TenementManage\ViewModel\OtherincomeitemListEntity.cs" />
+    <Compile Include="TenementManage\ViewModel\OutInModel.cs" />
+    <Compile Include="TenementManage\ViewModel\RentcontractTree.cs" />
+    <Compile Include="TenementManage\ViewModel\YearModel.cs" />
+    <Compile Include="TenementManage\ViewModel\DevicePartModel.cs" />
+    <Compile Include="TenementManage\ViewModel\FeeincomeAdjustEntity.cs" />
+    <Compile Include="TenementManage\ViewModel\DeviceModel.cs" />
+    <Compile Include="TenementManage\ViewModel\FeeincomeListEntity.cs" />
+    <Compile Include="TenementManage\ViewModel\FeeManageEntity.cs" />
+    <Compile Include="TenementManage\ViewModel\OtherincomeFromEntity.cs" />
+    <Compile Include="TenementManage\ViewModel\OtherincomeListEntity.cs" />
+    <Compile Include="TenementManage\ViewModel\OwnerFeeIndexEntity.cs" />
+    <Compile Include="TenementManage\ViewModel\OwnerFeeModelEntity.cs" />
+    <Compile Include="TenementManage\ViewModel\OwnerListEntity.cs" />
+    <Compile Include="TenementManage\ViewModel\OwnerModelEntity.cs" />
+    <Compile Include="TenementManage\ViewModel\PaymentSerachEntity.cs" />
+    <Compile Include="TenementManage\ViewModel\RentfeeitemListEntity.cs" />
+    <Compile Include="TenementManage\ViewModel\RoomModelEntity.cs" />
+    <Compile Include="TenementManage\wy_DeviceFixEntity.cs" />
+    <Compile Include="TenementManage\wy_device_contractEntity.cs" />
+    <Compile Include="TenementManage\wy_device_planEntity.cs" />
+    <Compile Include="TenementManage\wy_device_typeEntity.cs" />
+    <Compile Include="UserInfoModel.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\HuRongClub.Util\HuRongClub.Util.Extension\HuRongClub.Util.Extension.csproj">
+      <Project>{4B7DDE80-DFA1-4938-93F8-3721E2C592B9}</Project>
+      <Name>HuRongClub.Util.Extension</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\HuRongClub.Application.Code\HuRongClub.Application.Code.csproj">
+      <Project>{9b10db87-130c-41d3-8687-1fac877db74a}</Project>
+      <Name>HuRongClub.Application.Code</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

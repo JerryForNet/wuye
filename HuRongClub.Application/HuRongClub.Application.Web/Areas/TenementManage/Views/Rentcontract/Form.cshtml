@@ -1,0 +1,523 @@
+﻿@{;
+ViewBag.Title = "表单页面";
+Layout = "~/Views/Shared/_FlowForm.cshtml";
+}
+<!--jqgrid表格组件start-->
+<link href="/Content/scripts/plugins/jqgrid/jqgrid.css" rel="stylesheet" />
+<script src="/Content/scripts/plugins/jqgrid/grid.locale-cn.js"></script>
+<script src="/Content/scripts/plugins/jqgrid/jqgrid.min.js"></script>
+<!--表格组件end-->
+<script src="/Content/scripts/plugins/webuploader/webuploader.min.js"></script>
+<script src="/Content/scripts/plugins/webuploader/uploader.js"></script>
+<script>
+    var keyValue = request('keyValue');
+    $(function () {
+        initControl();
+        GetGridExpand();
+        getGridCost();
+        //初始化上传控件
+        $(".upload-File").InitUploader({ filesize: "10240", filepath: "/upload/file/", filetype: 3, sendurl: "/Content/Handler/upload_ajax.ashx", swf: "/Content/scripts/plugins/webuploader/uploader.swf", filetypes: "" });
+
+    });
+    //初始化控件
+    function initControl() {
+        //获取合同基本信息表单
+        if (!!keyValue) {
+            $.SetForm({
+                url: "/TenementManage/Rentcontract/GetFormJson",
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    $("#form1").SetWebControls(data);
+                    if (data.attfile != null && data.attfile.length > 0) {
+                        $("#aattfile").attr('href', data.attfile);
+                    }
+                    else {
+                        $("#aattfile").hide();
+                    }
+                    if (data.status == 0) {
+                        $("#btn_BaseInfo_zf").hide();
+                    } else if (data.status == 1) {
+                        $("#btn_BaseInfo_sx").hide();
+
+                        //$("#btn_BaseInfo_bc").hide();
+                        //$("#lr-add-Expand").hide();
+                        //$("#lr-delete-Expand").hide();
+                        //$("#lr-add-cost").hide();
+                        //$("#lr-edit-cost").hide();
+                        //$("#lr-delete-cost").hide();
+                    }
+                    else {
+                        $("#btn_BaseInfo_bc").hide();
+                        $("#btn_BaseInfo_zf").hide();
+                        $("#btn_BaseInfo_sx").hide();
+                    }
+                }
+            })
+        }
+
+        //加载楼栋
+        $.SetForm({
+            url: "/TenementManage/Building/GetListJson",
+            success: function (data) {
+                var rows = '<li><a data-value="">---楼栋选择--</a></li>';
+                $('#building_id').find('ul').append(rows);
+                $.each(data, function (id, item) {
+                    var row = '<li><a data-value="' + item.id + '">' + item.text + '</a></li>';
+                    $('#building_id').find('ul').append(row);
+                });
+                $('#building_id').find('li>a').click(function () {
+                    var id = $(this).attr('data-value');
+                    var text = $(this).html();
+                    $('#building_id').find('.dropdown-text').html(text).attr('data-value', id);
+                    $('#fee_code').find('.dropdown-text').html("---业主单元--");
+                    GetList(id);
+                });
+
+            }
+        })
+    }
+    //关闭
+    function onClose() {
+        var index = top.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+        top.layer.close(index);
+    }
+    //切换显示底部按钮
+    function tabSwitch(obj) {
+        $(".form-button").hide();
+        $(".btn" + obj).show();
+    }
+    //加载房间
+    function GetList(keyValue) {
+        if (keyValue == null || undefined || keyValue == "" || keyValue == "0") {
+            $('#fee_code').find('ul').find("li").remove();
+        }
+        else {
+            $('#fee_code').find('ul').find("li").remove();
+            $.SetForm({
+                url: "/TenementManage/Building/GetRoomTreeJson",
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    var rows = '<li><a data-value="">--单元--</a></li>';
+                    $('#fee_code').find('ul').append(rows);
+                    $.each(data, function (id, item) {
+                        var row = '<li><a data-value="' + item.id + '" data_dim="' + item.building_dim + '">' + item.text + '</a></li>';
+                        $('#fee_code').find('ul').append(row);
+                    });
+                    $('#fee_code').find('li>a').click(function () {
+                        var id = $(this).attr('data-value');
+                        var dim = $(this).attr('data_dim');
+                        var text = $(this).html();
+                        $('#fee_code').find('.dropdown-text').html(text).attr('data-value', id).attr('data_dim', dim);
+                    });
+                }
+            })
+        }
+
+    }
+
+    /*租凭单元being==================================*/
+    var ExpandJson = "";
+    function GetGridExpand() {
+        var owner_id = request('oid');
+        //$.ajax({
+        //    url: "/TenementManage/Building/GetListRent?keyValue=" + keyValue,
+        //    type: "get",
+        //    dataType: "json",
+        //    success: function (data) {
+        //        ExpandJson = data;
+        //    },
+        //});
+        var $grid = $("#gridTable-Expand");
+        $grid.jqGrid({
+            unwritten: false,
+            url: "/TenementManage/Building/GetListRent?keyValue=" + keyValue,
+            datatype: "json",
+            height: $(window).height() - 200,
+            width: $(window).width() - 30,
+            colModel: [
+                { label: "编号", name: "room_id", hidden: true },
+                { label: "房间号", name: "building_name", width: 300, align: "left", sortable: true },
+                { label: "建面", name: "building_dim", width: 200, align: "left", sortable: true, formatter: 'number', formatoptions: { thousandsSeparator: "", decimalPlaces: 2 } },
+            ],
+            rowNum: 1000,
+            rownumbers: true,
+            footerrow: true,
+            gridComplete: function () {
+                var rowNum = parseInt($(this).getGridParam("records"), 10);
+                if (rowNum > 0) {
+                    $(".ui-jqgrid-sdiv").show();
+
+                    var totalamount = $(this).getCol("building_dim", false, "sum");
+                    //合计
+                    $(this).footerData("set", { "building_name": "合计：", "building_dim": totalamount, });
+                    $('table.ui-jqgrid-ftable td').prevUntil().css("border-right-color", "#fff");//将合计值显示出来
+                } else {
+                    $(".ui-jqgrid-sdiv").hide();
+                }
+            }
+        });
+        //处理Json
+        function ExpandListToListTreeJson(ExpandJson) {
+            $.ajax({
+                url: "/TenementManage/Building/ListToListTreeJson",
+                data: { moduleColumnJson: JSON.stringify(buttonJson) },
+                type: "post",
+                dataType: "json",
+                success: function (data) {
+                    $grid.clearGridData();
+                    $grid[0].addJSONData(data);
+                },
+            });
+        }
+        //新增
+        $("#lr-add-Expand").click(function () {
+            var obj = $("#gridTable-Expand").jqGrid("getRowData");
+            var $Count = obj.length;
+            console.log($Count);
+            var $room_id = $("#fee_code").find('.dropdown-text').attr('data-value');
+            var $building_dim = $("#fee_code").find('.dropdown-text').attr('data_dim');
+            var postData = $("#divHd").GetWebControls(keyValue);
+            if (!!$room_id) {
+                $.SaveForm({
+                    url: "/TenementManage/Rentcontract/UpdateRentcell?keyValue=" + keyValue + "&room_id=" + $room_id + "&IsTrue=2&rentcell=" + $("#rentcell").val(),
+                    param: { room_id: $room_id, IsTrue: 2 },
+                    loading: "正在保存数据...",
+                    close: false,
+                    success: function (data) {
+                        $("#gridTable-Expand").trigger("reloadGrid");
+
+                        var $rentarea = $.trim($("#rentarea").val());
+                        if ($building_dim != undefined && $building_dim != "") {
+                            $("#rentarea").val(Number($rentarea) + Number($building_dim));
+                        }
+                    }
+                })
+            }
+            else {
+                dialogMsg('请选择单元！', 0);
+            }
+        })
+        //删除
+        $("#lr-delete-Expand").click(function () {
+            var $room_id = $("#gridTable-Expand").jqGridRowValue("room_id");
+            var $building_dim = $("#gridTable-Expand").jqGridRowValue("building_dim");
+            if (checkedRow($room_id)) {
+                $.RemoveForm({
+                    url: "/TenementManage/Rentcontract/RemoveDYForm?keyValue=" + keyValue + "&room_id=" + $room_id + "&rentcell=" + $("#rentcell").val(),
+                    param: { room_id: $room_id },
+                    success: function (data) {
+                        $("#gridTable-Expand").trigger("reloadGrid");
+
+                        var $rentarea = $.trim($("#rentarea").val());
+                        if ($building_dim != undefined && $building_dim != "") {
+                            var area = Number($rentarea) - Number($building_dim);
+                            $("#rentarea").val(area <= 0 ? 0 : area);
+                        }
+
+                    }
+                })
+            }
+        });
+    }
+    /*租赁单元end==================================*/
+
+    /*租赁收费标准being==================================*/
+    var buttonJson = "";
+    function getGridCost() {
+        $.ajax({
+            url: "/TenementManage/Rentfeeitem/GetListJson?queryJson=" + keyValue,
+            type: "get",
+            dataType: "json",
+            success: function (data) {
+                buttonJson = data;
+            },
+        });
+        var $grids = $("#gridTable-Cost");
+        $grids.jqGrid({
+            unwritten: false,
+            url: "/TenementManage/Rentfeeitem/GetListJson?queryJson=" + keyValue,
+            datatype: "json",
+            height: $(window).height() - 200,
+            width: $(window).width() - 30,
+            colModel: [
+                { label: "序号", name: "itemid", hidden: true },
+                { label: "租赁合同ID", name: "contractid", hidden: true },
+                { label: "费用科目", name: "feeitem_name", width: 200, align: "left", sortable: true },
+                { label: "费用金额", name: "feemoney", width: 200, align: "left", sortable: true, formatter: 'number', formatoptions: { thousandsSeparator: "", decimalPlaces: 2 } },
+                { label: "费用计算方式", name: "feerule", width: 250, align: "left", sortable: true },
+            ],
+            rowNum: 1000,
+            rownumbers: true,
+            footerrow: true,
+            gridComplete: function () {
+                var rowNum = parseInt($(this).getGridParam("records"), 10);
+                if (rowNum > 0) {
+                    $(".ui-jqgrid-sdiv").show();
+
+                    var totalamount = $(this).getCol("feemoney", false, "sum");
+                    //合计
+                    $(this).footerData("set", { "feeitem_name": "合计：", "feemoney": totalamount, });
+                    $('table.ui-jqgrid-ftable td').prevUntil().css("border-right-color", "#fff");//将合计值显示出来
+                } else {
+                    $(".ui-jqgrid-sdiv").hide();
+                }
+            }
+        });
+        //处理Json
+        function ButtonListToListTreeJson(buttonJson) {
+            $.ajax({
+                url: "/TenementManage/Rentfeeitem/ListToListTreeJson",
+                data: { moduleColumnJson: JSON.stringify(buttonJson) },
+                type: "post",
+                dataType: "json",
+                success: function (data) {
+                    $grids.clearGridData();
+                    $grids[0].addJSONData(data);
+                },
+            });
+        }
+        //新增
+        $("#lr-add-cost").click(function () {
+            var $customername = escape($("#customername").val());
+            var $rentarea = $("#rentarea").val();
+            var $code = $("#contractcode").val();
+            dialogOpen({
+                id: "buttonForm",
+                title: '添加收费信息',
+                url: '/TenementManage/Rentfeeitem/RentfeeitemForm?contractid=' + keyValue + "&customername=" + $customername + "&rentarea=" + $rentarea + "&code=" + $code,
+                width: "500px",
+                height: "400px",
+                callBack: function (iframeId) {
+                    top.frames[iframeId].AcceptClick(function (data) {
+                        buttonJson.push(data);
+                        ButtonListToListTreeJson(buttonJson);
+                    });
+                }
+            });
+        });
+        //编辑
+        $("#lr-edit-cost").click(function () {
+            var itemid = $("#gridTable-Cost").jqGridRowValue('itemid');
+            var $customername = $.trim(escape($("#customername").val()));
+            var $rentarea = $("#rentarea").val();
+            var $code = $("#contractcode").val();
+            if (checkedRow(itemid)) {
+                dialogOpen({
+                    id: 'buttonForm',
+                    title: '编辑收费信息',
+                    url: '/TenementManage/Rentfeeitem/RentfeeitemForm?keyValue=' + itemid + "&contractid=" + keyValue + "&customername=" + $customername + "&rentarea=" + $rentarea + "&code=" + $code,
+                    width: '500px',
+                    height: '400px',
+                    callBack: function (iframeId) {
+                        top.frames[iframeId].AcceptClick(function (data) {
+                            $.each(buttonJson, function (i) {
+                                if (buttonJson[i].itemid == itemid) {
+                                    buttonJson.splice(i, 1);
+                                    ButtonListToListTreeJson(buttonJson);
+                                    return false;
+                                }
+                            });
+
+                            buttonJson.push(data);
+                            ButtonListToListTreeJson(buttonJson);
+                        });
+                    }
+                })
+            }
+
+        });
+        //删除
+        $("#lr-delete-cost").click(function () {
+            var itemid = $("#gridTable-Cost").jqGridRowValue("itemid");
+            if (checkedRow(itemid)) {
+                $.RemoveForm({
+                    url: "/TenementManage/Rentfeeitem/RemoveForm",
+                    param: { keyValue: itemid },
+                    success: function (data) {
+                        $.each(buttonJson, function (i) {
+                            if (buttonJson[i].itemid == itemid) {
+                                buttonJson.splice(i, 1);
+                                ButtonListToListTreeJson(buttonJson);
+                                return false;
+                            }
+                        });
+                    }
+                })
+            }
+        });
+    }
+
+    /*租赁收费标准end====================================*/
+
+    //保存合同基本信息表单
+    function AcceptClick_Base() {
+        if (!$('#BaseInfo').Validform()) {
+            return false;
+        }
+        var postData = $("#BaseInfo").GetWebControls(keyValue);
+        $.SaveForm({
+            url: "/TenementManage/Rentcontract/SaveForm?keyValue=" + keyValue,
+            param: postData,
+            loading: "正在保存数据...",
+            close: false,
+            success: function () {
+                $.currentIframe().$("#gridTable").trigger("reloadGrid");
+            }
+        })
+    }
+    //修改状态
+    function AcceptClick_Updte(obj) {
+        $.SaveForm({
+            url: "/TenementManage/Rentcontract/UpdateStatus?keyValue=" + keyValue,
+            param: { Status: obj },
+            loading: "正在保存数据...",
+            close: false,
+            success: function () {
+                if (obj == 1) {
+                    $("#btn_BaseInfo_sx").hide();
+                    $("#btn_BaseInfo_zf").show();
+                }
+                else {
+                    $("#btn_BaseInfo_bc").hide();
+                    $("#btn_BaseInfo_zf").hide();
+                }
+            }
+        })
+    }
+</script>
+<div style="margin-top: 10px; margin-right: 10px;">
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#BaseInfo" data-toggle="tab" onclick="tabSwitch(1)">合同基本信息</a></li>
+        <li><a href="#ExpandInfo" data-toggle="tab" onclick="tabSwitch(2)">租赁单元</a></li>
+        <li><a href="#CostInfo" data-toggle="tab" onclick="tabSwitch(3)">租赁收费标准</a></li>
+    </ul>
+    <div class="step-content" id="wizard-steps" style="border-left: none; border-bottom: none; border-right: none;">
+        <div class="step-pane active" id="BaseInfo" style="margin-left: 0px; margin-top: 15px; margin-right: 30px;">
+            <table class="form">
+                <tr>
+                    <td class="formTitle">合同编号：<font face="宋体">*</font></td>
+                    <td class="formValue">
+                        <input id="contractcode" type="text" class="form-control" placeholder="合同编号" isvalid="yes" checkexpession="NotNull" />
+                    </td>
+                    <td class="formTitle">合同总面积：</td>
+                    <td class="formValue">
+                        <input id="rentarea" type="text" class="form-control" placeholder="合同总面积" readonly="readonly" />
+                    </td>
+                </tr>
+                <tr>
+                    <td class="formTitle">客户姓名：<font face="宋体">*</font></td>
+                    <td class="formValue">
+                        <input id="customername" type="text" class="form-control" placeholder="客户姓名" isvalid="yes" checkexpession="NotNull" />
+                    </td>
+                    <td class="formTitle">联系电话：</td>
+                    <td class="formValue">
+                        <input id="phone" type="text" class="form-control" placeholder="联系电话" />
+                    </td>
+                </tr>
+                <tr>
+                    <td class="formTitle">传真：</td>
+                    <td class="formValue">
+                        <input id="fax" type="text" class="form-control" placeholder="传真" />
+                    </td>
+                    <td class="formTitle">客户联系人：</td>
+                    <td class="formValue">
+                        <input id="linkman" type="text" class="form-control" placeholder="客户联系人" />
+                    </td>
+                </tr>
+                <tr>
+                    <td class="formTitle">合同开始日期：<font face="宋体">*</font></td>
+                    <td class="formValue">
+                        <input id="expire_begin" type="text" class="form-control input-datepicker" placeholder="合同开始日期" isvalid="yes" checkexpession="NotNull" onfocus="WdatePicker({ dateFmt: 'yyyy-MM-dd' })" />
+                    </td>
+                    <td class="formTitle">合同截止日期：<font face="宋体">*</font></td>
+                    <td class="formValue">
+                        <input id="expire_end" type="text" class="form-control input-datepicker" placeholder="合同截止日期" isvalid="yes" checkexpession="NotNull" onfocus="WdatePicker({ minDate: '#F{$dp.$D(\'expire_begin\')}', dateFmt: 'yyyy-MM-dd' })" />
+                    </td>
+                </tr>
+                <tr>
+                    <td class="formTitle">合同签约日期：</td>
+                    <td class="formValue">
+                        <input id="signdate" type="text" class="form-control input-datepicker" placeholder="合同签约日期" />
+                    </td>
+                    <td class="formTitle">合同登记日期：</td>
+                    <td class="formValue">
+                        <input id="inputtime" type="text" class="form-control input-datepicker" placeholder="合同登记日期" />
+                    </td>
+                </tr>
+                <tr>
+                    <td class="formTitle">合同内容描述：</td>
+                    <td class="formValue" colspan="3">
+                        <textarea id="contractinfo" placeholder="合同内容描述" class="form-control"></textarea>
+                </tr>
+                <tr>
+                    <td class="formTitle">合同附件：</td>
+                    <td class="formValue" colspan="3">
+                        <div class="file_uploadss">
+                            <input type="text" name="attfile" id="attfile" style="width:335px;" class="form-control upload-path" readonly="readonly" />
+                            <div style="padding-left:5px; float:left;" class="upload-box upload-File"></div>
+                            <div style="padding-left:5px; float:left; line-height:30px;"><a id="aattfile" href="" target="_blank">下载查看</a></div>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div class="step-pane" id="ExpandInfo" style="margin: 5px;">
+            <div class="title-search" style="width:360px; float:left; margin-left:50px;">
+                <table>
+                    <tr>
+                        <td>
+                            <div id="building_id" class="btn-group" style="padding-right:20px; max-height:260px;">
+                                <a class="btn btn-default dropdown-text" data-toggle="dropdown">所在楼栋</a>
+                                <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                                <ul class="dropdown-menu" style="max-height:260px;overflow:auto;overflow-x:hidden;"></ul>
+                            </div>
+                        </td>
+                        <td>
+                            <div id="fee_code" class="btn-group" style="max-height:260px;">
+                                <a class="btn btn-default dropdown-text" data-toggle="dropdown">业主单元</a>
+                                <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                                <ul class="dropdown-menu" style="max-height:260px;overflow:auto;overflow-x:hidden;"></ul>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div style="height: 40px; line-height: 33px; text-align: right;">
+                <div class="btn-group">
+                    <a id="lr-add-Expand" class="btn btn-default"><i class="fa fa-plus"></i>&nbsp;新增</a>
+                    <a id="lr-delete-Expand" class="btn btn-default"><i class="fa fa-trash-o"></i>&nbsp;删除</a>
+                </div>
+            </div>
+            <table id="gridTable-Expand"></table>
+            <din id="divHd">
+                <input type="hidden" id="room_id" />
+                <input type="hidden" id="building_name" />
+                <input type="hidden" id="building_dim" />
+            </din>
+        </div>
+        <div class="step-pane" id="CostInfo" style="margin: 5px;">
+            <div style="height: 40px; line-height: 33px; text-align: right;">
+                <div class="btn-group">
+                    <a id="lr-add-cost" class="btn btn-default"><i class="fa fa-plus"></i>&nbsp;新增</a>
+                    <a id="lr-edit-cost" class="btn btn-default"><i class="fa fa-pencil-square-o"></i>&nbsp;编辑</a>
+                    <a id="lr-delete-cost" class="btn btn-default"><i class="fa fa-trash-o"></i>&nbsp;删除</a>
+                </div>
+            </div>
+            <table id="gridTable-Cost"></table>
+        </div>
+    </div>
+</div>
+
+<div class="form-button btn1">
+    <a id="btn_BaseInfo_bc" class="btn btn-success" onclick="AcceptClick_Base();">保存</a>
+    <a id="btn_BaseInfo_sx" class="btn btn-success" onclick="AcceptClick_Updte(1);">启动生效</a>
+    <a id="btn_BaseInfo_zf" class="btn btn-success" onclick="AcceptClick_Updte(2);">终止/作废</a>
+    <a class="btn btn-danger layui-layer-close1" onclick="onClose();">关闭</a>
+</div>
+<div class="form-button btn2" style="display:none;">
+    <a class="btn btn-danger layui-layer-close1" onclick="onClose();">关闭</a>
+</div>
+<div class="form-button btn3" style="display:none;">
+    <a class="btn btn-danger layui-layer-close1" onclick="onClose();">关闭</a>
+</div>
+<input type="hidden" id="rentcell" />

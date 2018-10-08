@@ -1,0 +1,93 @@
+﻿@{
+    ViewBag.Title = "打印预览";
+    Layout = "~/Views/Shared/_Index.cshtml";
+}
+
+<link href="/Content/styles/hurongclub-report.css" rel="stylesheet" />
+<script src="/Content/scripts/plugins/printTable/jquery.printTable.js"></script>
+<style>
+    body { width: 100%; background-color: #ccc; margin: 0px auto; padding: 0px; }
+    .ui-report .gridPanel { box-shadow: none; border: none; }
+</style>
+<script>
+	window.onload = function () {
+	    $('#gridTable').setGridWidth(($('.gridPanel').width()) - 10);
+	}
+	$(function () {
+	    $.ajax({
+	        async: false,
+	        url: "/RepostryManage/Outbillitem/GetGridRows",
+	        dataType: "json",
+	        success: function (data) {
+	            GetGrid(data);
+	        }
+	    });
+
+	    $(".ui-jqgrid-labels th").css("width", "80px");
+	    $("#gridTable_部门").css("width", "130px");
+	    $("#gridTable tr").children('td').css("width", "80px");
+	    $("#gridTable tr").children('td').eq(0).css("width", "130px");
+	    $(".footrow-ltr td").css("width", "80px");
+	    $(".footrow-ltr td").eq(0).css("width", "130px");
+	});
+
+	//加载表格
+	function GetGrid(data) {
+	    var arguments = window.dialogArguments;
+	    var queryJson;
+	    queryJson = window.opener.divqueryJson.innerHTML;
+	    var _json = JSON.parse(queryJson);
+	    $("#beginTime").html(_json.StartDate);
+	    $("#endTime").html(_json.EndDate);
+
+	    var $gridTable = $('#gridTable');
+
+	    $gridTable.jqGrid({
+	        autowidth: true,
+	        height: '100%',
+	        url: "/RepostryManage/Outbillitem/GetReceiveCostJson",
+	        postData: { queryJson: queryJson },
+	        colModel: data,
+	        datatype: "json",
+	        viewrecords: true,
+	        rowNum: "all",
+	        gridview: true,
+	        footerrow: true,
+	        gridComplete: function () {
+	            //合计
+	            var col = $("#gridTable").jqGrid('getGridParam', 'colNames');
+	            var fmoney = 0;
+	            var xml = "";
+
+	            for (var i = 0; i < col.length; i++) {
+	                if (i == 0) {
+	                    xml += ',"' + col[i] + '": "合计："';
+	                } else {
+	                    fmoney = jQuery(this).getCol(col[i], false, 'sum');
+	                    xml += ',"' + col[i] + '": "<span>' + fmoney.toFixed(2) + '</span>"';
+	                }
+	            }
+	            xml = xml.substr(1);
+	            xml = "{" + xml + "}";
+	            $(this).footerData("set", JSON.parse(xml));
+	            $('table.ui-jqgrid-ftable td[aria-describedby="gridTable_location"]').prevUntil().css("border-right-color", "#fff");
+
+	            //加载后打印
+	            window.print();
+
+	        }
+	    });
+	}
+</script>
+
+<div class="ui-report">
+    <div style="margin:0 auto; width:1300px; background-color:#ffffff;">
+        <div class="gridPanel" id="gridPanel" style="min-height:780px;">
+            <div class="printArea">
+                <div class="grid-title" style="text-align:center; font-size:18px; padding-top:15px; font-weight:bold;">部门（项目）领用材料费用表</div>
+                <div class="grid-subtitle" style="line-height:30px;">汇总日期: <label id="beginTime"></label> 至 <label id="endTime"></label></div>
+                <table id="gridTable"></table>
+            </div>
+        </div>
+    </div>
+</div>

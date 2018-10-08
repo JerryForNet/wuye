@@ -1,0 +1,186 @@
+﻿@{;
+ViewBag.Title = "表单页面";
+Layout = "~/Views/Shared/_OrderForm.cshtml";
+}
+<script>
+    var keyValue = request('keyValue');
+    $(function () {
+        InitialPage();
+        GetOrderEntryGrid();
+        initControl();
+
+    });
+    //初始化页面
+    function InitialPage() {;
+        //resize重设(表格、树形)宽高
+        $(window).resize(function (e) {
+            window.setTimeout(function () {
+                $('#gridTable').setGridWidth(($('.gridPanel').width()));
+                $('#gridTable').setGridHeight($(window).height() - 240.5);
+            }, 200);
+            e.stopPropagation();
+        });
+    }
+    //加载明细表
+    function GetOrderEntryGrid() {
+        var $grid = $('#gridTable');
+        $grid.jqGrid({
+            unwritten: false,
+            datatype: 'local',
+            height: $(window).height() - 240.5,
+            autowidth: true,
+            colModel: [
+                  { label: '费用项目', name: 'feeitem_id', width: 120, align: '', sortable: false, resizable: false },
+                    { label: '明细id', name: 'billitem_id', width: 80, align: '', sortable: false, resizable: false, hidden: true },
+                   { label: '摘要', name: 'summary', width: 380, align: '', sortable: false, resizable: false },
+                   { label: '金额', name: 'feemoney', width: 30, align: '', sortable: false, resizable: false },
+
+                { label: '费用id', name: 'billid', width: 80, align: '', sortable: false, resizable: false, hidden: true },
+            ],
+            pager: false,
+            rownumbers: true,
+            shrinkToFit: false,
+            gridview: true,
+            footerrow: false,
+            gridComplete: function () {
+            }
+        });
+        //默认添加13行 空行
+        for (var i = 1; i < 13; i++) {
+            var rowdata = {
+                billitem_id: '<input name="billitem_id" type="text" class="editable center" />',
+                summary: '<input name="summary" type="text" class="editable center" />',
+                feemoney: '<input name="feemoney" type="text" class="editable center" />',
+                feeitem_id: '<div id="feeitem_id" type="select"  class="select" ></div>',
+                billid: '<input name="billid" type="text" class="editable center" />',
+            }
+            select();
+            $grid.jqGrid('addRowData', i, rowdata);
+
+        };
+    }
+
+    function select() {
+        $(".select").ComboBox({
+            url: "../../FinanceManage/Feeitem/GetListg?group_id=内部费用",
+            id: "feeitem_id",
+            text: "feeitem_name",
+            description: "==请选择==",
+            allowSearch: true,
+        });
+    }
+    //初始化控件
+    function initControl() {
+        select();
+        //是否付款
+        $("#ifpay").ComboBox({
+            description: "==请选择==",
+        });
+        //部门
+        $("#deptid").ComboBox({
+            url: "../../PersonnelManage/HrDepartment/GetTreeJson",
+            id: "deptid",
+            text: "deptname",
+            description: "==请选择==",
+            height: "200px",
+            allowSearch: true,
+        });
+        //获取表单
+        if (!!keyValue) {
+            $.SetForm({
+                url: "../../FinanceManage/Innerbill/GetFormJson",
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    //console.log(data);
+                    $("#form1").SetWebControls(data.entity);
+                    //明细获取数据
+                    var childEntity = data.childEntity;
+                    $('#gridTable').find('[role=row]').each(function (i) {
+                        var row = childEntity[i - 1];
+                        if (row != undefined) {
+                            $(this).find('input[name="billitem_id"]').val(row.billitem_id);
+                            $(this).find('input[name="summary"]').val(row.summary);
+                            $(this).find('input[name="feemoney"]').val(row.feemoney);
+                            $(this).find("#feeitem_id").ComboBoxSetValue(row.feeitem_id);
+                            $(this).find('input[name="billid"]').val(row.billid);
+                        }
+                    });
+                }
+            })
+        }
+    }
+    //保存表单;
+    function AcceptClick() {
+        if (!$('#form1').Validform()) {
+            return false;
+        }
+        var postData = $("#form1").GetWebControls(keyValue);
+        var childEntryJson = [];
+        $('#gridTable').find('[role=row]').each(function (i) {
+            if (!!$(this).find('input[name="billitem_id"]').val()) {
+                childEntryJson.push({
+                    billitem_id: $(this).find('input[name="billitem_id"]').val(),
+                    summary: $(this).find('input[name="summary"]').val(),
+                    feemoney: $(this).find('input[name="feemoney"]').val(),
+                    feeitem_id: $(this).find('input[name="feeitem_id"]').val(),
+                    billid: $(this).find('input[name="billid"]').val()
+                });
+            }
+        });
+        $.SaveForm({
+            url: "../../FinanceManage/Innerbill/SaveForm?keyValue=" + keyValue,
+            param: { "strEntity": JSON.stringify(postData), "strChildEntitys": JSON.stringify(childEntryJson) },
+            loading: "正在保存数据...",
+            success: function () {
+                $.currentIframe().$("#gridTable").trigger("reloadGrid");
+            }
+        })
+    }
+</script>
+<div class="bills">
+    <div style="margin-top: 20px; margin-right: 30px;">
+        <table class="form">
+            <tr>
+                <th class="formTitle" style="width: 60px;">部门<font face="宋体">*</font></th>
+                <td class="formValue"><div id="deptid" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull"></div></td>
+            </tr>
+            <tr>
+                <th class="formTitle" style="width: 60px;">票号<font face="宋体">*</font></th>
+                <td class="formValue">
+                    <input id="ticketnumber" type="text" class="form-control" isvalid="yes" checkexpession="NotNull" />
+                </td>
+                <th class="formTitle" style="width: 60px;">领用日期<font face="宋体">*</font></th>
+                <td class="formValue">
+                    <input id="moneydate" type="text" onfocus="WdatePicker()" class="form-control input-datepicker" isvalid="yes" checkexpession="NotNull" />
+                </td>
+                <th class="formTitle" style="width: 60px;">是否付款<font face="宋体">*</font></th>
+                <td class="formValue">
+                    <div id="ifpay" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull">
+                        <ul>
+                            <li data-value="是">是</li>
+                            <li data-value="否">否</li>
+                        </ul>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td class="formTitle">说明<font face="宋体">*</font></td>
+                <td class="formValue" colspan="5">
+                    <textarea id="notes" class="form-control" isvalid="yes" checkexpession="NotNull"></textarea>
+                </td>
+            </tr>
+        </table>
+        <br />
+        <br />
+        <br />
+        <br />
+    </div>
+    <div class="gridPanel">
+        <table id="gridTable"></table>
+    </div>
+</div>
+<style>
+    body { margin: 0px; }
+    .bills { overflow: hidden; border-radius: 0px; position: relative; background: #FFFFFF; border: 0px solid rgb(204, 204, 204); box-shadow: none; padding: 0px; }
+    .ui-widget-content { border-left: 0px; border-right: 0px; border-bottom: 0px; }
+</style>

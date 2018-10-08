@@ -1,0 +1,148 @@
+﻿@{;
+    ViewBag.Title = "表单页面";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+<script>
+    var keyValue = request('keyValue');
+    var $contractid = request('contractid');
+    var $customername = request('customername');
+    var $rentarea = request('rentarea');
+    var $code = request('code');
+    $(function () {
+        $("#contractid").val($contractid);
+        $("#customername").val($customername);
+        $("#rentarea").val($rentarea);
+        $("#itemid").val(keyValue);
+        $("#code").val($code);
+        initControl();
+    });
+    //初始化控件
+    function initControl() { 
+        //费用科目
+        $("#feeitemid").ComboBox({
+            url: "/FinanceManage/Feeitem/GetSelectJson?group_id=" + encodeURI("应收费用"),
+            id: "feeitem_id",
+            text: "feeitem_name",
+            description: "=====请选择====",
+            height: "170px"
+        });
+        //费用币种
+        $("#currency").ComboBox({
+            url: "/TenementManage/Building/GetRoomMedel?dictid=21",
+            id: "itemname",
+            text: "itemname",
+            description: "=====请选择====",
+            height: "170px"
+        });
+        //获取表单
+        if (!!keyValue) {
+            $.SetForm({
+                url: "/TenementManage/Rentfeeitem/GetFormJson",
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    $("#form1").SetWebControls(data);
+                    $("#feerule").ComboBox({
+                        description: "==请选择==",
+                    });
+                    if (data.feerule != '') {
+                        var $feerule = data.feerule.split('：')[0];
+                        if ($feerule == "按房屋面积") {
+                            $("#feerule").ComboBoxSetValue("0");
+                        }
+                        else {
+                            $("#feerule").ComboBoxSetValue("1");
+                        }
+                    }
+                }
+            })
+        }
+        else {
+            $("#feerule").ComboBox({
+                description: "==请选择==",
+            });
+            $("#currency").ComboBoxSetValue("人民币");
+        }
+    }
+    //保存表单;
+    function AcceptClick(callback) {
+        if (!$('#form1').Validform()) {
+            return false;
+        }
+        var postData = $("#form1").GetWebControls(keyValue);
+        var $rentarea = $("#rentarea").val();
+        $.SaveForm({
+            url: "/TenementManage/Rentfeeitem/SaveForm?keyValue=" + keyValue + "&rentarea=" + $rentarea,
+            param: postData,
+            loading: "正在保存数据...",
+            success: function (data) {
+                postData["feeitem_name"] = $("#feeitemid").attr("data-text");
+                var $fee_money = $("#feemoney").val();
+                var $fee_rule = $("#feerule").attr("data-value");
+                var $fee_rule_text = $("#feerule").attr("data-text");
+                if ($fee_rule == "0") {
+                    postData["feerule"] = $fee_rule_text + "：" + $fee_money + "*" + $rentarea;
+                    $fee_money = Number(Number($fee_money) * Number($rentarea)).toFixed(2);
+                    postData["feemoney"] = $fee_money;
+                }
+                else {
+                    postData["feerule"] = $fee_rule_text + "：" + $fee_money;
+                }
+                postData["itemid"] = data.resultdata;
+                callback(postData);
+                dialogClose();
+            }
+        })
+    }
+</script>
+<div style="margin-top: 20px; margin-right: 30px;">
+    <table class="form">
+        <tr>
+            <td class="formTitle">合同编号：</td>
+            <td class="formValue">
+                <input id="code" type="text" class="form-control" disabled="disabled" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">客户：</td>
+            <td class="formValue">
+                <input id="customername" type="text" class="form-control" disabled="disabled" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">费用科目：<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div id="feeitemid" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull"></div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">费用币种：<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div id="currency" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull"></div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">计算方式：<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div id="feerule" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull">
+                    <ul>
+                        <li data-value="0">按房屋面积</li>
+                        <li data-value="1">按固定金额</li>
+                    </ul>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">费用金额：<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="feemoney" type="text" class="form-control" placeholder="单价" isvalid="yes" checkexpession="Double" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">&nbsp;</td>
+            <td class="formValue">1.费用规则为按房屋面积时费用金额填单价（元/平方米）<br /> 2.费用规则为按固定金额时填实际收费金额</td>
+        </tr>
+    </table>
+    <input type="hidden" id="contractid" />
+    <input type="hidden" id="rentarea" />
+    <input type="hidden" id="itemid" />
+</div>

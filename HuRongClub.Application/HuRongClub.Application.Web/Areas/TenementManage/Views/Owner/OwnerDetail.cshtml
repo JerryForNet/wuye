@@ -1,0 +1,248 @@
+@{
+    ViewBag.Title = "房间详情";
+    Layout = "~/Views/Shared/_FlowForm.cshtml";
+}
+<!--jqgrid表格组件start-->
+<link href="/Content/scripts/plugins/jqgrid/jqgrid.css" rel="stylesheet" />
+<script src="/Content/scripts/plugins/jqgrid/grid.locale-cn.js"></script>
+<script src="/Content/scripts/plugins/jqgrid/jqgrid.min.js"></script>
+<!--表格组件end-->
+<script type="text/javascript">
+    var keyValue = request('keyValue');
+    var parentId = request('parentId');
+    $(function () {
+        initControl();
+        getGridCost();
+        getGridQF();
+    })
+    //初始化控件
+    function initControl() {        
+        //单元业主信息
+        if (!!keyValue) {
+            $.SetForm({
+                url: "/TenementManage/Owner/GetInfoJson",
+                param: { keyValue: keyValue,type:2 },
+                success: function (data) {
+                    $("#ExpandInfo").SetWebControls(data);
+                    if (data.in_date != null && data.in_date.length > 0) {
+                        $("#in_date").val(data.in_date.split(' ')[0]);
+                    }
+                    if (data.sign_date != null && data.sign_date.length > 0) {
+                        $("#sign_date").val(data.sign_date.split(' ')[0]);
+                    }
+                    if (data.out_date != null && data.out_date.length > 0) {
+                        $("#out_date").val(data.out_date.split(' ')[0]);
+                    }
+                    if (data.building_dim != null) {
+                        $("#building_dim").val(data.building_dim + " 平方米");
+                    }
+                    if (data.room_dim != null) {
+                        $("#room_dim").val(data.room_dim + " 平方米");
+                    }
+                }
+            });
+        }
+    }
+
+    //关闭
+    function onClose() {
+        var index = top.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+        top.layer.close(index);
+    }
+    //已缴费用
+    function getGridCost() {
+        var selectedRowIndex = 0;
+        var $grid = $("#gridTable-Cost");
+        $grid.jqGrid({
+            autowidth: true,
+            height: $(window).height() - 150,
+            url: "/TenementManage/Feeincome/GetPageListsJson?type=1&owner_id=" + keyValue,
+            datatype: "json",
+            colModel: [
+                { label: 'income_id', name: 'income_id', index: 'income_id', width: 100, align: 'left', sortable: true, hidden: true },
+                { label: 'owner_id', name: 'owner_id', index: 'owner_id', width: 100, align: 'left', sortable: true, hidden: true },
+                { label: '所属物业', name: 'property_name', index: 'property_name', width: 230, align: 'left', sortable: true },
+                { label: '费用科目', name: 'feeitem_name', index: 'feeitem_name', width: 150, align: 'left', sortable: false },
+                { label: '应收年月', name: 'fee_years', index: 'fee_years', width: 130, align: 'left', sortable: true, formatter: "date", formatoptions: { newformat: 'Y-m' } },
+                { label: '应收费用', name: 'fee_income', index: 'fee_income', width: 130, align: 'left', sortable: true, formatter: 'number', formatoptions: { thousandsSeparator: "", decimalPlaces: 2 } },
+                { label: '已缴费用', name: 'fee_already', index: 'fee_already', width: 130, align: 'left', sortable: true, formatter: 'number', formatoptions: { thousandsSeparator: "", decimalPlaces: 2 } },
+            ],
+            viewrecords: true,
+            rowNum: 30,
+            rowList: [30, 50, 100],
+            pager: "#gridPager",
+            sortname: 'income_id',
+            sortorder: 'asc',
+            rownumbers: true,
+            shrinkToFit: false,
+            gridview: true,
+            onSelectRow: function () {
+                selectedRowIndex = $('#' + this.id).getGridParam('selrow');
+            },
+            gridComplete: function () {
+                $('#' + this.id).setSelection(selectedRowIndex, false);
+            }
+        });
+    }
+    //欠缴费用
+    function getGridQF() {
+        var selectedRowIndexs = 0;
+        var $grids = $("#gridTable-QF");
+        $grids.jqGrid({
+            autowidth: true,
+            height: $(window).height() - 150,
+            url: "/TenementManage/Feeincome/GetPageListsJson?type=2&owner_id=" + keyValue,
+            datatype: "json",
+            colModel: [
+                { label: 'income_id', name: 'income_id', index: 'income_id', width: 100, align: 'left', sortable: true, hidden: true },
+                { label: 'owner_id', name: 'owner_id', index: 'owner_id', width: 100, align: 'left', sortable: true, hidden: true },
+                { label: '所属物业', name: 'property_name', index: 'property_name', width: 230, align: 'left', sortable: true },
+                { label: '费用科目', name: 'feeitem_name', index: 'feeitem_name', width: 150, align: 'left', sortable: false },
+                { label: '应收年月', name: 'fee_years', index: 'fee_years', width: 130, align: 'left', sortable: true, formatter: "date", formatoptions: { newformat: 'Y-m' } },
+                { label: '应收费用', name: 'fee_income', index: 'fee_income', width: 130, align: 'left', sortable: true, formatter: 'number', formatoptions: { thousandsSeparator: "", decimalPlaces: 2 } },
+                { label: '已缴费用', name: 'fee_already', index: 'fee_already', width: 130, align: 'left', sortable: true, formatter: 'number', formatoptions: { thousandsSeparator: "", decimalPlaces: 2 } },
+            ],
+            viewrecords: true,
+            rowNum: 30,
+            rowList: [30, 50, 100],
+            pager: "#gridPager_QF",
+            sortname: 'income_id',
+            sortorder: 'asc',
+            rownumbers: true,
+            shrinkToFit: false,
+            gridview: true,
+            onSelectRow: function () {
+                selectedRowIndexs = $('#' + this.id).getGridParam('selrow');
+            },
+            gridComplete: function () {
+                $('#' + this.id).setSelection(selectedRowIndexs, false);
+            }
+        });
+    }
+
+</script>
+<div style="margin-left: 10px; margin-right: 10px;">
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#ExpandInfo" data-toggle="tab">业主信息</a></li>
+        <li><a href="#CostInfo" data-toggle="tab">已缴费用</a></li>
+        <li><a href="#qfInfo" data-toggle="tab">欠缴费用</a></li>
+    </ul>
+    <div class="step-content" id="wizard-steps" style="border-left: none; border-bottom: none; border-right: none;">
+        <div class="step-pane active" id="ExpandInfo" style="margin-left: 0px; margin-top: 15px; margin-right: 30px;">
+            <table class="form">
+                <tr>
+                    <th class="formTitle">单元业主：</th>
+                    <td class="formValue">
+                        <input id="owner_name" type="text" class="form-control owname" readonly="readonly" />
+                    </td>
+                    <th class="formTitle">所属物业：</th>
+                    <td class="formValue">
+                        <input id="property_name" type="text" class="form-control" readonly="readonly" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">入住房间单元：</th>
+                    <td class="formValue">
+                        <input id="room_names" type="text" class="form-control" />
+                    </td>
+                    <th class="formTitle">业主电话：</th>
+                    <td class="formValue">
+                        <input id="owner_tel" type="text" class="form-control" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">建筑面积：</th>
+                    <td class="formValue">
+                        <input id="building_dim" type="text" class="form-control" />
+                    </td>
+                    <th class="formTitle">使用面积：</th>
+                    <td class="formValue">
+                        <input id="room_dim" type="text" class="form-control" />
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">入住日期：</th>
+                    <td class="formValue">
+                        <input id="in_date" type="text" class="form-control"  />
+                    </td>
+                    <th class="formTitle">登记日期：</th>
+                    <td class="formValue">
+                        <input id="sign_date" type="text" class="form-control" />
+                    </td>
+                </tr>
+                <tr>                    
+                    <th class="formTitle">同住人：</th>
+                    <td class="formValue">
+                        <input id="link1_name" type="text" class="form-control" />
+                    </td>
+                    <th class="formTitle">同住人电话：</th>
+                    <td class="formValue">                        
+                        <table class="form">
+                            <tr>
+                                <td><input id="link1_tel" type="text" class="form-control" /></td>
+                                <th class="formTitle" style="width:50px; padding-right:5px;">关系：</th>
+                                <td class="formValue" style="padding-right:0px;">
+                                    <input id="link1_mark" type="text" class="form-control" />
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <th class="formTitle">同住人2：</th>
+                    <td class="formValue">
+                        <input id="link2_name" type="text" class="form-control" />
+                    </td>
+                    <th class="formTitle">同住人电话2：</th>
+                    <td class="formValue">                        
+                        <table class="form">
+                            <tr>
+                                <td><input id="link2_tel" type="text" class="form-control" /></td>
+                                <th class="formTitle" style="width:50px; padding-right:5px;">关系：</th>
+                                <td class="formValue" style="padding-right:0px;">
+                                    <input id="link2_mark" type="text" class="form-control" />
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>                    
+                    <th class="formTitle">业主证件名称：</th>
+                    <td class="formValue">
+                        <input id="owner_cardtype" type="text" class="form-control" />
+                    </td>
+                    <th class="formTitle">证件号码：</th>
+                    <td class="formValue">
+                        <input id="owner_cardno" type="text" class="form-control" />
+                    </td>
+                </tr>
+                <tr>                    
+                    <th class="formTitle">备注：</th>
+                    <td class="formValue" colspan="3">
+                        <input id="remark" type="text" class="form-control" />
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div class="step-pane" id="CostInfo" style="margin: 5px;">
+            <table id="gridTable-Cost"></table>
+            <div id="gridPager"></div>
+        </div>
+        
+        <div class="step-pane" id="qfInfo" style="margin: 5px;">
+            <table id="gridTable-QF"></table>
+            <div id="gridPager_QF"></div>
+        </div>
+    </div>
+    <input type="hidden" id="room_id" value="" />
+    <input type="hidden" id="building_id" value="" />
+    <input type="hidden" id="owner_id" value="" />
+    <input type="hidden" id="property_id" value="" />
+</div>
+<div class="form-button btn3">
+    <a class="btn btn-danger layui-layer-close1" onclick="onClose();">关闭</a>
+</div>
+
+
+
+

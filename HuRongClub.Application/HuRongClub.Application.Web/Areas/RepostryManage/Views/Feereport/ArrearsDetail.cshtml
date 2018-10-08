@@ -1,0 +1,76 @@
+﻿@{
+    Layout = "~/Views/Shared/_FlowForm.cshtml";
+    ViewBag.Title = "欠费详情";
+}
+<!--jqgrid表格组件start-->
+<link href="/Content/scripts/plugins/jqgrid/jqgrid.css" rel="stylesheet" />
+<script src="/Content/scripts/plugins/jqgrid/grid.locale-cn.js"></script>
+<script src="/Content/scripts/plugins/jqgrid/jqgrid.min.js"></script>
+<!--表格组件end-->
+<script type="text/javascript">
+
+    $(function () {
+        getGridQF();
+    })
+    //关闭
+    function onClose() {
+        var index = top.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+        top.layer.close(index);
+    }
+
+    //欠缴费用
+    function getGridQF() {
+        var keyvalue = request('keyvalue');
+        var type = request('type');
+        var YearNum = request('YearNum');
+        var MonthNum = request('MonthNum');
+        var DMonthNum = request('DMonthNum');
+        var propertyID = request('propertyID');
+        var feeitemId = request('feeitemId');
+        var queryJsonstr = "{'YearNum': '" + YearNum + "','MonthNum': '" + MonthNum + "','DMonthNum': '" + DMonthNum + "','propertyID': '" + propertyID + "','type': '" + type + "','keyvalue': '" + keyvalue + "','feeitemId':'" + feeitemId + "'}";
+        var selectedRowIndexs = 0;
+        var $grids = $("#gridTable-QF");
+        $grids.jqGrid({
+            autowidth: true,
+            height: $(window).height() - 100,
+            url: "../../RepostryManage/Feereport/GetArrearsDetailJson",
+            postData: { queryJson: queryJsonstr },
+            datatype: "json",
+            colModel: [
+                { label: '费用名称', name: 'feeitem_name', index: 'feeitem_name', width: 150, align: 'left', sortable: true },
+                { label: '应收日期', name: 'fee_years', index: 'fee_years', width: 130, align: 'left', sortable: true, formatter: "date", formatoptions: { newformat: 'Y-m' } },
+                { label: '金额', name: 'fee_arrears', index: 'fee_arrears', width: 130, align: 'left', sortable: true, formatter: 'number', formatoptions: { thousandsSeparator: "", decimalPlaces: 2 } },
+            ],
+            pager: false,
+            rowNum: 'all',
+            shrinkToFit: false,
+            gridview: true,
+            footerrow: true,
+            gridComplete: function () {
+
+                var totallbcount = $(this).getCol("fee_arrears", false, "sum");
+                //合计
+                $(this).footerData("set", {
+                    "fee_years": "合计：",
+                    "fee_arrears": totallbcount,
+                });
+                $('table.ui-jqgrid-ftable td').prevUntil().css("border-right-color", "#fff");
+            }
+
+        });
+    }
+
+</script>
+
+<div style="margin-left: 10px; margin-right: 10px;">
+    <div class="step-content" id="wizard-steps" style="border-left: none; border-bottom: none; border-right: none;">
+        <div class="step-pane active" id="qfInfo" style="margin: 5px;">
+            <table id="gridTable-QF"></table>
+            <div id="gridPager_QF"></div>
+        </div>
+    </div>
+</div>
+<div class="form-button btn3">
+    <a class="btn btn-danger layui-layer-close1" onclick="onClose();">关闭</a>
+</div>
+

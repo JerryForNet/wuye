@@ -1,0 +1,189 @@
+﻿@{;
+    ViewBag.Title = "列表页面";
+    Layout = "~/Views/Shared/_Index.cshtml";
+}
+<script>;
+    $(function () {
+        InitialPage();
+        GetGrid();
+    });
+    //初始化页面
+    function InitialPage() {
+        //resize重设布局;
+        $(window).resize(function (e) {
+            window.setTimeout(function () {
+                $('#gridTable').setGridWidth(($('.gridPanel').width()));
+                $('#gridTable').setGridHeight($(window).height() - 136.5);
+            }, 200);
+            e.stopPropagation();
+        });
+        //加载楼栋
+        $.SetForm({
+            url: "/TenementManage/Building/GetListJson",
+            success: function (data) {
+                var rows = '<li><a data-value="">请选择</a></li>';
+                $('#building_id').find('ul').append(rows);
+                $.each(data, function (id, item) {
+                    var row = '<li><a data-value="' + item.id + '">' + item.text + '</a></li>';
+                    $('#building_id').find('ul').append(row);
+                });
+                $('#building_id').find('li>a').click(function () {
+                    var id = $(this).attr('data-value');
+                    var text = $(this).html();
+                    $('#building_id').find('.dropdown-text').html(text).attr('data-value', id);
+                });
+
+            }
+        });
+        //费用科目
+        $.SetForm({
+            url: "/FinanceManage/Feeitem/GetSelectJson?group_id=" + encodeURI("应收费用"),
+            success: function (data) {
+                var rows = '<li><a data-value="">请选择</a></li>';
+                $('#feeitem_id').find('ul').append(rows);
+                $.each(data, function (id, item) {
+                    var row = '<li><a data-value="' + item.feeitem_id + '">' + item.feeitem_name + '</a></li>';
+                    $('#feeitem_id').find('ul').append(row);
+                });
+                $('#feeitem_id').find('li>a').click(function () {
+                    var id = $(this).attr('data-value');
+                    var text = $(this).html();
+                    $('#feeitem_id').find('.dropdown-text').html(text).attr('data-value', id);
+                });
+
+            }
+        });
+    }
+    //加载表格
+    function GetGrid() {
+        var selectedRowIndex = 0;
+        var $gridTable = $('#gridTable');
+        $gridTable.jqGrid({
+            autowidth: true,
+            height: $(window).height() - 136.5,
+            url: "/TenementManage/Owner_fee/GetListsJson",
+            datatype: "json",
+            colModel: [
+                { label: '编号', name: 'owner_feeid', index: 'owner_feeid', width: 100, align: 'left', sortable: true, hidden: true },
+                { label: '费用科目编号', name: 'feeitem_id', index: 'feeitem_id', width: 100, align: 'left', sortable: true, hidden: true },
+                { label: '建筑面积', name: 'building_dim', index: 'building_dim', width: 100, align: 'left', sortable: true, hidden: true },
+                //{ label: '选择', name: 'check_name', index: 'check_name', width: 50, align: 'center', formatter: 'checkbox', formatoptions: { disabled: false } },
+                { label: '业主名称', name: 'ownerName', index: 'ownerName', width: 200, align: 'left', sortable: true },
+                { label: '房间编号', name: 'room_name', index: 'room_name', width: 200, align: 'left', sortable: true },
+                { label: '费用科目', name: 'feeitem_name', index: 'feeitem_name', width: 150, align: 'left', sortable: true },
+                { label: '费用金额', name: 'fee_money', index: 'fee_money', width: 100, align: 'left', sortable: true, formatter: 'number', formatoptions: { thousandsSeparator: "", decimalPlaces: 2 } },
+                { label: '费用起交日期', name: 'start_date', index: 'start_date', width: 100, align: 'left', sortable: true, formatter: "date", formatoptions: { newformat: 'Y-m-d' } },
+            ],
+            viewrecords: true,
+            rowNum: 30,
+            rowList: [30, 50, 100],
+            pager: "#gridPager",
+            sortname: 'building_id',
+            sortorder: 'asc',
+            rownumbers: true,
+            shrinkToFit: false,
+            gridview: true,
+            multiselect: true,
+            onSelectRow: function () {
+                selectedRowIndex = $('#' + this.id).getGridParam('selrow');
+            },
+            gridComplete: function () {
+                $('#' + this.id).setSelection(selectedRowIndex, false);
+                var rowIds = jQuery('#' + this.id).jqGrid('getDataIDs');
+                for (var k = 0; k < rowIds.length; k++) {
+                    var curRowData = jQuery('#' + this.id).jqGrid('getRowData', rowIds[k]);
+                    var curChk = $("#" + rowIds[k] + "").find(":checkbox");
+                    curChk.attr('name', 'check_name');   //给每一个checkbox赋名字
+                    curChk.attr('value', curRowData['owner_feeid']);   //给checkbox赋值
+                    curChk.attr('dim', curRowData['building_dim']);   //给checkbox赋予额外的属性值
+                }
+            }
+        });
+        //查询事件
+        $("#btn_Search").click(function () {
+            var queryJson = {
+                building_id: $("#building_id").find('.dropdown-text').attr('data-value'),
+                feeitem_id: $("#feeitem_id").find('.dropdown-text').attr('data-value'),
+                owner_name: $("#owner_name").val()
+            }
+            $gridTable.jqGrid('setGridParam', {
+                postData: { queryJson: JSON.stringify(queryJson) }
+            }).trigger('reloadGrid');
+        });
+        //查询回车
+        $('#txt_Keyword').bind('keypress', function (event) {
+            if (event.keyCode == "13") {
+                $('#btn_Search').trigger("click");
+            }
+        });
+    }
+    //编辑
+    function btn_edit() {
+        var keyValue = $("#gridTable").jqGridRowValue("owner_feeid");
+        var $dim = $("#gridTable").jqGridRowValue("building_dim");
+
+        var arrChk = "";
+        var $arrdim = "";
+        $($("input[type='checkbox']:checked")).each(function () {
+            arrChk += this.value + ',';
+            $arrdim += $(this).attr("dim") + ",";
+        });
+        if (arrChk != "") {
+            arrChk = arrChk.substring(0, (arrChk.length - 1));
+            $arrdim = $arrdim.substring(0, ($arrdim.length - 1));
+            keyValue = arrChk;
+            $dim = $arrdim;
+        }
+        if (checkedArray(keyValue)) {
+            dialogOpen({
+                id: 'Form',
+                title: '费用标准调整',
+                url: '/TenementManage/Owner_fee/Owner_feeForm?keyValue=' + keyValue + "&dim=" + $dim,
+                width: '600px',
+                height: '360px',
+                callBack: function (iframeId) {
+                    top.frames[iframeId].AcceptClick();
+                }
+            })
+        }
+    }
+</script>
+<div class="titlePanel">
+    <div class="title-search">
+        <table>
+            <tr>
+                <td>
+                    <div id="building_id" class="btn-group">
+                        <a class="btn btn-default dropdown-text" data-toggle="dropdown">所在楼栋</a>
+                        <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                        <ul class="dropdown-menu"style="max-height:480px;overflow:auto;overflow-x:hidden;"></ul>
+                    </div>
+                </td>
+                <td style="padding-left:5px;">
+                    <div id="feeitem_id" class="btn-group">
+                        <a class="btn btn-default dropdown-text" data-toggle="dropdown">费用科目</a>
+                        <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                        <ul class="dropdown-menu"style="max-height:480px;overflow:auto; overflow-x:hidden;"></ul>
+                    </div>
+                </td>
+                <td style="padding-left:5px;">
+                    <input id="owner_name" type="text" class="form-control" placeholder="请输入要查询业主姓名" style="width: 200px;" />
+                </td>
+                <td style="padding-left: 5px;">
+                    <a id="btn_Search" class="btn btn-primary"><i class="fa fa-search"></i>查询</a>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div class="toolbar">
+        <div class="btn-group">
+            <a id="lr-replace" class="btn btn-default" onclick="reload()"><i class="fa fa-refresh"></i>&nbsp;刷新</a>
+            <a id="lr-edit" class="btn btn-default" onclick="btn_edit()"><i class="fa fa-pencil-square-o"></i>&nbsp;调整</a>
+        </div>
+        <script>$('.toolbar').authorizeButton()</script>
+    </div>
+</div>
+<div class="gridPanel">
+    <table id="gridTable"></table>
+    <div id="gridPager"></div>
+</div>

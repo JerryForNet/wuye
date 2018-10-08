@@ -1,0 +1,119 @@
+﻿@{
+    ViewBag.Title = "表单页面";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+<script src="/Content/scripts/plugins/cookie/jquery.cookie.js"></script>
+<script>
+    var keyValue = request('keyValue');
+    $(function () {
+        initControl();
+        var $pid = $.cookie("property_id");
+        if ($pid != "" && $pid != undefined) {
+            $("#checkproperty").ComboBoxSetValue($pid);
+        }
+    });
+    //初始化控件
+    function initControl() {
+        //获取表单
+        if (!!keyValue) {
+            $.SetForm({
+                url: "/FinanceManage/Feenotice/GetFormJson",
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    $("#tbform").SetWebControls(data);
+                }
+            })
+        }
+
+
+        //小区
+        $("#checkproperty").ComboBox({
+            url: "/Home/GetPropertyJson",
+            id: "property_id",
+            text: "property_name",
+            description: "=====请选择====",
+            height: "160px"
+        });
+    }
+    //保存表单;
+    function AcceptClick() {
+        if (!$('#tbClaim').Validform()) {
+            return false;
+        }
+        var postData = $("#tbClaim").GetWebControls(keyValue);
+        $.SaveForm({
+            url: "/FinanceManage/Feenotice/SaveClaimForm?keyValue=" + keyValue,
+            param: postData,
+            loading: "正在保存数据...",
+            success: function () {
+                $.currentIframe().$("#gridTable").trigger("reloadGrid");
+            }
+        })
+    }
+</script>
+<div style="margin-top: 20px; margin-right: 30px;">
+    <table class="form" id="tbform">
+        <tr>
+            <td class="formTitle">账单编号</td>
+            <td class="formValue" colspan='3'>
+                <input id="accountcode" type="text" class="form-control" readonly="readonly" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">账单单位</td>
+            <td class="formValue" colspan='3'>
+                <input id="accountcompany" type="text" class="form-control" readonly="readonly" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">账单日期</td>
+            <td class="formValue">
+                <input id="accountdate" type="text"  class="form-control input-datepicker" readonly="readonly" />
+            </td>
+            <td class="formTitle">账单金额</td>
+            <td class="formValue">
+                <input id="account" type="text" class="form-control"  readonly="readonly" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">对方帐号</td>
+            <td class="formValue" colspan='3'>
+                <input id="accounts" type="text" class="form-control"  readonly="readonly"/>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">用途</td>
+            <td class="formValue" colspan='3'>
+                <textarea id="purpose" class="form-control" readonly="readonly"></textarea>
+            </td>
+        </tr>  
+        <tr>
+            <td class="formTitle">账单备注</td>
+            <td class="formValue" colspan='3'>
+                <input id="memo" type="text" class="form-control"  readonly="readonly" />
+            </td>
+        </tr>
+    </table>
+    <table class="form" id="tbClaim">
+        <tr>
+            <td class="formTitle">认领日期<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="checkdate" value="@HuRongClub.Util.Time.GetToday()"  type="text" class="form-control input-datepicker" isvalid="yes" checkexpession="NotNull" />
+            </td>
+            <td class="formTitle">&nbsp;</td>
+            <td  class="formValue">&nbsp;</td>
+        </tr>
+        <tr>
+            <td class="formTitle">认领物业<font face="宋体">*</font></td>
+            <td class="formValue" colspan='3'>
+                <div id="checkproperty" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull"></div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">认领备注</td>
+            <td class="formValue" colspan='3'>
+                <textarea id="checkremark" class="form-control"></textarea>
+            </td>
+        </tr> 
+    </table>
+</div>

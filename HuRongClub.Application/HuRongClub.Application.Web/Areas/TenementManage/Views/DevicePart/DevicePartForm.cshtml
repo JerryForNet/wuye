@@ -1,0 +1,507 @@
+﻿@{;
+    ViewBag.Title = "表单页面";
+    Layout = "~/Views/Shared/_Form.cshtml";
+}
+<script>
+    var keyValue = request('keyValue');
+    $(function () {
+        initControl();
+    });
+    //初始化控件
+    function initControl() {
+        //设备类别
+        $("#devicetype").ComboBox({
+            url: "/TenementManage/Device/GetDeviceTypeListJson",
+            id: "typecode",
+            text: "typename",
+            description: "==设备类别==",
+            height: "200px",
+            allowSearch: true,
+        });
+        //设备信息	
+        $("#device").ComboBox({
+            url: "",
+            id: "d_number",
+            text: "mechinename",
+            description: "==设备信息==",
+            height: "200px",
+            allowSearch: true,
+        });
+        //部件信息	
+        $("#p_number").ComboBox({
+            url: "",
+            id: "p_number",
+            text: "p_name",
+            description: "==部件信息==",
+            height: "200px",
+            allowSearch: true,
+        });
+        $("#devicetype").change(function () {
+            var d_typecode = $("#devicetype").attr('data-value');
+            $("#device").attr('data-value', '');
+            $("#device").attr('data-text', '');
+            $("#device .ui-select-text").html('==设备信息==');
+
+            $("#p_number").attr('data-value', '');
+            $("#p_number").attr('data-text', '');
+            $("#p_number .ui-select-text").html('==部件信息==');
+
+            //设备信息	
+            $("#device").ComboBox({
+                url: "/TenementManage/Device/GetListJson?queryJson=" + JSON.stringify({
+                    d_typecode: d_typecode
+                }),
+                id: "d_number",
+                text: "mechinename",
+                description: "==设备信息==",
+                height: "200px",
+                allowSearch: true,
+            });
+        })
+        $("#device").change(function () {
+            var d_devicenumber = $("#device").attr('data-value');
+            $("#p_number").attr('data-value', '');
+            $("#p_number").attr('data-text', '');
+            $("#p_number .ui-select-text").html('==部件信息==');
+
+            $.SetForm({
+                url: "../../TenementManage/Device/GetFormJson",
+                param: { keyValue: d_devicenumber },
+                success: function (data) {
+                    $("#d_number").val(data.d_number);
+                    $("#d_name").val(data.d_name);
+                    $("#d_standard").val(data.d_standard);
+                    $("#d_place").val(data.d_place);
+
+                }
+            })
+
+            //部件信息	
+            $("#p_number").ComboBox({
+                url: "/TenementManage/DevicePart/GetListJson?queryJson=" + JSON.stringify({
+                    d_devicenumber: d_devicenumber
+                }),
+                id: "p_number",
+                text: "p_name",
+                description: "==部件信息==",
+                height: "200px",
+                allowSearch: true,
+            });
+        })
+        $("#p_number").change(function () {
+            changeplan();
+        })
+        var date = new Date;
+        var year = date.getFullYear();
+        //保养年度	
+        $("#fyear").ComboBox({
+            url: "/TenementManage/DevicePart/GetYearListJson?year=3&startyear=" + (year-5),
+            id: "ytext",
+            text: "yvalue",
+            description: "==保养年度==",
+            height: "200px",
+            allowSearch: true,
+        });
+        $("#fyear").change(function () {
+            changeplan();
+        })
+        //保养班组
+        $("#fgroupid").ComboBox({
+            url: "/SysManage/Dictitem/GetPageListByDid?queryJson=" + JSON.stringify({
+                dictid: "15"
+            }),
+            id: "itemid",
+            text: "itemname",
+            description: "==保养班组==",
+            height: "200px",
+            allowSearch: true,
+        });
+    }
+    //保存表单;
+    function AcceptClick() {
+        if (!$('#form1').Validform()) {
+            return false;
+        }
+        var classid = new Array();
+       var classid1= $('#month1').find('.dropdown-text').attr('data-value');
+       var classid2 = $('#month2').find('.dropdown-text').attr('data-value');
+       var classid3 = $('#month3').find('.dropdown-text').attr('data-value');
+       var classid4 = $('#month4').find('.dropdown-text').attr('data-value');
+       var classid5 = $('#month5').find('.dropdown-text').attr('data-value');
+       var classid6 = $('#month6').find('.dropdown-text').attr('data-value');
+       var classid7 = $('#month7').find('.dropdown-text').attr('data-value');
+       var classid8 = $('#month8').find('.dropdown-text').attr('data-value');
+       var classid9 = $('#month9').find('.dropdown-text').attr('data-value');
+       var classid10 = $('#month10').find('.dropdown-text').attr('data-value');
+       var classid11 = $('#month11').find('.dropdown-text').attr('data-value');
+       var classid12 = $('#month12').find('.dropdown-text').attr('data-value');
+       if ((classid1 == null || classid1 == "") && (classid2 == null || classid2 == "") && (classid3== null || classid3 == "") && (classid4 == null || classid4 == "") && (classid5 == null || classid5 == "") && (classid6 == null || classid6== "") && (classid7 == null || classid7== "") && (classid8 == null || classid8 == "") && (classid9 == null || classid9 == "") && (classid10 == null || classid10 == "") && (classid11 == null || classid11 == "") && (classid12 == null || classid12 == "")) {
+           ValidationMessage($("#month1"), "请至少选择1个月的计划");
+           return false;
+       }
+       classid[0] = classid1;
+       classid[1] = classid2;
+       classid[2] = classid3;
+       classid[3] = classid4;
+       classid[4] = classid5;
+       classid[5] = classid6;
+       classid[6] = classid7;
+       classid[7] = classid8;
+       classid[8] = classid9;
+       classid[9] = classid10;
+       classid[10] = classid11;
+       classid[11] = classid12;
+       $("#classid").val(classid);
+       var postData = $("#form1").GetWebControls(keyValue);
+
+
+        $.SaveForm({
+            url: "/TenementManage/wy_device_plan/SaveForm?keyValue=" + keyValue,
+            param: postData,
+            loading: "正在保存数据...",
+            success: function () {
+                $.currentIframe().$("#gridTable").trigger("reloadGrid");
+            }
+        })
+    }
+    function clearplan() {
+        $("#manticeTB").html('');
+        $('.month1').find('ul').html('');
+        $('.month2').find('ul').html('');
+        $('.month3').find('ul').html('');
+        $('.month4').find('ul').html('');
+        $('.month5').find('ul').html('');
+        $('.month6').find('ul').html('');
+        $('.month7').find('ul').html('');
+        $('.month8').find('ul').html('');
+        $('.month9').find('ul').html('');
+        $('.month10').find('ul').html('');
+        $('.month11').find('ul').html('');
+        $('.month12').find('ul').html('');
+        $('#month1').find('.dropdown-text').html('请选择').attr('data-value', '');
+        $('#month2').find('.dropdown-text').html('请选择').attr('data-value', '');
+        $('#month3').find('.dropdown-text').html('请选择').attr('data-value', '');
+        $('#month4').find('.dropdown-text').html('请选择').attr('data-value', '');
+        $('#month5').find('.dropdown-text').html('请选择').attr('data-value', '');
+        $('#month6').find('.dropdown-text').html('请选择').attr('data-value', '');
+        $('#month7').find('.dropdown-text').html('请选择').attr('data-value', '');
+        $('#month8').find('.dropdown-text').html('请选择').attr('data-value', '');
+        $('#month9').find('.dropdown-text').html('请选择').attr('data-value', '');
+        $('#month10').find('.dropdown-text').html('请选择').attr('data-value', '');
+        $('#month11').find('.dropdown-text').html('请选择').attr('data-value', '');
+        $('#month12').find('.dropdown-text').html('请选择').attr('data-value', '');
+    }
+    function changeplan() {
+        clearplan();
+        var p_number = $("#p_number").attr('data-value');
+        if (p_number==null||p_number=="") {
+            return;
+        }
+        $.SetForm({
+            url: "/TenementManage/DeviceMaintence/GetListJson?queryJson=" + JSON.stringify({
+                p_number: p_number
+            }),
+            success: function (data) {
+                var rows = '<li><a data-value="">请选择</a></li>';
+                $('#month1').find('ul').append(rows);
+                $('#month2').find('ul').append(rows);
+                $('#month3').find('ul').append(rows);
+                $('#month4').find('ul').append(rows);
+                $('#month5').find('ul').append(rows);
+                $('#month6').find('ul').append(rows);
+                $('#month7').find('ul').append(rows);
+                $('#month8').find('ul').append(rows);
+                $('#month9').find('ul').append(rows);
+                $('#month10').find('ul').append(rows);
+                $('#month11').find('ul').append(rows);
+                $('#month12').find('ul').append(rows);
+                if (data.length > 0) {
+                    $.each(data, function (id, item) {
+                        var row = '<tr><td class="formTitle">' + item.maintencename + '</td><td class="formValue">' + item.maintence + '</td></tr>';
+                        $("#manticeTB").append(row);
+                        var rowmonth = '<li><a data-value="' + item.classid + '">' + item.maintencename + '</a></li>';
+                        $('.month1').find('ul').append(rowmonth);
+                        $('.month2').find('ul').append(rowmonth);
+                        $('.month3').find('ul').append(rowmonth);
+                        $('.month4').find('ul').append(rowmonth);
+                        $('.month5').find('ul').append(rowmonth);
+                        $('.month6').find('ul').append(rowmonth);
+                        $('.month7').find('ul').append(rowmonth);
+                        $('.month8').find('ul').append(rowmonth);
+                        $('.month9').find('ul').append(rowmonth);
+                        $('.month10').find('ul').append(rowmonth);
+                        $('.month11').find('ul').append(rowmonth);
+                        $('.month12').find('ul').append(rowmonth);
+                    });
+                }
+                $('#month1').find('li>a').click(function () {
+                    var id = $(this).attr('data-value');
+                    var text = $(this).html();
+                    $('#month1').find('.dropdown-text').html(text).attr('data-value', id);
+                });
+                $('#month2').find('li>a').click(function () {
+                    var id = $(this).attr('data-value');
+                    var text = $(this).html();
+                    $('#month2').find('.dropdown-text').html(text).attr('data-value', id);
+                }); $('#month3').find('li>a').click(function () {
+                    var id = $(this).attr('data-value');
+                    var text = $(this).html();
+                    $('#month3').find('.dropdown-text').html(text).attr('data-value', id);
+                }); $('#month4').find('li>a').click(function () {
+                    var id = $(this).attr('data-value');
+                    var text = $(this).html();
+                    $('#month4').find('.dropdown-text').html(text).attr('data-value', id);
+                }); $('#month5').find('li>a').click(function () {
+                    var id = $(this).attr('data-value');
+                    var text = $(this).html();
+                    $('#month5').find('.dropdown-text').html(text).attr('data-value', id);
+                }); $('#month6').find('li>a').click(function () {
+                    var id = $(this).attr('data-value');
+                    var text = $(this).html();
+                    $('#month6').find('.dropdown-text').html(text).attr('data-value', id);
+                }); $('#month7').find('li>a').click(function () {
+                    var id = $(this).attr('data-value');
+                    var text = $(this).html();
+                    $('#month7').find('.dropdown-text').html(text).attr('data-value', id);
+                }); $('#month8').find('li>a').click(function () {
+                    var id = $(this).attr('data-value');
+                    var text = $(this).html();
+                    $('#month8').find('.dropdown-text').html(text).attr('data-value', id);
+                }); $('#month9').find('li>a').click(function () {
+                    var id = $(this).attr('data-value');
+                    var text = $(this).html();
+                    $('#month9').find('.dropdown-text').html(text).attr('data-value', id);
+                }); $('#month10').find('li>a').click(function () {
+                    var id = $(this).attr('data-value');
+                    var text = $(this).html();
+                    $('#month10').find('.dropdown-text').html(text).attr('data-value', id);
+                }); $('#month11').find('li>a').click(function () {
+                    var id = $(this).attr('data-value');
+                    var text = $(this).html();
+                    $('#month11').find('.dropdown-text').html(text).attr('data-value', id);
+                }); $('#month12').find('li>a').click(function () {
+                    var id = $(this).attr('data-value');
+                    var text = $(this).html();
+                    $('#month12').find('.dropdown-text').html(text).attr('data-value', id);
+                });
+            }
+        })
+        var fyear = $("#fyear").attr('data-value');
+        $.SetForm({
+            url: "/TenementManage/wy_device_plan/GetListJson?queryJson=" + JSON.stringify({
+                p_number: p_number,
+                fyear: fyear,
+            }),
+            success: function (data) {
+                if (data.length > 0) {
+                    $.each(data, function (id, item) {
+                        if (item.fmonth == 1) {
+                            $('.month1').find('.dropdown-text').html(item.maintencename).attr('data-value', item.classid);
+                        }
+                        if (item.fmonth == 2) {
+                            $('.month2').find('.dropdown-text').html(item.maintencename).attr('data-value', item.classid);
+                        }
+                        if (item.fmonth == 3) {
+                            $('.month3').find('.dropdown-text').html(item.maintencename).attr('data-value', item.classid);
+                        }
+                        if (item.fmonth == 4) {
+                            $('.month4').find('.dropdown-text').html(item.maintencename).attr('data-value', item.classid);
+                        }
+                        if (item.fmonth == 5) {
+                            $('.month5').find('.dropdown-text').html(item.maintencename).attr('data-value', item.classid);
+                        }
+                        if (item.fmonth == 6) {
+                            $('.month6').find('.dropdown-text').html(item.maintencename).attr('data-value', item.classid);
+                        }
+                        if (item.fmonth == 7) {
+                            $('.month7').find('.dropdown-text').html(item.maintencename).attr('data-value', item.classid);
+                        }
+                        if (item.fmonth == 8) {
+                            $('.month8').find('.dropdown-text').html(item.maintencename).attr('data-value', item.classid);
+                        }
+                        if (item.fmonth == 9) {
+                            $('.month9').find('.dropdown-text').html(item.maintencename).attr('data-value', item.classid);
+                        }
+                        if (item.fmonth == 10) {
+                            $('.month10').find('.dropdown-text').html(item.maintencename).attr('data-value', item.classid);
+                        }
+                        if (item.fmonth == 11) {
+                            $('.month11').find('.dropdown-text').html(item.maintencename).attr('data-value', item.classid);
+                        }
+                        if (item.fmonth == 12) {
+                            $('.month12').find('.dropdown-text').html(item.maintencename).attr('data-value', item.classid);
+                        }
+                    });
+                }
+            }
+        })
+    }
+</script>
+<div style="margin-top: 20px; margin-right: 30px;">
+    <table class="form" >
+        <tr>
+            <td class="formTitle">设备编号<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="d_number" type="text" class="form-control" disabled isvalid="yes" checkexpession="NotNull" />
+            </td>
+            <td class="formTitle">设备名称<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="d_name" type="text" class="form-control" disabled isvalid="yes" checkexpession="NotNull" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">设备型号<font face="宋体">*</font></td>
+            <td class="formValue">
+                <input id="d_standard" type="text" class="form-control" disabled isvalid="yes" checkexpession="NotNull" />
+            </td>
+            <td class="formTitle"> 安装位置<font face="宋体">*</font> </td>
+            <td class="formValue">
+                <input id="d_place" type="text" class="form-control" disabled isvalid="yes" checkexpession="NotNull" />
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">设备类别<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div id="devicetype" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull"></div>
+            </td>
+            <td class="formTitle">设备信息<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div id="device" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull"></div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">部件信息<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div id="p_number" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull"></div>
+            </td>
+            <td class="formTitle">保养年度<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div id="fyear" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull"></div>
+            </td>
+        </tr>
+        <tr>
+            <td class="formTitle">保养班组<font face="宋体">*</font></td>
+            <td class="formValue">
+                <div id="fgroupid" type="select" class="ui-select" isvalid="yes" checkexpession="NotNull"></div>
+            </td>
+        </tr>
+
+    </table>
+    <table id="manticeTB" class="form"></table>
+        <Table class="form">
+        <tr>
+            <td class="formTitle">一月</td>
+            <td class="formValue">
+                <div id="month1" class="btn-group month1">
+                    <a class="btn btn-default dropdown-text" data-toggle="dropdown">请选择</a>
+                    <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                    <ul class="dropdown-menu" style="max-height:480px;overflow:auto;overflow-x:hidden;"></ul>
+                </div>
+            </td>
+            <td class="formTitle">二月</td>
+            <td class="formValue">
+                <div id="month2" class="btn-group month2">
+                    <a class="btn btn-default dropdown-text" data-toggle="dropdown">请选择</a>
+                    <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                    <ul class="dropdown-menu" style="max-height:480px;overflow:auto;overflow-x:hidden;"></ul>
+                </div>
+            </td>
+        </tr>
+
+        <tr>
+            <td class="formTitle">三月</td>
+            <td class="formValue">
+                <div id="month3" class="btn-group month3">
+                    <a class="btn btn-default dropdown-text" data-toggle="dropdown">请选择</a>
+                    <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                    <ul class="dropdown-menu" style="max-height:480px;overflow:auto;overflow-x:hidden;"></ul>
+                </div>
+            </td>
+            <td class="formTitle"> 四月 </td>
+            <td class="formValue">
+                <div id="month4" class="btn-group month4">
+                    <a class="btn btn-default dropdown-text" data-toggle="dropdown">请选择</a>
+                    <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                    <ul class="dropdown-menu" style="max-height:480px;overflow:auto;overflow-x:hidden;"></ul>
+                </div>
+            </td>
+        </tr>
+
+        <tr>
+            <td class="formTitle">五月</td>
+            <td class="formValue">
+                <div id="month5" class="btn-group month5">
+                    <a class="btn btn-default dropdown-text" data-toggle="dropdown">请选择</a>
+                    <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                    <ul class="dropdown-menu" style="max-height:480px;overflow:auto;overflow-x:hidden;"></ul>
+                </div>
+            </td>
+            <td class="formTitle"> 六月 </td>
+            <td class="formValue">
+                <div id="month6" class="btn-group month6">
+                    <a class="btn btn-default dropdown-text" data-toggle="dropdown">请选择</a>
+                    <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                    <ul class="dropdown-menu" style="max-height:480px;overflow:auto;overflow-x:hidden;"></ul>
+                </div>
+            </td>
+        </tr>
+
+        <tr>
+            <td class="formTitle">七月</td>
+            <td class="formValue">
+                <div id="month7" class="btn-group month7">
+                    <a class="btn btn-default dropdown-text" data-toggle="dropdown">请选择</a>
+                    <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                    <ul class="dropdown-menu" style="max-height:480px;overflow:auto;overflow-x:hidden;"></ul>
+                </div>
+            </td>
+            <td class="formTitle"> 八月 </td>
+            <td class="formValue">
+                <div id="month8" class="btn-group month8">
+                    <a class="btn btn-default dropdown-text" data-toggle="dropdown">请选择</a>
+                    <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                    <ul class="dropdown-menu" style="max-height:480px;overflow:auto;overflow-x:hidden;"></ul>
+                </div>
+            </td>
+        </tr>
+
+        <tr>
+            <td class="formTitle">九月</td>
+            <td class="formValue">
+                <div id="month9" class="btn-group month9">
+                    <a class="btn btn-default dropdown-text" data-toggle="dropdown">请选择</a>
+                    <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                    <ul class="dropdown-menu" style="max-height:480px;overflow:auto;overflow-x:hidden;"></ul>
+                </div>
+            </td>
+            <td class="formTitle">十月</td>
+            <td class="formValue">
+                <div id="month10" class="btn-group month10">
+                    <a class="btn btn-default dropdown-text" data-toggle="dropdown">请选择</a>
+                    <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                    <ul class="dropdown-menu" style="max-height:480px;overflow:auto;overflow-x:hidden;"></ul>
+                </div>
+            </td>
+        </tr>
+
+        <tr>
+            <td class="formTitle">十一月</td>
+            <td class="formValue">
+                <div id="month11" class="btn-group month11">
+                    <a class="btn btn-default dropdown-text" data-toggle="dropdown">请选择</a>
+                    <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                    <ul class="dropdown-menu" style="max-height:480px;overflow:auto;overflow-x:hidden;"></ul>
+                </div>
+            </td>
+            <td class="formTitle">十二月</td>
+            <td class="formValue">
+                <div id="month12" class="btn-group month12">
+                    <a class="btn btn-default dropdown-text" data-toggle="dropdown">请选择</a>
+                    <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                    <ul class="dropdown-menu" style="max-height:480px;overflow:auto;overflow-x:hidden;"></ul>
+                </div>
+            </td>
+        </tr>
+            <input type="hidden" id="classid" />
+    </table>
+</div>

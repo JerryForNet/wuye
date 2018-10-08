@@ -1,0 +1,365 @@
+﻿@{;
+    ViewBag.Title = "列表页面";
+    Layout = "~/Views/Shared/_Index.cshtml";
+}
+<script>;
+    $(function () {
+        InitialPage();
+        GetGrid();
+
+        $("#StartDate").focus(function () {
+            var $val = $("#StartDate").val();
+            $("#SelectedStartTime").html($val);
+        });
+        $("#EndDate").focus(function () {
+            var $val = $("#EndDate").val();
+            $("#SelectedEndTime").html($val);
+        });
+    });
+    //初始化页面
+    function InitialPage() {
+        //resize重设布局;
+        $(window).resize(function (e) {
+            window.setTimeout(function () {
+                $('#gridTable').setGridWidth(($('.gridPanel').width()));
+                $('#gridTable').setGridHeight($(window).height() - 136.5);
+            }, 200);
+            e.stopPropagation();
+        });
+        //加载楼栋
+        $.SetForm({
+            url: "/TenementManage/Building/GetListJson",
+            success: function (data) {
+                var rows = '<li><a data-value="">==所在楼栋==</a></li>';
+                $('#building_id').find('ul').append(rows);
+                $.each(data, function (id, item) {
+                    var row = '<li><a data-value="' + item.id + '">' + item.text + '</a></li>';
+                    $('#building_id').find('ul').append(row);
+                });
+                $('#building_id').find('li>a').click(function () {
+                    var id = $(this).attr('data-value');
+                    var text = $(this).html();
+                    $('#building_id').find('.dropdown-text').html(text).attr('data-value', id);
+                    $('#fee_code').find('.dropdown-text').html("业主单元");
+                    GetList(id);
+                });
+            }
+        });
+        //合同租户
+        $.SetForm({
+            url: "/TenementManage/Rentcontract/GetListBySel",
+            success: function (data) {
+                var rows = '<li><a data-value="">==合同租户==</a></li>';
+                $('#contractid').find('ul').append(rows);
+                $.each(data, function (id, item) {
+                    var row = '<li><a data-value="' + item.id + '">' + item.text + '</a></li>';
+                    $('#contractid').find('ul').append(row);
+                });
+                $('#contractid').find('li>a').click(function () {
+                    var id = $(this).attr('data-value');
+                    var text = $(this).html();
+                    $('#contractid').find('.dropdown-text').html(text).attr('data-value', id);
+
+                    $('#fee_code').find('.dropdown-text').html("==业主单元==").attr('data-value', "");
+                });
+            }
+        });
+    }
+    //加载房间
+    function GetList(keyValue) {
+        if (keyValue == null || undefined || keyValue == "" || keyValue == "0") {
+            $('#fee_code').find('ul').find("li").remove();
+        }
+        else {
+            $('#fee_code').find('ul').find("li").remove();
+            $.SetForm({
+                url: "/TenementManage/Building/GetRoomTreeJson",
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    var rows = '<li><a data-value="">==业主单元==</a></li>';
+                    $('#fee_code').find('ul').append(rows);
+                    $.each(data, function (id, item) {
+                        var row = '<li><a data-value="' + item.value + '">' + item.text + '</a></li>';
+                        $('#fee_code').find('ul').append(row);
+                    });
+                    $('#fee_code').find('li>a').click(function () {
+                        var id = $(this).attr('data-value');
+                        var text = $(this).html();
+                        $('#fee_code').find('.dropdown-text').html(text).attr('data-value', id);
+
+                        $('#contractid').find('.dropdown-text').html("==合同租户==").attr('data-value', "");
+                    });
+                }
+            })
+        }
+    }
+    //加载表格
+    function GetGrid() {
+        var $queryJsons = {
+            StartDate: $("#StartDate").val(),
+            EndDate: $("#EndDate").val()
+        }
+
+        var selectedRowIndex = 0;
+        var $gridTable = $('#gridTable');
+        $gridTable.jqGrid({
+            autowidth: true,
+            height: $(window).height() - 136.5,
+            url: "/TenementManage/FixReport/GetPageListJson",
+            postData: { queryJson: JSON.stringify($queryJsons) },
+            datatype: "json",
+            colModel: [
+                { label: 'FixReportID', name: 'FixReportID', index: 'FixReportID', width: 150, align: 'left', sortable: true, hidden: true },
+                { label: '报修单号', name: 'fixNumber_No', index: 'fixNumber_No', width: 150, align: 'left', sortable: true },
+                { label: '客户', name: 'customername', index: 'customername', width: 150, align: 'left', sortable: true },
+                { label: '报修人', name: 'ReportMan', index: 'ReportMan', width: 150, align: 'left', sortable: true },
+                { label: '报修时间', name: 'ReportDate', index: 'ReportDate', width: 200, align: 'left', sortable: true },
+                { label: '联系电话', name: 'phone', index: 'phone', width: 150, align: 'left', sortable: true },
+                { label: '人工费', name: 'manfee', index: 'manfee', width: 150, align: 'left', sortable: false, formatter: 'number', formatoptions: { thousandsSeparator: "", decimalPlaces: 2 } },
+                { label: '材料费', name: 'materialfee', index: 'materialfee', width: 150, align: 'left', sortable: false, formatter: 'number', formatoptions: { thousandsSeparator: "", decimalPlaces: 2 } },
+                { label: '检修人', name: 'fixman', index: 'fixman', width: 150, align: 'left', sortable: true },
+            ],
+            viewrecords: true,
+            rowNum: 999999,
+            rowList: [30, 50, 100],
+            sortname: 'ReportDate',
+            sortorder: 'desc',
+            rownumbers: true,
+            shrinkToFit: false,
+            gridview: true,
+            footerrow: true,
+            onSelectRow: function () {
+                selectedRowIndex = $('#' + this.id).getGridParam('selrow');
+            },
+            gridComplete: function () {
+                $('#' + this.id).setSelection(selectedRowIndex, false);
+
+                var totalmanfee = $(this).getCol("manfee", false, "sum");
+                var totalmaterialfee = $(this).getCol("materialfee", false, "sum");
+
+                //合计
+                $(this).footerData("set", {
+                    "phone": "合计：",
+                    "manfee": totalmanfee,
+                    "materialfee": totalmaterialfee,
+                });
+                $('table.ui-jqgrid-ftable td').prevUntil().css("border-right-color", "#fff");
+            }
+        });
+
+        //查询条件
+        $("#fixtype .dropdown-menu li").click(function () {
+            var text = $(this).find('a').html();
+            var value = $(this).find('a').attr('data-value');
+            $("#fixtype .dropdown-text").html(text).attr('data-value', value)
+        });
+        $("#fixgroup .dropdown-menu li").click(function () {
+            var text = $(this).find('a').html();
+            var value = $(this).find('a').attr('data-value');
+            $("#fixgroup .dropdown-text").html(text).attr('data-value', value)
+        });
+        //查询事件
+        $("#btn_Search").click(function () {
+            var $state = $("#StartDate").val();
+            var $end = $("#EndDate").val();
+            if ($state == "" || $state == undefined || $end == "" || $end == undefined) {
+                dialogMsg('请选择维修时间！', 0);
+                return false;
+            }
+            var $owner_id = $("#fee_code").find('.dropdown-text').attr('data-value');
+            var $customertype = 1;
+            var $owner = "";
+            if ($owner_id != "" && $owner_id != undefined) {
+                $owner = $owner_id;
+            }
+            else {
+                var $contractid = $("#contractid").find('.dropdown-text').attr('data-value');
+                if ($contractid != "" && $contractid != undefined) {
+                    $owner = $contractid;
+                    $customertype = 2;
+                }
+            }
+
+
+            var queryJson = {
+                fixtype: $("#fixtype").find('.dropdown-text').attr('data-value'),
+                fixgroup: $("#fixgroup").find('.dropdown-text').attr('data-value'),
+                owner_id: $owner,
+                customertype: $customertype,
+                fixNumber_No: $("#fixNumber_No").val(),
+                Content: $("#Content").val(),
+                StartDate: $state,
+                EndDate: $end,
+            }
+            $gridTable.jqGrid('setGridParam', {
+                postData: { queryJson: JSON.stringify(queryJson) }
+            }).trigger('reloadGrid');
+
+            $("#divflter").click();
+        });
+    }
+    //新增
+    function btn_add() {
+        dialogOpen({
+            id: 'Form',
+            title: '添加报修维修',
+            url: '/TenementManage/FixReport/FixReportForm',
+            width: '70%',
+            height: '80%',
+            btn:null
+        });
+    }
+    //编辑
+    function btn_edit() {
+        var keyValue = $('#gridTable').jqGridRowValue('FixReportID');
+        if (checkedRow(keyValue)) {
+            dialogOpen({
+                id: 'Form',
+                title: '编辑报修维修',
+                url: '/TenementManage/FixReport/FixReportForm?keyValue=' + keyValue,
+                width: '70%',
+                height: '80%',
+                btn: null
+            })
+        }
+    }
+    //删除
+    function btn_delete() {
+        var keyValue = $('#gridTable').jqGridRowValue('FixReportID');
+        if (keyValue) {
+            $.RemoveForm({
+                url: '/TenementManage/FixReport/RemoveForm',
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    $('#gridTable').trigger('reloadGrid');
+                }
+            })
+        } else {
+            dialogMsg('请选择需要删除的报修维修！', 0);
+        }
+    }
+</script>
+<div class="titlePanel">
+    <div class="title-search">
+        <table>
+            <tr>
+                <td>查询条件</td>
+                <td style="padding-left: 10px;">
+                    <div class="ui-filter" style="width: 200px;">
+                        <div class="ui-filter-text" id="divflter">
+                            <strong id="SelectedStartTime">@DateTime.Now.AddDays(-7).ToString("yyyy-MM-dd")</strong> 至 <strong id="SelectedEndTime">@DateTime.Now.ToString("yyyy-MM-dd")</strong>
+                        </div>
+                        <div class="ui-filter-list" style="width: 550px;">
+                            <table class="form" id="filter-form">
+                                <tr>
+                                    <th class="formTitle">报修时间：</th>
+                                    <td class="formValue">
+                                        <input id="Category" type="hidden" value="1" />
+                                        <div style="float: left; width: 45%;">
+                                            <input id="StartDate" type="text" value="@HuRongClub.Util.Time.GetDate(-7)" class="form-control input-datepicker" placeholder="起始日期" onfocus="WdatePicker({  dateFmt: 'yyyy-MM-dd' })" />
+                                        </div>
+                                        <div style="float: left; width: 10%; text-align: center;">至</div>
+                                        <div style="float: left; width: 45%;">
+                                            <input id="EndDate" type="text" value="@HuRongClub.Util.Time.GetToday()" class="form-control input-datepicker" placeholder="结束日期" onfocus="WdatePicker({ minDate: '#F{$dp.$D(\'StartDate\')}', dateFmt: 'yyyy-MM-dd' })" />
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="formTitle">所在楼栋：</td>
+                                    <td class="formValue">
+                                        <div style="float: left;">
+                                            <div id="building_id" class="btn-group">
+                                                <a class="btn btn-default dropdown-text" data-toggle="dropdown">==所在楼栋==</a>
+                                                <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                                                <ul class="dropdown-menu" style="max-height:220px;overflow:auto;overflow-x:hidden;"></ul>
+                                            </div>
+                                        </div>
+                                        <div style="float: left; width: 10px; text-align: center;">&nbsp;</div>
+                                        <div style="float: left;">
+                                            <div id="fee_code" class="btn-group">
+                                                <a class="btn btn-default dropdown-text" data-toggle="dropdown">==业主单元==</a>
+                                                <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                                                <ul class="dropdown-menu" style="max-height:220px;overflow:auto;overflow-x:hidden;"></ul>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="formTitle">报修单号：</td>
+                                    <td class="formValue">
+                                        <input id="fixNumber_No" type="text" class="form-control" placeholder="请输入要查询报修单号" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="formTitle">维修类别：</td>
+                                    <td class="formValue">
+                                        <div id="fixtype" class="btn-group">
+                                            <a class="btn btn-default dropdown-text" data-toggle="dropdown">==维修类别==</a>
+                                            <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                                            <ul class="dropdown-menu">
+                                                <li><a data-value="">==请选择==</a></li>
+                                                <li><a data-value="0">无偿服务</a></li>
+                                                <li><a data-value="1">有偿服务</a></li>
+                                                <li><a data-value="2">公共部位</a></li>
+                                            </ul>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="formTitle">维修班组：</td>
+                                    <td class="formValue">
+                                        <div id="fixgroup" class="btn-group">
+                                            <a class="btn btn-default dropdown-text" data-toggle="dropdown">==维修班组==</a>
+                                            <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                                            <ul class="dropdown-menu">
+                                                <li><a data-value="">==请选择==</a></li>
+                                                <li><a data-value="管道班">管道班</a></li>
+                                                <li><a data-value="电工班">电工班</a></li>
+                                                <li><a data-value="空调班">空调班</a></li>
+                                                <li><a data-value="清洁班">清洁班</a></li>
+                                            </ul>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="formTitle">合同租户：</td>
+                                    <td class="formValue">
+                                        <div id="contractid" class="btn-group">
+                                            <a class="btn btn-default dropdown-text" data-toggle="dropdown">==合同租户==</a>
+                                            <a class="btn btn-default dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></a>
+                                            <ul class="dropdown-menu" style="max-height:100px;overflow:auto;overflow-x:hidden;"></ul>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="formTitle">报修内容：</td>
+                                    <td class="formValue">
+                                        <input id="content" type="text" class="form-control" placeholder="请输入要查询报修内容" />
+                                    </td>
+                                </tr>
+                            </table>
+                            <div class="ui-filter-list-bottom">
+                                <a id="btn_Search" class="btn btn-primary">&nbsp;查&nbsp;&nbsp;询</a>
+                            </div>
+                            <div style="height:120px;"></div>
+                        </div>
+
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div class="toolbar">
+        <div class="btn-group">
+            <a id="lr-replace" class="btn btn-default" onclick="reload()"><i class="fa fa-refresh"></i>&nbsp;刷新</a>
+            <a id="lr-add" class="btn btn-default" onclick="btn_add()"><i class="fa fa-plus"></i>&nbsp;新增</a>
+            <a id="lr-edit" class="btn btn-default" onclick="btn_edit()"><i class="fa fa-pencil-square-o"></i>&nbsp;编辑</a>
+            <a id="lr-delete" class="btn btn-default" onclick="btn_delete()"><i class="fa fa-trash-o"></i>&nbsp;删除</a>
+        </div>
+        <script>$('.toolbar').authorizeButton()</script>
+    </div>
+</div>
+<div class="gridPanel">
+    <table id="gridTable"></table>
+    <div id="gridPager"></div>
+</div>

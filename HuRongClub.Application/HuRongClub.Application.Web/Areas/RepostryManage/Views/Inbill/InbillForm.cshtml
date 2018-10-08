@@ -1,0 +1,152 @@
+﻿@{;
+    ViewBag.Title = "表单页面";
+    Layout = "~/Views/Shared/_OrderForm.cshtml";
+}
+<script>
+    var keyValue = request('keyValue');
+    $(function () {
+        InitialPage();
+        GetOrderEntryGrid();
+        initControl();
+    });
+    //初始化页面
+    function InitialPage() {;
+        //resize重设(表格、树形)宽高
+        $(window).resize(function (e) {
+            window.setTimeout(function () {
+                $('#gridTable').setGridWidth(($('.gridPanel').width()));
+                $('#gridTable').setGridHeight($(window).height() - 240.5);
+            }, 200);
+            e.stopPropagation();
+        });
+    }
+    //加载明细表
+    function GetOrderEntryGrid() {
+        var $grid = $('#gridTable');
+        $grid.jqGrid({
+            unwritten: false,
+            datatype: 'local',
+            height: $(window).height() - 240.5,
+            autowidth: true,
+            colModel: [
+                { label: '供应商ID', name: 'fproviderid', width: 80, align: '', sortable: false, resizable: false  },
+                { label: '入库数量', name: 'fnumber', width: 80, align: '', sortable: false, resizable: false  },
+                { label: '采购价格', name: 'fprice', width: 80, align: '', sortable: false, resizable: false  },
+                { label: '采购总价', name: 'fmoney', width: 80, align: '', sortable: false, resizable: false  },
+                { label: '物品ID', name: 'fgoodsid', width: 80, align: '', sortable: false, resizable: false  },
+                { label: '明细ID', name: 'finbillid', width: 80, align: '', sortable: false, resizable: false ,hidden: true },
+            ],
+            pager: false,
+            rownumbers: true,
+            shrinkToFit: false,
+            gridview: true,
+            footerrow: false,
+            gridComplete: function () {
+            }
+        });
+        //默认添加13行 空行
+        for (var i = 1; i < 13; i++) {
+            var rowdata = {
+                fproviderid: '<input name="fproviderid" type="text" class="editable center" />',
+                fnumber: '<input name="fnumber" type="text" class="editable center" />',
+                fprice: '<input name="fprice" type="text" class="editable center" />',
+                fmoney: '<input name="fmoney" type="text" class="editable center" />',
+                fgoodsid: '<input name="fgoodsid" type="text" class="editable center" />',
+                finbillid: '<input name="finbillid" type="text" class="editable center" />',
+            }
+            $grid.jqGrid('addRowData', i, rowdata);
+        };
+    }
+    //初始化控件
+    function initControl() {
+        //获取表单
+        if (!!keyValue) {
+            $.SetForm({
+                url: "../../RepostryManage/Inbill/GetFormJson",
+                param: { keyValue: keyValue },
+                success: function (data) {
+                    $("#form1").SetWebControls(data.entity);
+                    //明细
+                    var childEntity = data.childEntity;
+                    $('#gridTable').find('[role=row]').each(function (i) {
+                        var row = childEntity[i - 1];
+                        if (row != undefined) {
+                            $(this).find('input[name="fproviderid"]').val(row.fproviderid);
+                            $(this).find('input[name="fnumber"]').val(row.fnumber);
+                            $(this).find('input[name="fprice"]').val(row.fprice);
+                            $(this).find('input[name="fmoney"]').val(row.fmoney);
+                            $(this).find('input[name="fgoodsid"]').val(row.fgoodsid);
+                            $(this).find('input[name="finbillid"]').val(row.finbillid);
+                        }
+                    });
+                }
+            })
+        }
+    }
+    //保存表单;
+    function AcceptClick() {
+        if (!$('#form1').Validform()) {
+            return false;
+        }
+        var postData = $("#form1").GetWebControls(keyValue);
+        var childEntryJson = [];
+        $('#gridTable').find('[role=row]').each(function (i) {
+        if (!!$(this).find('input[name="fproviderid"]').val()) {
+            childEntryJson.push({
+                    fproviderid: $(this).find('input[name="fproviderid"]').val(),
+                    fnumber: $(this).find('input[name="fnumber"]').val(),
+                    fprice: $(this).find('input[name="fprice"]').val(),
+                    fmoney: $(this).find('input[name="fmoney"]').val(),
+                    fgoodsid: $(this).find('input[name="fgoodsid"]').val(),
+                    finbillid: $(this).find('input[name="finbillid"]').val(),
+                 });
+            }
+        });
+        $.SaveForm({
+            url: "../../RepostryManage/Inbill/SaveForm?keyValue=" + keyValue,
+            param: { "strEntity": JSON.stringify(postData), "strChildEntitys": JSON.stringify(childEntryJson) },
+            loading: "正在保存数据...",
+            success: function () {
+                $.currentIframe().$("#gridTable").trigger("reloadGrid");
+            }
+        })
+    }
+</script>
+<div class="bills" >
+ <div style="height:190px;overflow-y:auto;margin:10px 10px;">
+    <table class="form" style="width: 100%;">
+        <tr>
+            <th class="formTitle" style="width: 60px;">入库单编号<font face="宋体">*</font></th>
+            <td class="formValue"><input id="finbillid" type="text"  class="form-control" isvalid="yes" checkexpession="NotNull"></td>
+            <th class="formTitle" style="width: 60px;">入库日期<font face="宋体">*</font></th>
+            <td class="formValue"><input id="findate" type="text"  class="form-control" isvalid="yes" checkexpession="NotNull"></td>
+            <th class="formTitle" style="width: 60px;">用户ID</th>
+            <td class="formValue"><input id="fuserid" type="text"  class="form-control" ></td>
+            <th class="formTitle" style="width: 60px;">入库时间</th>
+            <td class="formValue"><input id="finputdate" type="text"  class="form-control" ></td>
+        </tr>
+    </table>
+ </div>
+ <div class="gridPanel" >
+     <table id="gridTable" ></table>
+ </div>
+</div>
+<style>
+    body {
+        margin:0px;
+    }
+    .bills {
+        overflow: hidden;
+        border-radius: 0px;
+        position: relative;
+        background: #FFFFFF;
+        border: 0px solid rgb(204, 204, 204);
+        box-shadow:none;
+        padding: 0px;
+    }
+    .ui-widget-content {
+        border-left: 0px;
+        border-right: 0px;
+        border-bottom: 0px;
+    }
+</style>
