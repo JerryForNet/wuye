@@ -69,7 +69,7 @@ namespace HuRongClub.Application.Web.App_Start._01_Handler
                 logEntity.OperateAccount = OperatorProvider.Provider.Current().Account + "（" + OperatorProvider.Provider.Current().UserName + "）";
                 logEntity.OperateUserId = OperatorProvider.Provider.Current().UserId;
                 logEntity.ExecuteResult = 0;
-                logEntity.ExecuteResultJson = "QueryString:" + request.QueryString.ToString() + "|postJson:" + JsonConvert.SerializeObject(request.Form);
+                logEntity.ExecuteResultJson = "QueryString:" + request.QueryString.ToString() + "|postJson:" + request.Form.ToString();
                 logEntity.Module = controllerName + "/" + actionName;
 
                 logEntity.WriteLog();
