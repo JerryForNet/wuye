@@ -327,9 +327,12 @@ namespace HuRongClub.Application.Web.Areas.TenementManage.Controllers
             }
             FeeincomeBLL feeincomebll = new FeeincomeBLL();
 
+            HuRongClub.Util.Log.log4netHelper.Info(ent.feeitem_id + "|" + ids + "|" + ent.fee_year + "|" + ent.fee_month + "|" + type);
+
             var data = feeincomebll.GetList(ent.feeitem_id, ids, ent.fee_year.ToInt(), ent.fee_month.ToInt(), type);
             int Total = data.Count();
 
+          
             Busines.FinanceManage.FeeitemBLL blls = new Busines.FinanceManage.FeeitemBLL();
             Entity.FinanceManage.FeeitemEntity fen_ent = blls.GetEntity(ent.feeitem_id);
 
@@ -343,18 +346,32 @@ namespace HuRongClub.Application.Web.Areas.TenementManage.Controllers
 
                 if (Total == 0)
                 {
+                    HuRongClub.Util.Log.log4netHelper.Info("不存在费用记录1");
+
                     bl = true;
                 }
                 else
                 {
-                    if (data.Where(t => t.room_id == dt.Rows[i][1].ToString()).Count() == 0)
+                    //租户和业主区分
+                    int rowcount = 0;
+                    if(type==1){
+                        rowcount=data.Where(t => t.room_id == dt.Rows[i][1].ToString()).Count();
+                    }
+                    else {
+                        rowcount=data.Where(t => t.rentcontract_id == dt.Rows[i][1].ToString()).Count();
+                    }
+
+                    if (rowcount == 0)
                     {
+                       // HuRongClub.Util.Log.log4netHelper.Info("不存在费用记录2|" + dt.Rows[i][1].ToString());
                         bl = true;
                     }
                     else
                     {
+                       // HuRongClub.Util.Log.log4netHelper.Info("存在，判断是否允许重复");
                         if (fen_ent.allowreply == true)
                         {
+                            HuRongClub.Util.Log.log4netHelper.Info("允许重复|"+fen_ent.feeitem_id+"|"+fen_ent.allowreply.ToString());
                             bl = true;
                         }
                     }

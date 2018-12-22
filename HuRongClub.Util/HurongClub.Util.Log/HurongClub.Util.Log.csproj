@@ -49,6 +49,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Log.cs" />
+    <Compile Include="log4netHelper.cs" />
     <Compile Include="LogFactory.cs" />
     <Compile Include="LogFormat.cs" />
     <Compile Include="LogLevel.cs" />

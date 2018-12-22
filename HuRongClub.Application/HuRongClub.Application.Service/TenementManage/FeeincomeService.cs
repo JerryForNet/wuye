@@ -11,6 +11,8 @@ using System.Data;
 using System.Data.Common;
 using System.Linq;
 using System.Text;
+using HuRongClub.Util.Log;
+
 
 namespace HuRongClub.Application.Service.TenementManage
 {
@@ -22,6 +24,8 @@ namespace HuRongClub.Application.Service.TenementManage
     /// </summary>
     public class FeeincomeService : RepositoryFactory<FeeincomeEntity>, FeeincomeIService
     {
+
+
         #region 获取数据
 
         /// <summary>
@@ -198,7 +202,16 @@ namespace HuRongClub.Application.Service.TenementManage
             }
             else
             {
-                expression = expression.And(t => t.rentcontract_id == room_id);
+                //expression = expression.And(t => t.rentcontract_id == room_id);
+                if (room_id.IndexOf(",") == -1)
+                {
+                    expression = expression.And(t => t.rentcontract_id == room_id);
+                }
+                else
+                {
+                    string[] contract_ids = room_id.Split(',');
+                    expression = expression.And(t => contract_ids.Contains(t.rentcontract_id));
+                }
             }
             return this.BaseRepository().IQueryable(expression).ToList();
         }
@@ -893,12 +906,16 @@ namespace HuRongClub.Application.Service.TenementManage
                     DbParameters.CreateDbParameter("@property_id",list[0].property_id)
                 };
 
+               
+
                 var all = this.BaseRepository().FindList(sql, parameter);
                 if (all != null)
                 {
                     foreach (FeeincomeEntity item in list)
                     {
                         FeeincomeEntity c = new FeeincomeEntity();
+                       
+
                         if (!string.IsNullOrEmpty(item.rentcontract_id))
                         {
                             c = all.Where(w => w.feeitem_id == item.feeitem_id && w.rentcontract_id == item.rentcontract_id).FirstOrDefault();
@@ -910,11 +927,23 @@ namespace HuRongClub.Application.Service.TenementManage
                         
                         if (c != null)
                         {
-                            item.income_id = c.income_id;
-                            update.Add(item);
+                            //如果该笔费用已经收取，收取金额>0则不更新
+                            
+                            if (c.fee_already >0)
+                            {
+                               
+                                insert.Add(item);
+                            }
+                            else
+                            {
+                               
+                                item.income_id = c.income_id;
+                                update.Add(item);
+                            }
                         }
                         else
                         {
+                           
                             insert.Add(item);
                         }
                     }

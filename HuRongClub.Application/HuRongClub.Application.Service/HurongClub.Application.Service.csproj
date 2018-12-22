@@ -146,6 +146,10 @@
       <Project>{4b7dde80-dfa1-4938-93f8-3721e2c592b9}</Project>
       <Name>HuRongClub.Util.Extension</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\HuRongClub.Util\HuRongClub.Util.Log\HuRongClub.Util.Log.csproj">
+      <Project>{2ef55895-d7dd-42d6-8741-f8100e5c210f}</Project>
+      <Name>HuRongClub.Util.Log</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\HuRongClub.Util\HuRongClub.Util.WebControl\HuRongClub.Util.WebControl.csproj">
       <Project>{93f81df7-5a0b-4a13-a90e-8cf7c41955c3}</Project>
       <Name>HuRongClub.Util.WebControl</Name>

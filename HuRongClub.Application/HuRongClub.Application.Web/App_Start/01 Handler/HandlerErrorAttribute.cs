@@ -60,8 +60,9 @@ namespace HuRongClub.Application.Web
             {
                 logMessage.ExceptionInfo = Error.InnerException.Message;
             }
-            //logMessage.ExceptionSource = Error.Source;
-            //logMessage.ExceptionRemark = Error.StackTrace;
+            logMessage.ExceptionSource = Error.Source;
+            logMessage.ExceptionRemark = Error.StackTrace;
+
             string strMessage = new LogFormat().ExceptionFormat(logMessage);
             log.Error(strMessage);
 
