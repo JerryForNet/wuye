@@ -34,7 +34,17 @@
                 { label: '物业', name: 'property_id', index: 'property_id', width: 100, align: 'left',sortable: true  },
                 { label: '费用年', name: 'fyear', index: 'fyear', width: 100, align: 'left',sortable: true  },
                 { label: '费用月', name: 'fmonth', index: 'fmonth', width: 100, align: 'left',sortable: true  },
-                { label: '状态', name: 'fstatus', index: 'fstatus', width: 100, align: 'left', sortable: true },
+                {
+                    label: '状态', name: 'fstatus', index: 'fstatus', width: 100, align: 'left', sortable: true,
+                    formatter: function (cellvalue, options, rowObject) {
+                        if (cellvalue == 0) {
+                            return '关闭';
+                        } else {
+                            return '开启';
+
+                        }
+                    }
+                },
                 { label: '操作人', name: 'fuser', index: 'fuser', width: 100, align: 'left', sortable: true },
                 { label: '最后操作时间', name: 'flasttime', index: 'flasttime', width: 100, align: 'left',sortable: true  },
             ],
