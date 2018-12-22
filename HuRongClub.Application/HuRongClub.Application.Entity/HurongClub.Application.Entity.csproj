@@ -51,6 +51,7 @@
     <Compile Include="AuthorizeManage\ModuleFormInstanceEntity.cs" />
     <Compile Include="AuthorizeManage\ViewModel\AuthorizeUrlModel.cs" />
     <Compile Include="BaseEntity.cs" />
+    <Compile Include="FinanceManage\FeeCloseEntity.cs" />
     <Compile Include="FinanceManage\FeeitemEntity.cs" />
     <Compile Include="FinanceManage\FeenoticeEntity.cs" />
     <Compile Include="FinanceManage\InnerbillEntity.cs" />

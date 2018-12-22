@@ -53,6 +53,7 @@
     <Compile Include="AuthorizeManage\ModuleFormBLL.cs" />
     <Compile Include="AuthorizeManage\ModuleFormInstanceBLL.cs" />
     <Compile Include="Common\UpLoad.cs" />
+    <Compile Include="FinanceManage\FeeCloseBLL.cs" />
     <Compile Include="FinanceManage\FeeitemBLL.cs" />
     <Compile Include="FinanceManage\FeenoticeBLL.cs" />
     <Compile Include="FinanceManage\InnerbillBLL.cs" />

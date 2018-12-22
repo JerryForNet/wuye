@@ -57,6 +57,7 @@
     <Compile Include="BaseManage\IPostService.cs" />
     <Compile Include="BaseManage\IJobService.cs" />
     <Compile Include="BaseManage\IUserGroupService.cs" />
+    <Compile Include="FinanceManage\FeeCloseIService.cs" />
     <Compile Include="FinanceManage\FeeitemIService.cs" />
     <Compile Include="FinanceManage\FeenoticeIService.cs" />
     <Compile Include="FinanceManage\InnerbillIService.cs" />

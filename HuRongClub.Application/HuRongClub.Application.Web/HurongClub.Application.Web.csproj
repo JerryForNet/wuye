@@ -173,6 +173,7 @@
     <Compile Include="Areas\BaseManage\Controllers\UserController.cs" />
     <Compile Include="Areas\BaseManage\Controllers\PostController.cs" />
     <Compile Include="Areas\BaseManage\Controllers\UserGroupController.cs" />
+    <Compile Include="Areas\FinanceManage\Controllers\FeeCloseController.cs" />
     <Compile Include="Areas\FinanceManage\Controllers\FeeitemController.cs" />
     <Compile Include="Areas\FinanceManage\Controllers\FeenoticeController.cs" />
     <Compile Include="Areas\FinanceManage\Controllers\InnerbillController.cs" />
@@ -506,6 +507,7 @@
     <Content Include="Content\scripts\utils\hurongclub-flowlayout.js" />
     <Content Include="Content\scripts\utils\hurongclub-im.js" />
     <Content Include="Content\images\video\5103.wav" />
+    <Content Include="doc\20180110_sql.sql" />
     <Content Include="Views\Home\Desktop.cshtml" />
     <Content Include="Views\Home\AdminDefault.cshtml" />
     <Content Include="Views\Web.config">
@@ -761,6 +763,8 @@
     <Content Include="Content\scripts\bootstrap\bootstrap-select.js.map" />
     <Content Include="Areas\TenementManage\Views\Rentcontract\CreateContractIncome.cshtml" />
     <Content Include="Areas\TenementManage\Views\Feeticket\FeeListView.cshtml" />
+    <Content Include="Areas\FinanceManage\Views\FeeClose\FeeCloseForm.cshtml" />
+    <Content Include="Areas\FinanceManage\Views\FeeClose\Index.cshtml" />
     <None Include="Properties\PublishProfiles\6.1.pubxml" />
     <Content Include="Areas\TenementManage\Views\DevicePart\DeviceCopy.cshtml" />
     <Content Include="Areas\RepostryManage\Views\InbillItem\DeleteIndex.cshtml" />

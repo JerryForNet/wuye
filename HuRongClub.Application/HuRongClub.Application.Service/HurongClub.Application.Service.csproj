@@ -57,6 +57,7 @@
     <Compile Include="AuthorizeManage\AuthorizeService.cs" />
     <Compile Include="AuthorizeManage\ModuleFormInstanceService.cs" />
     <Compile Include="AuthorizeManage\ModuleFormService.cs" />
+    <Compile Include="FinanceManage\FeeCloseService.cs" />
     <Compile Include="FinanceManage\FeenoticeService.cs" />
     <Compile Include="PersonnelManage\PaydetailService.cs" />
     <Compile Include="RepostryManage\LblistService.cs" />
