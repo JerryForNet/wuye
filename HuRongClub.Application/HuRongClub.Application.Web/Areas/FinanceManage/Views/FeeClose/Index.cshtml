@@ -31,7 +31,8 @@
             url: "../../FinanceManage/FeeClose/GetPageListJson",
             datatype: "json",
             colModel: [
-                { label: '物业', name: 'property_id', index: 'property_id', width: 100, align: 'left',sortable: true  },
+                { label: '编号', name: 'property_id', index: 'property_id', width: 100, align: 'left', sortable: true },
+                { label: '物业名称', name: 'propertyName', index: 'propertyName', width: 200, align: 'left', sortable: true },
                 { label: '费用年', name: 'fyear', index: 'fyear', width: 100, align: 'left',sortable: true  },
                 { label: '费用月', name: 'fmonth', index: 'fmonth', width: 100, align: 'left',sortable: true  },
                 {
@@ -165,6 +166,21 @@
         });
         $('#MonthNum').find('.dropdown-text').html($mouth).attr('data-value', $mouth);
     }
+
+    // 更新状态
+    function btn_update_status(fstatus) {
+        var propertyId = $("#gridTable").jqGridRowValue("property_id");
+        var fyear = $("#gridTable").jqGridRowValue("fyear");
+        var fmonth = $("#gridTable").jqGridRowValue("fmonth");
+        if (propertyId) {
+            $.post("/FinanceManage/FeeClose/UpdateStatus", { propertyId: propertyId, fyear: fyear, fmonth: fmonth, fstatus: fstatus }, function (res) {
+                dialogMsg(res.message, 1);
+                $("#btn_Search").click();
+            }, "json");
+        } else {
+            dialogMsg('请选择需要操作的物业！', 0);
+        }
+    }
 </script>
 <div class="titlePanel">
     <div class="title-search">
@@ -193,9 +209,8 @@
     <div class="toolbar">
         <div class="btn-group">
             <a id="lr-replace" class="btn btn-default" onclick="reload()"><i class="fa fa-refresh"></i>&nbsp;刷新</a>
-            <a id="lr-add" class="btn btn-default" onclick="btn_add()"><i class="fa fa-plus"></i>&nbsp;新增</a>
-            <a id="lr-edit" class="btn btn-default" onclick="btn_edit()"><i class="fa fa-pencil-square-o"></i>&nbsp;编辑</a>
-            <a id="lr-delete" class="btn btn-default" onclick="btn_delete()"><i class="fa fa-trash-o"></i>&nbsp;删除</a>
+            <a id="lr-open" class="btn btn-default" onclick="btn_update_status(1)"><i class="fa fa-plus"></i>&nbsp;开启</a>
+            <a id="lr-close" class="btn btn-default" onclick="btn_update_status(0)"><i class="fa fa-plus"></i>&nbsp;关闭</a>
         </div>
         <script>$('.toolbar').authorizeButton()</script>
     </div>

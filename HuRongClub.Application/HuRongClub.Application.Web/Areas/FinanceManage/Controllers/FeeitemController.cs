@@ -15,6 +15,7 @@ namespace HuRongClub.Application.Web.Areas.FinanceManage.Controllers
     /// 描 述：费用科目表
     /// </summary>
     [HandlerOperateLog]
+    [HandlerCheckFeeClose]
     public class FeeitemController : MvcControllerBase
     {
         private FeeitemBLL feeitembll = new FeeitemBLL();

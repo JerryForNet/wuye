@@ -1,6 +1,6 @@
-﻿using HuRongClub.Application.Entity.FinanceManage;
-using HuRongClub.Application.Busines.FinanceManage;
+﻿using HuRongClub.Application.Busines.FinanceManage;
 using HuRongClub.Application.Code;
+using HuRongClub.Application.Entity.FinanceManage;
 using HuRongClub.Util;
 using HuRongClub.Util.WebControl;
 using System.Web.Mvc;
@@ -18,6 +18,7 @@ namespace HuRongClub.Application.Web.Areas.FinanceManage.Controllers
         private FeeCloseBLL feeclosebll = new FeeCloseBLL();
 
         #region 视图功能
+
         /// <summary>
         /// 列表页面
         /// </summary>
@@ -28,6 +29,7 @@ namespace HuRongClub.Application.Web.Areas.FinanceManage.Controllers
         {
             return View();
         }
+
         /// <summary>
         /// 表单页面
         /// </summary>
@@ -38,9 +40,11 @@ namespace HuRongClub.Application.Web.Areas.FinanceManage.Controllers
         {
             return View();
         }
-        #endregion
+
+        #endregion 视图功能
 
         #region 获取数据
+
         /// <summary>
         /// 获取列表
         /// </summary>
@@ -65,6 +69,7 @@ namespace HuRongClub.Application.Web.Areas.FinanceManage.Controllers
             };
             return ToJsonResult(jsonData);
         }
+
         /// <summary>
         /// 获取列表
         /// </summary>
@@ -76,8 +81,9 @@ namespace HuRongClub.Application.Web.Areas.FinanceManage.Controllers
             var data = feeclosebll.GetList(queryJson);
             return ToJsonResult(data);
         }
+
         /// <summary>
-        /// 获取实体 
+        /// 获取实体
         /// </summary>
         /// <param name="keyValue">主键值</param>
         /// <returns>返回对象Json</returns>
@@ -87,9 +93,11 @@ namespace HuRongClub.Application.Web.Areas.FinanceManage.Controllers
             var data = feeclosebll.GetEntity(keyValue);
             return ToJsonResult(data);
         }
-        #endregion
+
+        #endregion 获取数据
 
         #region 提交数据
+
         /// <summary>
         /// 删除数据
         /// </summary>
@@ -104,6 +112,7 @@ namespace HuRongClub.Application.Web.Areas.FinanceManage.Controllers
             feeclosebll.RemoveForm(keyValue);
             return Success("删除成功。");
         }
+
         /// <summary>
         /// 保存表单（新增、修改）
         /// </summary>
@@ -119,6 +128,21 @@ namespace HuRongClub.Application.Web.Areas.FinanceManage.Controllers
             feeclosebll.SaveForm(keyValue, entity);
             return Success("操作成功。");
         }
-        #endregion
+
+        /// <summary>
+        /// 更新状态
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="status"></param>
+        /// <returns></returns>
+        [HttpPost]
+        [AjaxOnly]
+        public ActionResult UpdateStatus(string propertyId, string fyear, string fmonth, int fstatus)
+        {
+            feeclosebll.UpdateStatus(propertyId, fyear, fmonth, fstatus);
+            return Success("操作成功。");
+        }
+
+        #endregion 提交数据
     }
 }

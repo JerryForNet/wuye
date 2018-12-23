@@ -1,4 +1,5 @@
 ﻿using HuRongClub.Application.Entity.FinanceManage;
+using HuRongClub.Application.Entity.FinanceManage.ViewModel;
 using HuRongClub.Application.IService.FinanceManage;
 using HuRongClub.Data;
 using HuRongClub.Data.Repository;
@@ -28,7 +29,7 @@ namespace HuRongClub.Application.Service.FinanceManage
         /// <param name="pagination">分页</param>
         /// <param name="queryJson">查询参数</param>
         /// <returns>返回分页列表</returns>
-        public IEnumerable<FeeCloseEntity> GetPageList(Pagination pagination, string queryJson)
+        public IEnumerable<FeeCloseModel> GetPageList(Pagination pagination, string queryJson)
         {
             var queryParam = queryJson.ToJObject();
             if (String.IsNullOrEmpty(queryParam["propertyIds"].ToString()))
@@ -39,7 +40,7 @@ namespace HuRongClub.Application.Service.FinanceManage
             this.CheckData();
 
             StringBuilder sql = new StringBuilder();
-            sql.AppendFormat(@" SELECT  wy_feeclose.*
+            sql.AppendFormat(@" SELECT  wy_feeclose.*,wy_property.property_name as propertyName
                                 FROM    dbo.wy_feeclose
                                         INNER JOIN dbo.wy_property ON wy_property.property_id = wy_feeclose.property_id
                                 WHERE   wy_feeclose.property_id IN ('{0}')", queryParam["propertyIds"].ToString().Replace(",", "','"));
@@ -56,7 +57,9 @@ namespace HuRongClub.Application.Service.FinanceManage
                 parameter.Add(DbParameters.CreateDbParameter("@fmonth", queryParam["fmonth"].ToString()));
             }
 
-            return this.BaseRepository().FindList(sql.ToString(), parameter.ToArray(), pagination);
+            IRepository<FeeCloseModel> repository = new RepositoryFactory<FeeCloseModel>().BaseRepository();
+
+            return repository.FindList(sql.ToString(), parameter.ToArray(), pagination);
         }
 
         /// <summary>
@@ -77,6 +80,16 @@ namespace HuRongClub.Application.Service.FinanceManage
         public FeeCloseEntity GetEntity(string keyValue)
         {
             return this.BaseRepository().FindEntity(keyValue);
+        }
+
+        public FeeCloseEntity GetCurrentStatus(string propertyId)
+        {
+            string safeSql = "SELECT * FROM wy_feeclose WHERE property_id = @property_id AND fyear = YEAR(GETDATE()) AND fmonth = MONTH(GETDATE())";
+
+            var parameter = new List<DbParameter>();
+            parameter.Add(DbParameters.CreateDbParameter("@property_id", propertyId));
+
+            return this.BaseRepository().FindList(safeSql, parameter.ToArray()).FirstOrDefault();
         }
 
         #endregion 获取数据
@@ -110,6 +123,19 @@ namespace HuRongClub.Application.Service.FinanceManage
                 entity.Create();
                 this.BaseRepository().Insert(entity);
             }
+        }
+
+        public void UpdateStatus(string propertyId, string fyear, string fmonth, int fstatus)
+        {
+            string sql = "UPDATE wy_feeclose SET fstatus = @fstatus WHERE property_id = @property_id AND fyear = @fyear AND fmonth = @fmonth";
+
+            var parameter = new List<DbParameter>();
+            parameter.Add(DbParameters.CreateDbParameter("@fstatus", fstatus));
+            parameter.Add(DbParameters.CreateDbParameter("@property_id", propertyId));
+            parameter.Add(DbParameters.CreateDbParameter("@fyear", fyear));
+            parameter.Add(DbParameters.CreateDbParameter("@fmonth", fmonth));
+
+            this.BaseRepository().ExecuteBySql(sql, parameter.ToArray());
         }
 
         #endregion 提交数据

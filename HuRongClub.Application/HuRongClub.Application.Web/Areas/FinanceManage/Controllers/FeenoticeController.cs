@@ -1,14 +1,14 @@
-﻿using HuRongClub.Application.Entity.FinanceManage;
-using HuRongClub.Application.Busines.FinanceManage;
+﻿using HuRongClub.Application.Busines.FinanceManage;
 using HuRongClub.Application.Code;
-using HuRongClub.Util;
-using HuRongClub.Util.WebControl;
-using System.Web.Mvc;
-using System;
-using System.Data;
-using System.Collections.Generic;
-using HuRongClub.Util.Extension;
+using HuRongClub.Application.Entity.FinanceManage;
 using HuRongClub.Application.Web.App_Start._01_Handler;
+using HuRongClub.Util;
+using HuRongClub.Util.Extension;
+using HuRongClub.Util.WebControl;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Web.Mvc;
 
 namespace HuRongClub.Application.Web.Areas.FinanceManage.Controllers
 {
@@ -19,11 +19,13 @@ namespace HuRongClub.Application.Web.Areas.FinanceManage.Controllers
     /// 描 述：进账认领
     /// </summary>
     [HandlerOperateLog]
+    [HandlerCheckFeeClose]
     public class FeenoticeController : MvcControllerBase
     {
         private FeenoticeBLL feenoticebll = new FeenoticeBLL();
 
         #region 视图功能
+
         /// <summary>
         /// 列表页面
         /// </summary>
@@ -34,6 +36,7 @@ namespace HuRongClub.Application.Web.Areas.FinanceManage.Controllers
         {
             return View();
         }
+
         /// <summary>
         /// 表单页面
         /// </summary>
@@ -44,6 +47,7 @@ namespace HuRongClub.Application.Web.Areas.FinanceManage.Controllers
         {
             return View();
         }
+
         /// <summary>
         /// 认领
         /// </summary>
@@ -65,9 +69,11 @@ namespace HuRongClub.Application.Web.Areas.FinanceManage.Controllers
         {
             return View();
         }
+
         #endregion
 
         #region 获取数据
+
         /// <summary>
         /// 获取列表
         /// </summary>
@@ -89,6 +95,7 @@ namespace HuRongClub.Application.Web.Areas.FinanceManage.Controllers
             };
             return ToJsonResult(jsonData);
         }
+
         /// <summary>
         /// 获取列表
         /// </summary>
@@ -100,8 +107,9 @@ namespace HuRongClub.Application.Web.Areas.FinanceManage.Controllers
             var data = feenoticebll.GetList(queryJson);
             return ToJsonResult(data);
         }
+
         /// <summary>
-        /// 获取实体 
+        /// 获取实体
         /// </summary>
         /// <param name="keyValue">主键值</param>
         /// <returns>返回对象Json</returns>
@@ -124,9 +132,11 @@ namespace HuRongClub.Application.Web.Areas.FinanceManage.Controllers
             bool IsOk = feenoticebll.Existaccountcode(accountcode, keyValue);
             return Content(IsOk.ToString());
         }
+
         #endregion
 
         #region 提交数据
+
         /// <summary>
         /// 删除数据
         /// </summary>
@@ -141,6 +151,7 @@ namespace HuRongClub.Application.Web.Areas.FinanceManage.Controllers
             feenoticebll.RemoveForm(keyValue);
             return Success("删除成功。");
         }
+
         /// <summary>
         /// 保存表单（新增、修改）
         /// </summary>
@@ -155,7 +166,7 @@ namespace HuRongClub.Application.Web.Areas.FinanceManage.Controllers
             if (string.IsNullOrEmpty(keyValue))
             {
                 entity.CreatorId = OperatorProvider.Provider.Current().UserId;
-                entity.CreatorName = OperatorProvider.Provider.Current().UserName != ""? OperatorProvider.Provider.Current().UserName: OperatorProvider.Provider.Current().Account;
+                entity.CreatorName = OperatorProvider.Provider.Current().UserName != "" ? OperatorProvider.Provider.Current().UserName : OperatorProvider.Provider.Current().Account;
                 entity.CreateDate = DateTime.Now;
             }
             feenoticebll.SaveForm(keyValue, entity);
@@ -214,6 +225,7 @@ namespace HuRongClub.Application.Web.Areas.FinanceManage.Controllers
                             bool Ismemo = false, Isaccounts = false, Ispurpose = false;
 
                             #region 判断
+
                             if (dt.Columns.Contains("账单备注"))
                             {
                                 Ismemo = true;
@@ -226,6 +238,7 @@ namespace HuRongClub.Application.Web.Areas.FinanceManage.Controllers
                             {
                                 Ispurpose = true;
                             }
+
                             #endregion
 
                             #region 赋值
@@ -257,7 +270,6 @@ namespace HuRongClub.Application.Web.Areas.FinanceManage.Controllers
                                     }
 
                                     list.Add(ent);
-
                                 }
                             }
 
