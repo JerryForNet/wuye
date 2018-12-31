@@ -31,6 +31,11 @@ namespace HuRongClub.Application.Busines.RepostryManage
             return service.GetPageList(pagination, queryJson);
         }
 
+        public IEnumerable<MonthGoodsModel> GetMonthDetailListJson(Pagination pagination, string queryJson)
+        {
+            return service.GetMonthDetailListJson(pagination, queryJson);
+        }
+
         /// <summary>
         /// 获取列表
         /// </summary>
@@ -100,6 +105,8 @@ namespace HuRongClub.Application.Busines.RepostryManage
                 throw;
             }
         }
+
+        
 
         #endregion 提交数据
     }

@@ -1,0 +1,68 @@
+﻿@{;
+ViewBag.Title = "表单页面";
+Layout = "~/Views/Shared/_Form.cshtml";
+}
+<!--jqgrid表格组件start-->
+<link href="/Content/scripts/plugins/jqgrid/jqgrid.css" rel="stylesheet" />
+<script src="/Content/scripts/plugins/jqgrid/grid.locale-cn.js"></script>
+<script src="/Content/scripts/plugins/jqgrid/jqgrid.min.js"></script>
+<!--表格组件end-->
+<script src="/Content/scripts/plugins/Amount/ArabiaToChinese.js"></script>
+<script>
+    var startDate = request('startDate');
+    var endDate = request('endDate');
+    $(function () {
+        initControl();
+        getGrid();
+    });
+    //初始化控件
+    function initControl() {
+        
+    }
+
+    $.fn.serializeJson = function () {
+        var serializeObj = {};
+        $(this.serializeArray()).each(function () {
+            serializeObj[this.name] = this.value;
+        });
+        return serializeObj;
+    };
+
+    function getGrid() {
+        var $grid = $("#gridTable");
+        $grid.jqGrid({
+            autowidth: true,
+            height: $(window).height() - 160,
+            url: "/RepostryManage/Monthcheck/GetMonthDetailListJson?startDate=" + startDate + "&endDate" + endDate,
+            postData: {
+                queryJson: JSON.stringify({ startDate: startDate, endDate: endDate })
+            },
+            datatype: "json",
+            autowidth: true,    
+            colModel: [
+                { label: "材料编号", name: "fgoodsid", align: "left", width: 100, sortable: false },
+                { label: "单位", name: "funit", align: "left", sortable: false },
+                { label: "名称规格", name: "fname", align: "left", width: 100, sortable: false },
+                { label: "库存数量", name: "fcount", align: "left", sortable: false },
+                { label: "平均价格", name: "fprice", align: "left", sortable: false },
+                { label: "总价格", name: "fmoney", align: "left", sortable: false },
+            ],
+            viewrecords: true,
+            rowNum: 30,
+            rowList: [30, 50, 100],
+            pager: "#gridPager",
+            sortname: 'fgoodsid',
+            sortorder: 'desc',
+            rownumbers: true,
+            shrinkToFit: false,
+            gridview: true, 
+            footerrow: true,
+        });
+    }
+</script>
+<div style=" margin:20px 10px 0 10px">
+    <div class="gridPanel">
+        <table id="gridTable"></table>
+        <div id="gridPager"></div>
+    </div>
+</div>

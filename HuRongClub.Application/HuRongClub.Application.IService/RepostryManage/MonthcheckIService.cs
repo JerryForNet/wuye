@@ -36,6 +36,15 @@ namespace HuRongClub.Application.IService.RepostryManage
         /// <param name="keyValue">主键值</param>
         /// <returns></returns>
         MonthcheckEntity GetEntity(string keyValue);
+
+        /// <summary>
+        /// 获取月库存明细
+        /// </summary>
+        /// <param name="pagination"></param>
+        /// <param name="queryJson"></param>
+        /// <returns></returns>
+        IEnumerable<MonthGoodsModel> GetMonthDetailListJson(Pagination pagination, string queryJson);
+
         /// <summary>
         /// 查询上个月是否存在
         /// </summary>
