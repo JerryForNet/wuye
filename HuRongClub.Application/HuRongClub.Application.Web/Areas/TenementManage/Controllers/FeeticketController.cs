@@ -85,6 +85,15 @@ namespace HuRongClub.Application.Web.Areas.TenementManage.Controllers
             return View();
         }
 
+        /// <summary>
+        /// 打印发票
+        /// </summary>
+        /// <returns></returns>
+        public ActionResult PrintFrom()
+        {
+            return View();
+        }
+
         #endregion 财务管理--发票管理
 
         #endregion 视图功能

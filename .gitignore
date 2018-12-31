@@ -2,7 +2,11 @@
 Thumbs.db
 ehthumbs.db
 Desktop.ini
+.sqlite
+.user
 
 packages
 bin
 obj
+v15
+.vs
