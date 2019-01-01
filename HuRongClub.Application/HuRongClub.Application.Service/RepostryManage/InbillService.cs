@@ -1,15 +1,13 @@
 ﻿using HuRongClub.Application.Code;
 using HuRongClub.Application.Entity.RepostryManage;
 using HuRongClub.Application.Entity.RepostryManage.ViewModel;
-using HuRongClub.Application.Entity.SystemManage;
 using HuRongClub.Application.IService.RepostryManage;
-using HuRongClub.Application.IService.SystemManage;
-using HuRongClub.Application.Service.SystemManage;
 using HuRongClub.Data;
 using HuRongClub.Data.Repository;
 using HuRongClub.Util;
 using HuRongClub.Util.Extension;
 using HuRongClub.Util.WebControl;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
@@ -84,6 +82,42 @@ namespace HuRongClub.Application.Service.RepostryManage
                 strSql.Append(" and  finbillid='" + keyValue + "' ");
             }
             return repository.BaseRepository().FindList(strSql.ToString());
+        }
+
+        /// <summary>
+        /// 获取报表
+        /// </summary>
+        /// <param name="fgoodsid"></param>
+        /// <param name="year"></param>
+        /// <returns></returns>
+        public IEnumerable<BillReportModel> GetMonthInbill(List<string> fgoodsid, int year)
+        {
+            if (fgoodsid == null || fgoodsid.Count == 0) return null;
+            StringBuilder ids = new StringBuilder();
+            foreach (var item in fgoodsid)
+            {
+                ids.AppendFormat("'{0}',", item);
+            }
+            string id = ids.ToString().Substring(0, ids.Length - 1);
+
+            StringBuilder sql = new StringBuilder();
+            sql.AppendFormat(@"SELECT  ISNULL(SUM(item.fnumber), 0) tot_number ,
+                                        ISNULL(SUM(item.fmoney), 0) tot_money ,
+                                        item.fgoodsid ,
+                                        DATEPART(MONTH, bill.findate) mon
+                                FROM    dbo.tb_wh_inbill bill
+                                        LEFT JOIN dbo.tb_wh_inbill_item item ON bill.finbillid = item.finbillid
+                                WHERE   DATEPART(YEAR, bill.findate) = @year
+		                                AND item.fgoodsid IN ({0})
+                                GROUP BY item.fgoodsid ,
+                                        bill.findate", id);
+
+            List<DbParameter> param = new List<DbParameter>();
+            param.Add(DbParameters.CreateDbParameter("@year", year));
+
+            RepositoryFactory<BillReportModel> repository = new RepositoryFactory<BillReportModel>();
+
+            return repository.BaseRepository().FindList(sql.ToString(), param.ToArray(), null);
         }
 
         #endregion 获取数据
@@ -199,6 +233,7 @@ namespace HuRongClub.Application.Service.RepostryManage
                                 inentity.fmoney = inentity.fmoney - Convert.ToDecimal(obill.fmoney);
                             }
                         }
+
                         #endregion
 
                         //加库存
@@ -225,7 +260,6 @@ namespace HuRongClub.Application.Service.RepostryManage
                         entryList[i].fitemid = entity.finbillid + "-" + Utils.SupplementZero((i + 1).ToString(), 3); //生成领用单物品信息编号
 
                         db.Insert(entryList[i]);
-
 
                         //加库存
                         var strSqls = AddGoodsRepertorySql(entryList[i]);
@@ -256,11 +290,12 @@ namespace HuRongClub.Application.Service.RepostryManage
                                     SET     fcount = ISNULL(fcount, 0) + {0} ,
                                             fmoney = ( ISNULL(fmoney, 0) + {1} ) ,
                                             fprice = (CASE WHEN (((ISNULL(fmoney, 0) + {1}) <= 0) or ((ISNULL(fcount, 0) + {0}) = 0)) THEN 0
-				                                        ELSE ROUND(CONVERT(FLOAT, ( ISNULL(fmoney, 0) + {1} )) / ( ISNULL(fcount, 0) + {0} ), 2) 
+				                                        ELSE ROUND(CONVERT(FLOAT, ( ISNULL(fmoney, 0) + {1} )) / ( ISNULL(fcount, 0) + {0} ), 2)
                                                     END)
                                     WHERE   fgoodsid = '{2}'  ", item.fnumber, item.fmoney, item.fgoodsid);
             return strSqls;
         }
+
         /// <summary>
         /// 减库存的Sql
         /// </summary>

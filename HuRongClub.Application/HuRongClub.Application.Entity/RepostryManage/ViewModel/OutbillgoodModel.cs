@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 
 namespace HuRongClub.Application.Entity.RepostryManage.ViewModel
 {
@@ -19,7 +14,7 @@ namespace HuRongClub.Application.Entity.RepostryManage.ViewModel
         public string fname { get; set; }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         public string funit { get; set; }
     }

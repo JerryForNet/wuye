@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace HuRongClub.Application.Entity.RepostryManage.ViewModel
+﻿namespace HuRongClub.Application.Entity.RepostryManage.ViewModel
 {
     public class billItemModel
     {

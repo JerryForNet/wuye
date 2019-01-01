@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 
 namespace HuRongClub.Application.Entity.RepostryManage.ViewModel
 {
@@ -13,7 +8,7 @@ namespace HuRongClub.Application.Entity.RepostryManage.ViewModel
         /// <summary>
         /// 入库单编号
         /// </summary>
-       /// public string finbillid { get; set; }
+        /// public string finbillid { get; set; }
 
         /// <summary>
         /// 入库时间
@@ -29,6 +24,7 @@ namespace HuRongClub.Application.Entity.RepostryManage.ViewModel
         /// 供应商
         /// </summary>
         public string fprovider { get; set; }
+
         /// <summary>
         /// 单位
         /// </summary>

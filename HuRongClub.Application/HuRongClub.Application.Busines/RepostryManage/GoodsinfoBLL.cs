@@ -1,4 +1,5 @@
 ﻿using HuRongClub.Application.Entity.RepostryManage;
+using HuRongClub.Application.Entity.RepostryManage.ViewModel;
 using HuRongClub.Application.IService.RepostryManage;
 using HuRongClub.Application.Service.RepostryManage;
 using HuRongClub.Util.Offices;
@@ -7,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using HuRongClub.Util;
 
 namespace HuRongClub.Application.Busines.RepostryManage
 {
@@ -19,6 +21,8 @@ namespace HuRongClub.Application.Busines.RepostryManage
     public class GoodsinfoBLL
     {
         private GoodsinfoIService service = new GoodsinfoService();
+        private InbillIService inbillIService = new InbillService();
+        private OutbillIService outbillIService = new OutbillService();
 
         #region 获取数据
 
@@ -146,6 +150,55 @@ namespace HuRongClub.Application.Busines.RepostryManage
             {
                 return 0;
             }
+        }
+
+        /// <summary>
+        /// 物质库存统计报表
+        /// </summary>
+        /// <param name="pagination"></param>
+        /// <param name="queryJson"></param>
+        /// <returns></returns>
+        public IEnumerable<GoodsinfoReportModel> GetReportGoods(Pagination pagination, string queryJson)
+        {
+            List<GoodsinfoReportModel> result = new List<GoodsinfoReportModel>();
+            IEnumerable<GoodsinfoModel> goods = service.GetPageList(pagination, queryJson);
+            if (goods != null && goods.Count() > 0)
+            {
+                List<string> goodsIds = new List<string>();
+                foreach (GoodsinfoModel item in goods)
+                {
+                    GoodsinfoReportModel mod = new GoodsinfoReportModel();
+                    mod.fgoodsid = item.fgoodsid;
+                    mod.fname = item.fname;
+                    result.Add(mod);
+
+                    goodsIds.Add(item.fgoodsid);
+                }
+
+                var queryParam = queryJson.ToJObject();
+
+                // 入库数据
+                var inbills = inbillIService.GetMonthInbill(goodsIds, Convert.ToInt32(queryParam["year"]));
+                if (inbills != null && inbills.Count() > 0)
+                {
+                    foreach (var good in result)
+                    {
+                        foreach (var inbill in inbills)
+                        {
+                            if (inbill.GoodsId.ToString() == good.fgoodsid)
+                            {
+                                
+                            }
+                        }
+                    }
+                }
+
+
+                // 出库数据
+                var outbills = outbillIService.GetMonthInbill(goodsIds, Convert.ToInt32(queryParam["year"]));
+            }
+
+            return result;
         }
 
         #endregion 获取数据

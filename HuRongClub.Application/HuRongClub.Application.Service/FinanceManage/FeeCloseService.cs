@@ -148,7 +148,7 @@ namespace HuRongClub.Application.Service.FinanceManage
                 DbParameters.CreateDbParameter("@fuser",string.Empty)
             };
 
-            this.BaseRepository().ExecuteByProc("CreateFeeClose", parameter);
+            this.BaseRepository().ExecuteByProc("sp_Create_Fee_Close", parameter);
         }
 
         #endregion 私有方法

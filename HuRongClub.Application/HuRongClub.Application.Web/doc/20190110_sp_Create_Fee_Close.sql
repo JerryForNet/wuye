@@ -13,7 +13,7 @@ GO
 -- Create date: 2018/12/22
 -- Description:	如果当月没有数据，存储过程生成数据
 -- =============================================
-CREATE PROCEDURE [dbo].[CreateFeeClose] @fuser VARCHAR(10)
+CREATE PROCEDURE [dbo].[sp_Create_Fee_Close] @fuser VARCHAR(10)
 AS
     BEGIN
         SET NOCOUNT ON

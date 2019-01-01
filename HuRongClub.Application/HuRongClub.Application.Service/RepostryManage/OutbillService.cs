@@ -95,6 +95,36 @@ namespace HuRongClub.Application.Service.RepostryManage
             return repository.BaseRepository().FindList(strSql.ToString());
         }
 
+        public IEnumerable<BillReportModel> GetMonthInbill(List<string> fgoodsid, int year)
+        {
+            if (fgoodsid == null || fgoodsid.Count == 0) return null;
+            StringBuilder ids = new StringBuilder();
+            foreach (var item in fgoodsid)
+            {
+                ids.AppendFormat("'{0}',", item);
+            }
+            string id = ids.ToString().Substring(0, ids.Length - 1);
+
+            StringBuilder sql = new StringBuilder();
+            sql.AppendFormat(@"SELECT  ISNULL(SUM(item.fnumber), 0) tot_number ,
+                                        ISNULL(SUM(item.fmoney), 0) tot_money ,
+                                        item.fgoodsid ,
+                                        DATEPART(MONTH, bill.foutdate) mon
+                                FROM    dbo.tb_wh_outbill bill
+                                        LEFT JOIN dbo.tb_wh_outbill_item item ON bill.foutbillid = item.foutbillid
+                                WHERE   DATEPART(YEAR, bill.foutdate) = @year
+		                                AND item.fgoodsid IN ({0})
+                                GROUP BY item.fgoodsid ,
+                                        bill.foutdate", id);
+
+            List<DbParameter> param = new List<DbParameter>();
+            param.Add(DbParameters.CreateDbParameter("@year", year));
+
+            RepositoryFactory<BillReportModel> repository = new RepositoryFactory<BillReportModel>();
+
+            return repository.BaseRepository().FindList(sql.ToString(), param.ToArray(), null);
+        }
+
         #endregion 获取数据
 
         #region 提交数据
@@ -245,6 +275,7 @@ namespace HuRongClub.Application.Service.RepostryManage
                                     WHERE   fgoodsid = '{2}'  ", item.fnumber, item.fmoney, item.fgoodsid);
             return strSqls;
         }
+
         /// <summary>
         /// 减库存的Sql
         /// </summary>
