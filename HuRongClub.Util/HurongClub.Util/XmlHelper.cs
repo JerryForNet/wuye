@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Xml;
@@ -164,6 +165,34 @@ namespace HuRongClub.Util
                     XmlDocument XmlLoad = new XmlDocument();
                     XmlLoad.LoadXml(xml);
                     return XmlLoad.DocumentElement.SelectSingleNode(stringRoot).InnerXml.Trim();
+                }
+                catch
+                {
+                    throw new Exception("解析XML失败");
+                }
+            }
+            return "";
+        }
+
+
+        /// <summary>
+        /// 摘要:获取对应XML节点的值
+        /// </summary>
+        /// <param name="stringRoot">XML节点的标记</param>
+        /// <returns>返回获取对应XML节点的值</returns>
+        public static string XmlNodeFind(string stringRoot, string xml)
+        {
+            if (stringRoot.Equals("") == false)
+            {
+                try
+                {
+                    XmlDocument XmlLoad = new XmlDocument();
+                    XmlLoad.LoadXml(xml);
+                    XmlNodeList nodes = XmlLoad.SelectNodes(stringRoot);
+                    if (nodes != null && nodes.Count > 0)
+                    {
+                        return nodes[0].InnerText.Trim();
+                    }
                 }
                 catch
                 {

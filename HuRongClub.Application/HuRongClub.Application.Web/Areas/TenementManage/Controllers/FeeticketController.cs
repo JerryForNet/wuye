@@ -5,8 +5,11 @@ using HuRongClub.Application.Web.App_Start._01_Handler;
 using HuRongClub.Util;
 using HuRongClub.Util.WebControl;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
+using System.Web;
 using System.Web.Mvc;
 
 namespace HuRongClub.Application.Web.Areas.TenementManage.Controllers
@@ -100,6 +103,24 @@ namespace HuRongClub.Application.Web.Areas.TenementManage.Controllers
         /// <returns></returns>
         public ActionResult PrintFrom()
         {
+            string property_id = "";
+            if (!string.IsNullOrEmpty(Utils.GetCookie("property_id")))
+            {
+                property_id = Utils.GetCookie("property_id");
+            }
+            OptionBLL optionbll = new OptionBLL();
+            var data = optionbll.GetEntity(property_id);
+            if (data != null)
+            {
+                ViewBag.option_exchange = string.Format("{0:N2}", data.option_exchange);
+            }
+
+            DateTime time = DateTime.Now;
+            ViewBag.year = time.Year.ToString();
+
+            ViewBag.month = (time.Month < 10 ? ("0" + time.Month.ToString()) : time.Month.ToString());
+            ViewBag.day = (time.Day < 10 ? ("0" + time.Day.ToString()) : time.Day.ToString());
+
             return View();
         }
 
@@ -340,63 +361,129 @@ namespace HuRongClub.Application.Web.Areas.TenementManage.Controllers
         /// </summary>
         /// <returns></returns>
         [HttpGet]
-        public ActionResult GetPrintXML(string keyValue, int type, string queryJson)
+        public ActionResult GetPrintXML(string keyValue, int type, string queryJson, List<string> skus)
         {
             string strReturnValue = "";
+            var queryParam = HttpUtility.UrlDecode(queryJson).ToJObject();
 
             StringBuilder strXML = new StringBuilder();
             strXML.AppendFormat("<?xml version=\"1.0\" encoding=\"gbk\"?>");
             strXML.AppendFormat("<business comment\"发票开具\" id=\"FPKJ\">");
             strXML.AppendFormat("<body yylxdm=\"1\">");
             strXML.AppendFormat("<input>");
-            strXML.AppendFormat("<skpbh>税控盘编号</skpbh>");
-            strXML.AppendFormat("<skpkl>税控盘口令</skpkl>");
-            strXML.AppendFormat("<keypwd>数字证书密码</keypwd>");
-            strXML.AppendFormat("<fplxdm>发票类型代码</fplxdm>");
-            strXML.AppendFormat("<kplx>开票类型</kplx>");
-            strXML.AppendFormat("<tspz>特殊票种标识<tspz>");
-            strXML.AppendFormat("<xhdwsbh>销货单位识别号</xhdwsbh>");
-            strXML.AppendFormat("<xhdwmc>销货单位名称</xhdwmc>");
-            strXML.AppendFormat("<xhdwdzdh>销货单位地址电话</xhdwdzdh>");
-            strXML.AppendFormat("<xhdwyhzh>销货单位银行帐号</xhdwyhzh>");
-            strXML.AppendFormat("<ghdwsbh>购货单位识别号</ghdwsbh>");
-            strXML.AppendFormat("<ghdwmc>购货单位名称</ghdwmc>");
-            strXML.AppendFormat("<ghdwdzdh>购货单位地址电话</ghdwdzdh>");
-            strXML.AppendFormat("<ghdwyhzh>购货单位银行帐号</ghdwyhzh>");
-            strXML.AppendFormat("<bmbbbh>编码表版本号</bmbbbh>");
-            strXML.AppendFormat("<hsslbs>含税税率标识</hsslbs>");
+            strXML.AppendFormat("<skpbh>{0}</skpbh>", Config.GetValue("skpbh"));
+            strXML.AppendFormat("<skpkl>{0}</skpkl>", Config.GetValue("skpkl"));
+            strXML.AppendFormat("<keypwd>{0}</keypwd>", Config.GetValue("keypwd"));
+            strXML.AppendFormat("<fplxdm>{0}</fplxdm>", Config.GetValue("fplxdm"));
+            strXML.AppendFormat("<kplx>{0}</kplx>", Config.GetValue("kplx"));
+            strXML.AppendFormat("<tspz>{0}</tspz>", Config.GetValue("tspz"));
+
+            strXML.AppendFormat("<xhdwsbh>{0}</xhdwsbh>", queryParam.GetValue("ghdwsbh"));
+            strXML.AppendFormat("<xhdwmc>{0}</xhdwmc>", queryParam.GetValue("ghdwsbh"));
+            strXML.AppendFormat("<xhdwdzdh>{0}</xhdwdzdh>", queryParam.GetValue("ghdwsbh"));
+            strXML.AppendFormat("<xhdwyhzh>{0}</xhdwyhzh>", queryParam.GetValue("ghdwsbh"));
+
+            strXML.AppendFormat("<ghdwsbh>{0}</ghdwsbh>", queryParam.GetValue("ghdwsbh"));
+            strXML.AppendFormat("<ghdwmc>{0}</ghdwmc>", queryParam.GetValue("ghdwmc"));
+            strXML.AppendFormat("<ghdwdzdh>{0}</ghdwdzdh>", queryParam.GetValue("ghdwdzdh"));
+            strXML.AppendFormat("<ghdwyhzh>{0}</ghdwyhzh>", queryParam.GetValue("ghdwyhzh"));
+
+            strXML.AppendFormat("<hsslbs>{0}</hsslbs>", Config.GetValue("hsslbs"));
             strXML.AppendFormat("<fyxm count=\"1\">");
-            strXML.AppendFormat("<group xh=\"1\">");
-            strXML.AppendFormat("<fphxz>发票行性质</fphxz>");
-            strXML.AppendFormat("<spmc>商品名称</spmc>");
-            strXML.AppendFormat("<je>金额</je>");
-            strXML.AppendFormat("<kcje>扣除金额</kcje>");
-            strXML.AppendFormat("<sl>税率</sl>");
-            strXML.AppendFormat("<se>税额</se>");
-            strXML.AppendFormat("<hsbz>含税标志</hsbz>");
-            strXML.AppendFormat("<spbm>商品编码</spbm>");
-            strXML.AppendFormat("<zxbm>纳税人自行编码</zxbm>");
-            strXML.AppendFormat("<yhzcbs>优惠政策标识</yhzcbs>");
-            strXML.AppendFormat("<slbs>0税率标识</slbs>");
-            strXML.AppendFormat("<zzstsgl>增值税特殊管理</zzstsgl>");
-            strXML.AppendFormat("</group>");
+
+            // 参数
+            if (skus != null && skus.Count() > 0)
+            {
+                strXML.AppendFormat("<group xh=\"{0}\">", skus.Count());
+
+                foreach (var item in skus)
+                {
+                    strXML.AppendFormat("<fphxz>{0}</fphxz>", Config.GetValue("fphxz"));
+                    strXML.AppendFormat("<spmc>{0}</spmc>", queryParam.GetValue("spmc"));
+                    strXML.AppendFormat("<spsm></spsm>");
+                    strXML.AppendFormat("<je>{0}</je>", queryParam.GetValue("je"));
+                    strXML.AppendFormat("<kcje></kcje>");
+                    strXML.AppendFormat("<sl>{0}</sl>", queryParam.GetValue("sl"));
+                    strXML.AppendFormat("<se>{0}</se>", queryParam.GetValue("se"));
+
+                    strXML.AppendFormat("<hsbz>1</hsbz>");
+                    strXML.AppendFormat("<spbm>商品编码</spbm>");
+                    strXML.AppendFormat("<zxbm></zxbm>");
+                    strXML.AppendFormat("<yhzcbs>0</yhzcbs>");
+                    strXML.AppendFormat("<slbs></slbs>");
+                    strXML.AppendFormat("<zzstsgl></zzstsgl>");
+                }
+
+                strXML.AppendFormat("</group>");
+            }
+
             strXML.AppendFormat("</fyxm>");
             strXML.AppendFormat("<zhsl></zhsl>");
-            strXML.AppendFormat("<hjje>合计金额</hjje>");
-            strXML.AppendFormat("<hjse>合计税额</hjse>");
-            strXML.AppendFormat("<jshj>价税合计</jshj>");
-            strXML.AppendFormat("<bz>备注</bz>");
-            strXML.AppendFormat("<skr>收款人</skr>");
-            strXML.AppendFormat("<fhr>复核人</fhr>");
-            strXML.AppendFormat("<kpr>开票人</kpr>");
-            strXML.AppendFormat("<qdbz>清单标志</qdbz>");
-            strXML.AppendFormat("<ssyf>所属月份</ssyf>");
-            strXML.AppendFormat("<kpjh>开票机号</kpjh>");
-            strXML.AppendFormat("<qmcs>签名参数</qmcs>");
+
+            strXML.AppendFormat("<hjje>{0}</hjje>", queryParam.GetValue("hjje"));
+            strXML.AppendFormat("<hjse>{0}</hjse>", queryParam.GetValue("hjse"));
+            strXML.AppendFormat("<jshj>{0}</jshj>", queryParam.GetValue("jshj"));
+            strXML.AppendFormat("<bz>{0}</bz>", queryParam.GetValue("bz"));
+            strXML.AppendFormat("<skr>{0}</skr>", queryParam.GetValue("skr"));
+            strXML.AppendFormat("<fhr>{0}</fhr>", queryParam.GetValue("fhr"));
+            strXML.AppendFormat("<kpr>{0}</kpr>", queryParam.GetValue("kpr"));
+            strXML.AppendFormat("<jmbbh></jmbbh>");
+            strXML.Append("<zyspmc></zyspmc>");
+            strXML.Append("<spsm></spsm>");
+            strXML.AppendFormat("<qdbz>{0}</qdbz>", Config.GetValue("qdbz"));
+            strXML.Append("<ssyf></ssyf>");
+            strXML.AppendFormat("<kpjh>{0}</kpjh>", Config.GetValue("kpjh"));
+            strXML.AppendFormat("<qmcs>{0}</qmcs>", Config.GetValue("kpjh"));
             strXML.AppendFormat("</input>");
             strXML.AppendFormat("</body>");
             strXML.AppendFormat("</business>");
+            strReturnValue = sendXMLRequest(strXML);
 
+            string fpdm = String.Empty;
+            string fphm = String.Empty;
+            if (strReturnValue.IndexOf("returnmsg") != -1 && strReturnValue.IndexOf("成功") != -1)
+            {
+                fpdm = XmlHelper.XmlNodeFind(@"business/body/output/fpdm", strReturnValue);
+                fphm = XmlHelper.XmlAnalysis(@"business/body/output/fphm", strReturnValue);
+
+                // 调用打印
+                StringBuilder printXML = new StringBuilder();
+                printXML.AppendFormat("<?xml version=\"1.0\" encoding=\"gbk\"?>");
+                printXML.AppendFormat("<business comment=\"发票打印\" id=\"FPDY\">");
+                printXML.AppendFormat("<body yylxdm=\"{0}\">", Config.GetValue("yylxdm"));
+                printXML.AppendFormat("<input>");
+                printXML.AppendFormat("   <nsrsbh>{0}</nsrsbh>", Config.GetValue("nsrsbh"));
+                printXML.AppendFormat("   <skpbh>{0}</skpbh>", Config.GetValue("skpbh"));
+                printXML.AppendFormat("   <skpkl>{0}</skpkl>", Config.GetValue("skpkl"));
+                printXML.AppendFormat("   <keypwd>{0}</keypwd>", Config.GetValue("skpkl"));
+                printXML.AppendFormat("   <fplxdm>{0}</fplxdm>", Config.GetValue("skpkl"));
+                printXML.AppendFormat("   <fpdm>{0}</fpdm>", fpdm);
+                printXML.AppendFormat("   <fphm>{0}</fphm>", fphm);
+                printXML.AppendFormat("   <dylx>0</dylx>"); // 0：发票打印，1：清单打印
+                printXML.AppendFormat("   <dyfs>1</dyfs>");  // 0：批量打印  1：单张打印
+                printXML.AppendFormat("   <dyjmc></dyjmc>");
+                printXML.AppendFormat("</input>");
+                printXML.AppendFormat("</body>");
+                printXML.AppendFormat("</business>");
+
+                strReturnValue = sendXMLRequest(strXML);
+
+                return Success("操作成功！", strReturnValue);
+            }
+            else
+            {
+                return Error(XmlHelper.XmlNodeFind(@"business/body/output/fpdm", strReturnValue));
+            }
+        }
+
+        /// <summary>
+        /// 发送xml请求，获取返回信息
+        /// </summary>
+        /// <param name="strXML"></param>
+        /// <returns></returns>
+        private static string sendXMLRequest(StringBuilder strXML)
+        {
+            string strReturnValue;
             byte[] bOutputInfo = new byte[1024 * 10];
             OperateDisk(Encoding.Default.GetBytes(strXML.ToString()), bOutputInfo);
 
@@ -410,8 +497,7 @@ namespace HuRongClub.Application.Web.Areas.TenementManage.Controllers
                 }
             }
             strReturnValue = Encoding.Default.GetString(bOutputInfo, 0, intCount);
-
-            return Content(queryJson);
+            return strReturnValue;
         }
 
         #endregion 提交数据

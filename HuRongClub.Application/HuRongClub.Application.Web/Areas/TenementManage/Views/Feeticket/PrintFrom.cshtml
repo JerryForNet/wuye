@@ -28,19 +28,7 @@
     });
     //初始化控件
     function initControl() {
-        //类型
-        $("#ticket_type").ComboBox({
-            description: "==请选择==",
-        });
-        //部门
-        $("#dept_id").ComboBox({
-            url: "/PersonnelManage/HrDepartment/GetTreeJson",
-            id: "deptid",
-            text: "deptname",
-            description: "==请选择==",
-            height: "200px",
-            allowSearch: true,
-        });
+
         //获取表单
         if (!!keyValue) {
             $.SetForm({
@@ -70,73 +58,128 @@
             datatype: "json",
             autowidth: true,
             colModel: [
+                { label: "货物或应税劳务、服务名称", name: "fn", align: "left", sortable: false },
+                { label: "规格型号", name: "sku", align: "left", width: 60, sortable: false, formatter: function () { return "";} },
+                { label: "单位", name: "unit", align: "left", sortable: false, width: 40, formatter: function () { return "元" } },
+                { label: "数量", name: "num", align: "left", sortable: false, width: 40, formatter: function () { return "1" } },
+                { label: "单价", name: "check_money", align: "left", width: 60, sortable: false },
                 {
-                    label: "货物或应税劳务、服务名称", name: "fn", align: "left", width: 100, sortable: false, formatter: function (cellvalue, options, rowObject) {
-                        return '<input name="list-name" type="text" class="editable" value="' + cellvalue + '" />'
+                    label: "金额", name: "je", align: "left", width: 60, sortable: false, formatter: function (cellvalue, options, rowObject) {
+                        return '<input name="dj" type="text" class="editable center decimal disabled" isvalid="yes" checkexpession="Double" value="' + rowObject.check_money + '" />';
+                    }},
+                {
+                    label: "税率", name: "sl", align: "left", sortable: false, width: 60, formatter: function () {
+                        var rate = @ViewBag.option_exchange;
+                        return (rate / 100);
                     }
                 },
-                { label: "规格型号", name: "subject", align: "left", sortable: false },
                 {
-                    label: "单价", name: "check_money", align: "left", width: 100, sortable: false, formatter: function (cellvalue, options, rowObject) {
-                        return '<input name="list-price" type="text" class="editable" value="' + cellvalue + '" />'
-                    }, formatoptions: { thousandsSeparator: "", decimalPlaces: 2 }
-                },
+                    label: "税额", name: "se", align: "left", sortable: false, width: 60, formatter: function (cellvalue, options, rowObject) {
+                        var rate = @ViewBag.option_exchange;
+                        return rowObject.check_money * (rate / 100);
+                    }
+                }
             ],
             viewrecords: true,
             rowNum: 1000,
             gridview: true,
             footerrow: true,
             gridComplete: function () {
-                var totalamount = $(this).getCol("check_money", false, "sum").toFixed(2);
+                //var totalamount = $(this).getCol("check_money", false, "sum").toFixed(2);
+               
                 //合计
                 $(this).footerData("set", {
-                    "subject": "合计： 大写：" + Arabia_to_Chinese(totalamount) + "     小写：",
-                    "check_money": totalamount,
+                    "fn": "大写金额 <span id='TotalCapital'>0.00</span>",
+                    "se": "小写金额 <span id='TotalFeeincome'>0.00</span>",
                 });
                 $('table.ui-jqgrid-ftable td').prevUntil().css("border-right-color", "#fff");
                 $('table.ui-jqgrid-ftable td[aria-describedby="gridTable_subject"]').css("text-align", "right");
             }
+        });
+        $grid.find('.decimal').attr('onfocus', 'IsMoney(this.id)');
+        //价格文本框事件
+        $grid.find('.decimal').click(function () {
+            $(this).select();
+        });
+
+        //价格文本框换算
+        $grid.find('.decimal').keyup(function () {
+            //合计
+            var total_price = 0.00;
+            $grid.find("tbody tr").each(function (i) {
+                var price = $(this).find('td:eq(6)').find('input').val();
+                console.log(price);
+                if (price != "" && price != undefined) {
+                    total_price += Number(price);
+                }
+            });
+            $("#TotalCapital").text(Arabia_to_Chinese(toDecimal(total_price)));
+            $("#TotalFeeincome").text(toDecimal(total_price));
         });
     }
 
     // 打印发票;
     function AcceptClick(type) {
         var keyValue = request('keyValue');
+        var queryJson = $("#form1").serializeJson();
+        var proArrays = new Array();
+        var $grid = $("#gridTable");
 
-        $.get("/TenementManage/Feeticket/GetPrintXML", { keyValue: keyValue, type: type, queryJson: JSON.stringify($("#form1").serializeJson()) }, function (res) {
+
+        $grid.find("tbody tr").each(function (i) {
+            if (i > 0) {
+                var item = {
+                    fphxz: '',
+                    spmc: $(this).find('td:eq(0)').text(),
+                    spsm: '',
+                    ggxh: '',
+                    dw: '元',
+                    spsl: 1,
+                    dj: $(this).find('td:eq(4)').text(),
+                    je: $(this).find('td:eq(5)').find('input').val(),
+                    kcje: '',
+                    sl: $(this).find('td:eq(6)').text(),
+                    se: $(this).find('td:eq(7)').text(),
+                    hsbz: '',
+                    spbm: '',
+                    zxbm: '',
+                    yhzcbs: '0',
+                    slbs: ''
+                };
+
+                proArrays.push(item);
+            }
+        });
+        
+        queryJson = JSON.stringify(queryJson);
+        console.log(queryJson);
+
+        $.get("/TenementManage/Feeticket/GetPrintXML", { keyValue: keyValue, type: type, queryJson: encodeURI(queryJson), skus: encodeURI(proArrays)  }, function (res) {
             console.log(res);
+            if (res.type == 3) {
+                alert(res.message);
+            } else {
+                var mo = document.getElementById("ieOCX");
+                if (mo.OperateDiskX == undefined) {
+                    mo = document.getElementById("chromeOCX");
+                }
+                var retXml = "";
+                try {
+                    retXml = mo.OperateDiskX(res.resultdata);
+                } catch (e) {
+                    console.dir(e);
+                }
 
-            var printXML = '';
-            printXML += '<?xml version="1.0" encoding="gbk"?>';
-            printXML += '<business comment="发票打印" id="FPDY">';
-            printXML += '<body yylxdm="1">';
-            printXML += '<input>';
-            printXML += '   <nsrsbh>纳税人识别号</nsrsbh>';
-            printXML += '   <skpbh>税控盘编号</skpbh>';
-            printXML += '   <skpkl>税控盘口令</skpkl>';
-            printXML += '   <keypwd>税务数字证书密码</keypwd>';
-            printXML += '   <fplxdm>发票类型代码</fplxdm>';
-            printXML += '   <fpdm>发票代码</fpdm>';
-            printXML += '   <fphm>发票号码</fphm>';
-            printXML += '   <dylx>打印类型</dylx>';
-            printXML += '   <dyfs>打印方式</dyfs>';
-            printXML += '   <dyjmc>打印机名称</dyjmc>';
-            printXML += '</input>';
-            printXML += '</body>';
-            printXML += '</business >';
+                var xmldoc = loadXML(retXml);
 
-            var mo = document.getElementById("myZjjkOCX");
-            var retXml = mo.OperateDiskX(printXML);
-
-            var xmldoc = loadXML(retXml);
-
-            var elements = xmldoc.getElementsByTagName("output");
-            var retdata = "";
-            for (var i = 0; i < elements.length; i++) {
-                var name = elements[i].getElementsByTagName("returncode")[0].firstChild.nodeValue;
-                retdata = retdata + "返回编码：" + name;
-                var ip = elements[i].getElementsByTagName("returnmsg")[0].firstChild.nodeValue;
-                retdata = retdata + "返回信息：" + ip;
+                var elements = xmldoc.getElementsByTagName("output");
+                var retdata = "";
+                for (var i = 0; i < elements.length; i++) {
+                    var name = elements[i].getElementsByTagName("returncode")[0].firstChild.nodeValue;
+                    retdata = retdata + "返回编码：" + name;
+                    var ip = elements[i].getElementsByTagName("returnmsg")[0].firstChild.nodeValue;
+                    retdata = retdata + "返回信息：" + ip;
+                }
             }
 
         }, "json");
@@ -194,19 +237,19 @@
                             <table>
                                 <tr>
                                     <td>名　　　　称：</td>
-                                    <td><input name="buy-name" type="text" class="editable" /></td>
+                                    <td><input id="ghdwmc" name="ownername" type="text" class="editable" /></td>
                                 </tr>
                                 <tr>
                                     <td>纳税人识别号：</td>
-                                    <td><input name="buy-no" type="text" class="editable" /></td>
+                                    <td><input name="ghdwsbh" type="text" class="editable" /></td>
                                 </tr>
                                 <tr>
                                     <td>地址　、电话：</td>
-                                    <td><input name="buy-address" type="text" class="editable" /></td>
+                                    <td><input name="ghdwdzdh" type="text" class="editable" /></td>
                                 </tr>
                                 <tr>
                                     <td>开户行及账号：</td>
-                                    <td><input name="card-no" type="text" class="editable" /></td>
+                                    <td><input name="ghdwyhzh" type="text" class="editable" /></td>
                                 </tr>
                             </table>
                         </td>
@@ -224,24 +267,24 @@
                             <table>
                                 <tr>
                                     <td>名　　　　称：</td>
-                                    <td><input name="sell-name" type="text" class="editable" /></td>
+                                    <td><input name="xhdwmc" type="text" class="editable" /></td>
                                 </tr>
                                 <tr>
                                     <td>纳税人识别号：</td>
-                                    <td><input name="sell-no" type="text" class="editable" /></td>
+                                    <td><input name="xhdwsbh" type="text" class="editable" /></td>
                                 </tr>
                                 <tr>
                                     <td>地址　、电话：</td>
-                                    <td><input name="sell-address" type="text" class="editable" /></td>
+                                    <td><input name="xhdwdzdh" type="text" class="editable" /></td>
                                 </tr>
                                 <tr>
                                     <td>开户行及账号：</td>
-                                    <td><input name="sell-card-no" type="text" class="editable" /></td>
+                                    <td><input name="xhdwyhzh" type="text" class="editable" /></td>
                                 </tr>
                             </table>
                         </td>
                         <td class="info-title">备注</td>
-                        <td><textarea name="remark" style="height:80px; width:350px;" class="editable"></textarea></td>
+                        <td><textarea name="bz" style="height:80px; width:350px;" class="editable"></textarea></td>
                     </tr>
                 </table>
             </div>
@@ -249,11 +292,11 @@
                 <table class="form" style="width: 100%; margin-top: 5px;font-size:12px; ">
                     <tr>
                         <th class="formTitle" style="width: 40px; text-align:left;">收 款 人：</th>
-                        <td class="formValue"><input name="payee" type="text" /></td>
+                        <td class="formValue"><input name="skr" type="text" /></td>
                         <th class="formTitle" style="width: 40px; text-align:left;">复    核：</th>
-                        <td class="formValue"><input name="fuhe" type="text" /></td>
+                        <td class="formValue"><input name="fhr" type="text" /></td>
                         <th class="formTitle" style="width: 40px; text-align:left;">开 票 人：</th>
-                        <td class="formValue"><input name="kaipiaoren" type="text" /></td>
+                        <td class="formValue"><input name="kpr" type="text" /></td>
                         <th class="formTitle" style="width: 40px; text-align:left;">销售方（章）：</th>
                         <td class="formValue"><input name="xiaoshoufnag" type="text" /></td>
                     </tr>
@@ -295,5 +338,6 @@
             return xmlDoc;
         }
     </script>
-    <object id="myZjjkOCX" name="myZjjkOCX" style="width: 1%; height: 1%;" classid="CLSID:7E777ADB-F89A-49A3-BCC9-76B353AD0775"></object>
+    <object id="ieOCX" name="ieOCX" height="0" width="0" classid="CLSID:7E777ADB-F89A-49A3-BCC9-76B353AD0775"></object>
+    <object id="chromeOCX" height="0" width="0" type="application/x-itst-activex" clsid="{7E777ADB-F89A-49A3-BCC9-76B353AD0775}"></object>
 </div>
