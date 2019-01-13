@@ -1,5 +1,5 @@
 ﻿@{;
-    ViewBag.Title = "缴费单打印";
+    ViewBag.Title = "打印发票";
     Layout = "~/Views/Shared/_OrderForm.cshtml";
 }
 <script src="/Content/scripts/plugins/Amount/ArabiaToChinese.js"></script>
@@ -11,6 +11,8 @@
     .brs { border: 0px; border-bottom: solid 1px #000000; }
     .top { width: 100%; margin: 0 auto; height: 35px; line-height: 30px; position: fixed; _position: absolute; z-index: 9999; left: 0; top: 0; text-align: center; background: #808080; }
     .Noprint { width: 120px; }
+    .show-info { border: 1px solid #ccc; margin: 0 10px; }
+    .show-info .info-title { writing-mode: horizontal-tb; padding: 0 10px; width: 10px; border-right: 1px solid #ccc; }
 </style>
 <!--jqgrid表格组件start-->
 <link href="/Content/scripts/plugins/jqgrid/jqgrid.css" rel="stylesheet" />
@@ -66,12 +68,19 @@
             url: "/TenementManage/Feeticket/GetOherIncomeList?keyValue=" + keyValue,
             postData: { queryJson: JSON.stringify($("#form1").serializeJson()) },
             datatype: "json",
-            height: $(window).height() - 235,
             autowidth: true,
             colModel: [
-                { label: "费用项目", name: "fn", align: "left", width: 100, sortable: false },
-                { label: "摘要", name: "subject", align: "left", sortable: false },
-                { label: "费用金额", name: "check_money", align: "left", width: 100, sortable: false, formatter: 'number', formatoptions: { thousandsSeparator: "", decimalPlaces: 2 } },
+                {
+                    label: "货物或应税劳务、服务名称", name: "fn", align: "left", width: 100, sortable: false, formatter: function (cellvalue, options, rowObject) {
+                        return '<input name="list-name" type="text" class="editable" value="' + cellvalue + '" />'
+                    }
+                },
+                { label: "规格型号", name: "subject", align: "left", sortable: false },
+                {
+                    label: "单价", name: "check_money", align: "left", width: 100, sortable: false, formatter: function (cellvalue, options, rowObject) {
+                        return '<input name="list-price" type="text" class="editable" value="' + cellvalue + '" />'
+                    }, formatoptions: { thousandsSeparator: "", decimalPlaces: 2 }
+                },
             ],
             viewrecords: true,
             rowNum: 1000,
@@ -90,15 +99,47 @@
         });
     }
 
-    //保存表单;
+    // 打印发票;
     function AcceptClick(type) {
-        switch (type) {
-            case 0:
+        var keyValue = request('keyValue');
 
-                break;
-            case 1:
-                break
-        }
+        $.get("/TenementManage/Feeticket/GetPrintXML", { keyValue: keyValue, type: type, queryJson: JSON.stringify($("#form1").serializeJson()) }, function (res) {
+            console.log(res);
+
+            var printXML = '';
+            printXML += '<?xml version="1.0" encoding="gbk"?>';
+            printXML += '<business comment="发票打印" id="FPDY">';
+            printXML += '<body yylxdm="1">';
+            printXML += '<input>';
+            printXML += '   <nsrsbh>纳税人识别号</nsrsbh>';
+            printXML += '   <skpbh>税控盘编号</skpbh>';
+            printXML += '   <skpkl>税控盘口令</skpkl>';
+            printXML += '   <keypwd>税务数字证书密码</keypwd>';
+            printXML += '   <fplxdm>发票类型代码</fplxdm>';
+            printXML += '   <fpdm>发票代码</fpdm>';
+            printXML += '   <fphm>发票号码</fphm>';
+            printXML += '   <dylx>打印类型</dylx>';
+            printXML += '   <dyfs>打印方式</dyfs>';
+            printXML += '   <dyjmc>打印机名称</dyjmc>';
+            printXML += '</input>';
+            printXML += '</body>';
+            printXML += '</business >';
+
+            var mo = document.getElementById("myZjjkOCX");
+            var retXml = mo.OperateDiskX(printXML);
+
+            var xmldoc = loadXML(retXml);
+
+            var elements = xmldoc.getElementsByTagName("output");
+            var retdata = "";
+            for (var i = 0; i < elements.length; i++) {
+                var name = elements[i].getElementsByTagName("returncode")[0].firstChild.nodeValue;
+                retdata = retdata + "返回编码：" + name;
+                var ip = elements[i].getElementsByTagName("returnmsg")[0].firstChild.nodeValue;
+                retdata = retdata + "返回信息：" + ip;
+            }
+
+        }, "json");
     }
 </script>
 <div id="divTops">
@@ -110,93 +151,149 @@
 </div>
 <div id="divP" style="margin:0 auto; width:900px; background-color:#ffffff; height:700px;margin-top: 35px;">
     <div id="divPrint" class="billss" style="margin:0 auto;width:96%;">
-        <table id="tbHL" class="form" style="width: 20%; margin-bottom: 15px;font-size:12px; ">
-            <tr>
-                <th class="formTitle" style="width: 60px; text-align:left;">本月汇率：</th>
-                <td class="formValue">
-                    <input id="option_exchange" type="text" class="editable center decimal disabled brs" value="@ViewBag.option_exchange" />
-                </td>
-            </tr>
-        </table>
-        <div class="printArea fapiao">
-            <table class="form" style="width: 100%; margin-bottom: 5px;font-size:12px; ">
-                <tr>
-                    <th class="formTitle" style="width: 30px; text-align:left;">客户</th>
-                    <td class="formValue">
-                        <input id="propertyname" type="text" class="editable center decimal disabled brs" />
-                    </td>
-                    <td style="width:220px">&nbsp;</td>
-                    <td class="formValue" style="text-align:right;">
-                        <table class="form">
-                            <tr>
-                                <td style="width:50px;">
-                                    <input id="txtYear" type="text" class="editable center decimal disabled brs" value="@ViewBag.year" />
-                                </td>
-                                <th class="formTitle" style="width: 30px; text-align:center;">年</th>
-                                <td style="width:50px;">
-                                    <input id="txtMouth" type="text" class="editable center decimal disabled brs" value="@ViewBag.month" />
-                                </td>
-                                <th class="formTitle" style="width: 30px; text-align:center;">月</th>
-                                <td style="width:50px;">
-                                    <input id="txtDay" type="text" class="editable center decimal disabled brs" value="@ViewBag.day" />
-                                </td>
-                                <th class="formTitle" style="width: 30px; text-align:center;">日</th>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
-            </table>
-        </div>
-        <div class="gridPanel printArea">
-            <div style="margin-top: 20px; margin-right: 10px; margin-left:10px;">
-                <table class="form">
+        <form id="">
+            <input type="hidden" name="incomeid" id="incomeid" />
+            <input type="hidden" name="receive_id" id="receive_id">
+            <input type="hidden" name="is_income" id="is_income">
+            <input type="hidden" name="is_otherIncome" id="is_otherIncome">
+
+            <div class="printArea fapiao" >
+                <table class="form" style="width: 100%; margin-bottom: 5px;font-size:12px; ">
                     <tr>
-                        <td class="formTitle">物业：</td>
-                        <td class="formValue" colspan='3'>
-                            <input id="property_name" type="text" class="form-control" readonly="readonly" />
+                        <th class="formTitle" style="width: 30px; text-align:left;">客户</th>
+                        <td class="formValue">
+                            <input id="propertyname" type="text" class="editable center decimal disabled brs" />
                         </td>
-                        <td class="formTitle">业主：</td>
-                        <td class="formValue" colspan='3'>
-                            <input id="ownername" type="text" class="form-control" readonly="readonly" />
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="formTitle">收费日期：</td>
-                        <td class="formValue" colspan='3'>
-                            <input id="receive_date" type="text" class="form-control" readonly="readonly" />
-                        </td>
-                        <td class="formTitle">票据号码：</td>
-                        <td class="formValue" colspan='3'>
-                            <input id="ticket_code" type="text" class="form-control" readonly="readonly" />
-                        </td>
-                    </tr>
-                    <tr>
-                        <td class="formTitle">支付方式：</td>
-                        <td class="formValue" colspan='3'>
-                            <input id="pay_mode" type="text" class="form-control" readonly="readonly" />
-                        </td>
-                        <td class="formTitle">其它说明：</td>
-                        <td class="formValue" colspan='3'>
-                            <input id="pay_" type="text" class="form-control" readonly="readonly" />
+                        <td style="width:220px">&nbsp;</td>
+                        <td class="formValue" style="text-align:right;">
+                            <table class="form">
+                                <tr>
+                                    <td style="width:50px;">
+                                        <input id="txtYear" type="text" class="editable center decimal disabled brs" value="@ViewBag.year" />
+                                    </td>
+                                    <th class="formTitle" style="width: 30px; text-align:center;">年</th>
+                                    <td style="width:50px;">
+                                        <input id="txtMouth" type="text" class="editable center decimal disabled brs" value="@ViewBag.month" />
+                                    </td>
+                                    <th class="formTitle" style="width: 30px; text-align:center;">月</th>
+                                    <td style="width:50px;">
+                                        <input id="txtDay" type="text" class="editable center decimal disabled brs" value="@ViewBag.day" />
+                                    </td>
+                                    <th class="formTitle" style="width: 30px; text-align:center;">日</th>
+                                </tr>
+                            </table>
                         </td>
                     </tr>
                 </table>
-                <input type="hidden" name="incomeid" id="incomeid" />
-                <input type="hidden" name="receive_id" id="receive_id">
-                <input type="hidden" name="is_income" id="is_income">
-                <input type="hidden" name="is_otherIncome" id="is_otherIncome">
+            </div>
+            <div class="buy-info show-info">
+                <table style="width:100%;">
+                    <tr>
+                        <td class="info-title">购买方</td>
+                        <td>
+                            <table>
+                                <tr>
+                                    <td>名　　　　称：</td>
+                                    <td><input name="buy-name" type="text" class="editable" /></td>
+                                </tr>
+                                <tr>
+                                    <td>纳税人识别号：</td>
+                                    <td><input name="buy-no" type="text" class="editable" /></td>
+                                </tr>
+                                <tr>
+                                    <td>地址　、电话：</td>
+                                    <td><input name="buy-address" type="text" class="editable" /></td>
+                                </tr>
+                                <tr>
+                                    <td>开户行及账号：</td>
+                                    <td><input name="card-no" type="text" class="editable" /></td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="gridPanel" style="margin:0 10px;">
                 <table id="gridTable"></table>
             </div>
-        </div>
-        <div class="printArea">
-            <table class="form" style="width: 100%; margin-top: 5px;font-size:12px; ">
-                <tr>
-                    <th class="formTitle" style="width: 80px; text-align:left;">企业(盖章有效) </th>
-                    <td class="formValue" style="width:400px;">&nbsp;</td>
-                    <th class="formTitle" style="width: 40px; text-align:left;">开  票</th>
-                    <td class="formValue"><span id="invoiceMan">@ViewBag.UserName</span></td>
-                </tr>
-            </table>
-        </div>
+            <div class="sell-info show-info">
+                <table style="width:100%;">
+                    <tr>
+                        <td class="info-title">销售方</td>
+                        <td>
+                            <table>
+                                <tr>
+                                    <td>名　　　　称：</td>
+                                    <td><input name="sell-name" type="text" class="editable" /></td>
+                                </tr>
+                                <tr>
+                                    <td>纳税人识别号：</td>
+                                    <td><input name="sell-no" type="text" class="editable" /></td>
+                                </tr>
+                                <tr>
+                                    <td>地址　、电话：</td>
+                                    <td><input name="sell-address" type="text" class="editable" /></td>
+                                </tr>
+                                <tr>
+                                    <td>开户行及账号：</td>
+                                    <td><input name="sell-card-no" type="text" class="editable" /></td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td class="info-title">备注</td>
+                        <td><textarea name="remark" style="height:80px; width:350px;" class="editable"></textarea></td>
+                    </tr>
+                </table>
+            </div>
+            <div class="botom-info" style="margin-top:10px;">
+                <table class="form" style="width: 100%; margin-top: 5px;font-size:12px; ">
+                    <tr>
+                        <th class="formTitle" style="width: 40px; text-align:left;">收 款 人：</th>
+                        <td class="formValue"><input name="payee" type="text" /></td>
+                        <th class="formTitle" style="width: 40px; text-align:left;">复    核：</th>
+                        <td class="formValue"><input name="fuhe" type="text" /></td>
+                        <th class="formTitle" style="width: 40px; text-align:left;">开 票 人：</th>
+                        <td class="formValue"><input name="kaipiaoren" type="text" /></td>
+                        <th class="formTitle" style="width: 40px; text-align:left;">销售方（章）：</th>
+                        <td class="formValue"><input name="xiaoshoufnag" type="text" /></td>
+                    </tr>
+                </table>
+            </div>
+        </form>
     </div>
+</div>
+<div id="printBody" style="display:none;">
+    <script>
+        var loadXML = function (xmlString) {
+            var xmlDoc = null;
+
+            if (!window.DOMParser && window.ActiveXObject) {
+                var xmlDomVersions = ['MSXML.2.DOMDocument.6.0', 'MSXML.2.DOMDocument.3.0', 'Microsoft.XMLDOM'];
+                for (var i = 0; i < xmlDomVersions.length; i++) {
+                    try {
+                        xmlDoc = new ActiveXObject(xmlDomVersions[i]);
+                        xmlDoc.async = false;
+                        xmlDoc.loadXML(xmlString); //loadXML方法载入xml字符串
+                        break;
+                    }
+                    catch (e) {
+                    }
+                }
+            }
+            else if (window.DOMParser && document.implementation && document.implementation.createDocument) {
+                try {
+                    domParser = new DOMParser();
+                    xmlDoc = domParser.parseFromString(xmlString, 'text/xml');
+                }
+                catch (e) {
+                }
+            }
+            else {
+                return null;
+            }
+
+            return xmlDoc;
+        }
+    </script>
+    <object id="myZjjkOCX" name="myZjjkOCX" style="width: 1%; height: 1%;" classid="CLSID:7E777ADB-F89A-49A3-BCC9-76B353AD0775"></object>
 </div>
