@@ -220,19 +220,70 @@ namespace HuRongClub.Application.Service.TenementManage
             var queryParam = queryJson.ToJObject();
             string is_otherIncome = queryParam["is_otherIncome"].ToString();
             string is_income = queryParam["is_income"].ToString();
+            string is_group = queryParam["is_group"].ToString();
 
             if (is_otherIncome == "true")
             {
                 StringBuilder strsql = new StringBuilder();
-                strsql.Append("select fee_income as check_money,subject,(select top 1 feedate from wy_otherincome where wy_otherincome.incomeid=wy_otherincomeitem.incomeid) as pay_enddate,(select top 1 feeitem_name from wy_feeitem where feeitem_id=wy_otherincomeitem.feeitem_id) as fn from wy_otherincomeitem where incomeid='" + keyValue + "'");
+
+                if (is_group == "1")
+                {
+                    strsql.AppendFormat(@"  SELECT  SUM(temp.check_money) check_money ,
+                                                    MIN(temp.subject) ,
+                                                    MIN(temp.pay_enddate) ,
+                                                    temp.fn
+                                            FROM    ( SELECT    fee_income AS check_money ,
+                                                                subject ,
+                                                                ( SELECT TOP 1
+                                                                            feedate
+                                                                  FROM      wy_otherincome
+                                                                  WHERE     wy_otherincome.incomeid = wy_otherincomeitem.incomeid
+                                                                ) AS pay_enddate ,
+                                                                ( SELECT TOP 1
+                                                                            feeitem_name
+                                                                  FROM      wy_feeitem
+                                                                  WHERE     feeitem_id = wy_otherincomeitem.feeitem_id
+                                                                ) AS fn
+                                                      FROM      wy_otherincomeitem
+                                                      WHERE     incomeid = '{0}'
+                                                    ) temp
+                                            GROUP BY temp.fn", keyValue);
+                }
+                else
+                {
+                    strsql.Append("select fee_income as check_money,subject,(select top 1 feedate from wy_otherincome where wy_otherincome.incomeid=wy_otherincomeitem.incomeid) as pay_enddate,(select top 1 feeitem_name from wy_feeitem where feeitem_id=wy_otherincomeitem.feeitem_id) as fn from wy_otherincomeitem where incomeid='" + keyValue + "'");
+                }
+
                 return this.BaseRepository().FindList<OtherIncomeEntity>(strsql.ToString());
             }
             else if (is_income == "true")
             {
                 StringBuilder strsql = new StringBuilder();
-                strsql.Append("select wy_feecheck.*,wy_feeincome.pay_enddate,(cast(wy_feeincome.fee_year as varchar) + '/' + cast(wy_feeincome.fee_month as varchar)) as subject,");
-                strsql.Append(" (select top 1 feeitem_name from wy_feeitem where feeitem_id=wy_feeincome.feeitem_id) as fn from wy_feecheck left join ");
-                strsql.Append(" wy_feeincome on wy_feecheck.income_id=wy_feeincome.income_id where receive_id='" + queryParam["receive_id"].ToString() + "'");
+                if (is_group == "1")
+                {
+                    strsql.AppendFormat(@"  SELECT  SUM(temp.check_money) check_money ,
+                                                    fn
+                                            FROM    ( SELECT    wy_feecheck.* ,
+                                                                wy_feeincome.pay_enddate ,
+                                                                ( CAST(wy_feeincome.fee_year AS VARCHAR) + '/'
+                                                                  + CAST(wy_feeincome.fee_month AS VARCHAR) ) AS subject ,
+                                                                ( SELECT TOP 1
+                                                                            feeitem_name
+                                                                  FROM      wy_feeitem
+                                                                  WHERE     feeitem_id = wy_feeincome.feeitem_id
+                                                                ) AS fn
+                                                      FROM      wy_feecheck
+                                                                LEFT JOIN wy_feeincome ON wy_feecheck.income_id = wy_feeincome.income_id
+                                                      WHERE     receive_id = '{0}'
+                                                    ) temp
+                                            GROUP BY temp.fn", queryParam["receive_id"].ToString());
+                }
+                else
+                {
+                    strsql.Append("select wy_feecheck.*,wy_feeincome.pay_enddate,(cast(wy_feeincome.fee_year as varchar) + '/' + cast(wy_feeincome.fee_month as varchar)) as subject,");
+                    strsql.Append(" (select top 1 feeitem_name from wy_feeitem where feeitem_id=wy_feeincome.feeitem_id) as fn from wy_feecheck left join ");
+                    strsql.Append(" wy_feeincome on wy_feecheck.income_id=wy_feeincome.income_id where receive_id='" + queryParam["receive_id"].ToString() + "'");
+                }
 
                 return this.BaseRepository().FindList<OtherIncomeEntity>(strsql.ToString());
             }

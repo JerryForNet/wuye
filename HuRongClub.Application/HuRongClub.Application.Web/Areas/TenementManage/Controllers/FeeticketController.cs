@@ -4,6 +4,7 @@ using HuRongClub.Application.Entity.TenementManage;
 using HuRongClub.Application.Web.App_Start._01_Handler;
 using HuRongClub.Util;
 using HuRongClub.Util.WebControl;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -360,15 +361,16 @@ namespace HuRongClub.Application.Web.Areas.TenementManage.Controllers
         /// 获取打印发票用的xml
         /// </summary>
         /// <returns></returns>
-        [HttpGet]
-        public ActionResult GetPrintXML(string keyValue, int type, string queryJson, List<string> skus)
+        [HttpPost]
+        [AjaxOnly]
+        public ActionResult GetPrintXML(string keyValue, int type, string queryJson, string skus)
         {
             string strReturnValue = "";
             var queryParam = HttpUtility.UrlDecode(queryJson).ToJObject();
 
             StringBuilder strXML = new StringBuilder();
             strXML.AppendFormat("<?xml version=\"1.0\" encoding=\"gbk\"?>");
-            strXML.AppendFormat("<business comment\"发票开具\" id=\"FPKJ\">");
+            strXML.AppendFormat("<business comment=\"发票开具\" id=\"FPKJ\">");
             strXML.AppendFormat("<body yylxdm=\"1\">");
             strXML.AppendFormat("<input>");
             strXML.AppendFormat("<skpbh>{0}</skpbh>", Config.GetValue("skpbh"));
@@ -378,10 +380,10 @@ namespace HuRongClub.Application.Web.Areas.TenementManage.Controllers
             strXML.AppendFormat("<kplx>{0}</kplx>", Config.GetValue("kplx"));
             strXML.AppendFormat("<tspz>{0}</tspz>", Config.GetValue("tspz"));
 
-            strXML.AppendFormat("<xhdwsbh>{0}</xhdwsbh>", queryParam.GetValue("ghdwsbh"));
-            strXML.AppendFormat("<xhdwmc>{0}</xhdwmc>", queryParam.GetValue("ghdwsbh"));
-            strXML.AppendFormat("<xhdwdzdh>{0}</xhdwdzdh>", queryParam.GetValue("ghdwsbh"));
-            strXML.AppendFormat("<xhdwyhzh>{0}</xhdwyhzh>", queryParam.GetValue("ghdwsbh"));
+            strXML.AppendFormat("<xhdwsbh>{0}</xhdwsbh>", queryParam.GetValue("xhdwsbh"));
+            strXML.AppendFormat("<xhdwmc>{0}</xhdwmc>", queryParam.GetValue("xhdwmc"));
+            strXML.AppendFormat("<xhdwdzdh>{0}</xhdwdzdh>", queryParam.GetValue("xhdwdzdh"));
+            strXML.AppendFormat("<xhdwyhzh>{0}</xhdwyhzh>", queryParam.GetValue("xhdwyhzh"));
 
             strXML.AppendFormat("<ghdwsbh>{0}</ghdwsbh>", queryParam.GetValue("ghdwsbh"));
             strXML.AppendFormat("<ghdwmc>{0}</ghdwmc>", queryParam.GetValue("ghdwmc"));
@@ -391,38 +393,52 @@ namespace HuRongClub.Application.Web.Areas.TenementManage.Controllers
             strXML.AppendFormat("<hsslbs>{0}</hsslbs>", Config.GetValue("hsslbs"));
             strXML.AppendFormat("<fyxm count=\"1\">");
 
+            Decimal hjje = 0;
+            Decimal hjse = 0;
+
             // 参数
-            if (skus != null && skus.Count() > 0)
+            if (!String.IsNullOrEmpty(skus))
             {
-                strXML.AppendFormat("<group xh=\"{0}\">", skus.Count());
+                skus = skus.Replace("},{", "}#{").Replace("[", "").Replace("]", "");
+                string[] skulist = skus.Split('#');
 
-                foreach (var item in skus)
+                if (skulist != null && skulist.Count() > 0)
                 {
-                    strXML.AppendFormat("<fphxz>{0}</fphxz>", Config.GetValue("fphxz"));
-                    strXML.AppendFormat("<spmc>{0}</spmc>", queryParam.GetValue("spmc"));
-                    strXML.AppendFormat("<spsm></spsm>");
-                    strXML.AppendFormat("<je>{0}</je>", queryParam.GetValue("je"));
-                    strXML.AppendFormat("<kcje></kcje>");
-                    strXML.AppendFormat("<sl>{0}</sl>", queryParam.GetValue("sl"));
-                    strXML.AppendFormat("<se>{0}</se>", queryParam.GetValue("se"));
+                    strXML.AppendFormat("<group xh=\"{0}\">", skus.Count());
 
-                    strXML.AppendFormat("<hsbz>1</hsbz>");
-                    strXML.AppendFormat("<spbm>商品编码</spbm>");
-                    strXML.AppendFormat("<zxbm></zxbm>");
-                    strXML.AppendFormat("<yhzcbs>0</yhzcbs>");
-                    strXML.AppendFormat("<slbs></slbs>");
-                    strXML.AppendFormat("<zzstsgl></zzstsgl>");
+                    foreach (var item in skulist)
+                    {
+                        var sku = item.ToJObject();
+
+                        strXML.AppendFormat("<fphxz>{0}</fphxz>", Config.GetValue("fphxz"));
+                        strXML.AppendFormat("<spmc>{0}</spmc>", sku.GetValue("spmc"));
+                        strXML.AppendFormat("<spsm></spsm>");
+                        strXML.AppendFormat("<je>{0}</je>", sku.GetValue("je"));
+                        strXML.AppendFormat("<kcje></kcje>");
+                        strXML.AppendFormat("<sl>{0}</sl>", sku.GetValue("sl"));
+                        strXML.AppendFormat("<se>{0}</se>", sku.GetValue("se"));
+
+                        strXML.AppendFormat("<hsbz>1</hsbz>");
+                        strXML.AppendFormat("<spbm>商品编码</spbm>");
+                        strXML.AppendFormat("<zxbm></zxbm>");
+                        strXML.AppendFormat("<yhzcbs>0</yhzcbs>");
+                        strXML.AppendFormat("<slbs></slbs>");
+                        strXML.AppendFormat("<zzstsgl></zzstsgl>");
+
+                        hjse = hjse + Convert.ToDecimal(sku.GetValue("se"));
+                        hjje = hjje + Convert.ToDecimal(sku.GetValue("je"));
+                    }
+
+                    strXML.AppendFormat("</group>");
                 }
-
-                strXML.AppendFormat("</group>");
             }
 
             strXML.AppendFormat("</fyxm>");
             strXML.AppendFormat("<zhsl></zhsl>");
 
-            strXML.AppendFormat("<hjje>{0}</hjje>", queryParam.GetValue("hjje"));
-            strXML.AppendFormat("<hjse>{0}</hjse>", queryParam.GetValue("hjse"));
-            strXML.AppendFormat("<jshj>{0}</jshj>", queryParam.GetValue("jshj"));
+            strXML.AppendFormat("<hjje>{0}</hjje>", hjje);
+            strXML.AppendFormat("<hjse>{0}</hjse>", hjse);
+            strXML.AppendFormat("<jshj>{0}</jshj>", (hjje + hjse));
             strXML.AppendFormat("<bz>{0}</bz>", queryParam.GetValue("bz"));
             strXML.AppendFormat("<skr>{0}</skr>", queryParam.GetValue("skr"));
             strXML.AppendFormat("<fhr>{0}</fhr>", queryParam.GetValue("fhr"));
@@ -433,7 +449,7 @@ namespace HuRongClub.Application.Web.Areas.TenementManage.Controllers
             strXML.AppendFormat("<qdbz>{0}</qdbz>", Config.GetValue("qdbz"));
             strXML.Append("<ssyf></ssyf>");
             strXML.AppendFormat("<kpjh>{0}</kpjh>", Config.GetValue("kpjh"));
-            strXML.AppendFormat("<qmcs>{0}</qmcs>", Config.GetValue("kpjh"));
+            strXML.AppendFormat("<qmcs>{0}</qmcs>", Config.GetValue("qmcs"));
             strXML.AppendFormat("</input>");
             strXML.AppendFormat("</body>");
             strXML.AppendFormat("</business>");
@@ -455,8 +471,8 @@ namespace HuRongClub.Application.Web.Areas.TenementManage.Controllers
                 printXML.AppendFormat("   <nsrsbh>{0}</nsrsbh>", Config.GetValue("nsrsbh"));
                 printXML.AppendFormat("   <skpbh>{0}</skpbh>", Config.GetValue("skpbh"));
                 printXML.AppendFormat("   <skpkl>{0}</skpkl>", Config.GetValue("skpkl"));
-                printXML.AppendFormat("   <keypwd>{0}</keypwd>", Config.GetValue("skpkl"));
-                printXML.AppendFormat("   <fplxdm>{0}</fplxdm>", Config.GetValue("skpkl"));
+                printXML.AppendFormat("   <keypwd>{0}</keypwd>", Config.GetValue("keypwd"));
+                printXML.AppendFormat("   <fplxdm>{0}</fplxdm>", Config.GetValue("fplxdm"));
                 printXML.AppendFormat("   <fpdm>{0}</fpdm>", fpdm);
                 printXML.AppendFormat("   <fphm>{0}</fphm>", fphm);
                 printXML.AppendFormat("   <dylx>0</dylx>"); // 0：发票打印，1：清单打印
@@ -472,7 +488,7 @@ namespace HuRongClub.Application.Web.Areas.TenementManage.Controllers
             }
             else
             {
-                return Error(XmlHelper.XmlNodeFind(@"business/body/output/fpdm", strReturnValue));
+                return Error(strReturnValue);
             }
         }
 

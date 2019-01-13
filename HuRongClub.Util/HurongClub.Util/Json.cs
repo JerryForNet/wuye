@@ -41,5 +41,10 @@ namespace HuRongClub.Util
         {
             return Json == null ? JObject.Parse("{}") : JObject.Parse(Json.Replace("&nbsp;", ""));
         }
+
+        public static JArray ToJArrayObject(this string Json)
+        {
+            return Json == null ? JArray.Parse("[]") : JArray.Parse(Json.Replace("&nbsp;", ""));
+        }
     }
 }
