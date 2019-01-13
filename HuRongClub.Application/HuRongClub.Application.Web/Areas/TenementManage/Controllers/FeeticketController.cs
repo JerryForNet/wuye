@@ -43,7 +43,6 @@ namespace HuRongClub.Application.Web.Areas.TenementManage.Controllers
             return View();
         }
 
-
         /// <summary>
         /// 表单页面
         /// </summary>
@@ -85,7 +84,16 @@ namespace HuRongClub.Application.Web.Areas.TenementManage.Controllers
             return View();
         }
 
-        #endregion 财务管理--发票管理
+        /// <summary>
+        /// 打印预览
+        /// </summary>
+        /// <returns></returns>
+        public ActionResult PrintPreview()
+        {
+            return View();
+        }
+
+        #endregion 
 
         #endregion 视图功能
 
@@ -162,7 +170,6 @@ namespace HuRongClub.Application.Web.Areas.TenementManage.Controllers
             return ToJsonResult(data);
         }
 
-
         /// <summary>
         /// 获取下拉列表
         /// </summary>
@@ -207,7 +214,6 @@ namespace HuRongClub.Application.Web.Areas.TenementManage.Controllers
             {
                 return Error("操作失败，请刷新页面再操作！");
             }
-
         }
 
         /// <summary>

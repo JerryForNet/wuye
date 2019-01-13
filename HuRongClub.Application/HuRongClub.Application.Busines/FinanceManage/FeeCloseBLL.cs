@@ -64,7 +64,7 @@ namespace HuRongClub.Application.Busines.FinanceManage
                 return Convert.ToInt32(entity.fstatus) > 0 ? true : false;
             }
 
-            return false;
+            return true;
         }
 
         #endregion

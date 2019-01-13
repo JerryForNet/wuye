@@ -324,6 +324,24 @@ Layout = "~/Views/Shared/_Index.cshtml";
             }
         }
     }
+
+    //打印
+    function btn_print() {
+        var ticketId = $("#gridTable").jqGridRowValue("ticket_id");
+        if (ticketId == 0) {
+            dialogMsg('未找到需要打印数据，请先查询到数据后再按打印操作！', 0);
+            return false;
+        }
+        else {
+            var queryJson = {
+                ticketId: ticketId
+            }
+
+            var varData, winView, queryJson;
+            winView = window.open("/TenementManage/Feeticket/PrintPreview", "_blank", "location=no,menubar=no,toolbar=yes,status=yes,resizable=yes,scrollbars=yes");
+            return false;
+        }
+    }
 </script>
 <div class="titlePanel">
     <div class="title-search">
@@ -427,6 +445,7 @@ Layout = "~/Views/Shared/_Index.cshtml";
     </div>
     <div class="toolbar">
         <div class="btn-group">
+            <a id="lr-print" class="btn btn-default" onclick="btn_print()"><i class="fa fa-print"></i>&nbsp;打印发票</a>
             <a id="lr-replace" class="btn btn-default" onclick="reload()"><i class="fa fa-refresh"></i>&nbsp;刷新</a>
             <a id="lr-add" class="btn btn-default" onclick="btn_add()"><i class="fa fa-plus"></i>&nbsp;新增</a>
             <a id="lr-detail" class="btn btn-default" onclick="btn_detail()"><i class="fa fa-list-alt"></i>&nbsp;明细</a>
@@ -442,3 +461,4 @@ Layout = "~/Views/Shared/_Index.cshtml";
     <table id="gridTable"></table>
     <div id="gridPager"></div>
 </div>
+<div id="divqueryJson" style="display:none;"></div>

@@ -765,6 +765,7 @@
     <Content Include="Areas\TenementManage\Views\Feeticket\FeeListView.cshtml" />
     <Content Include="Areas\FinanceManage\Views\FeeClose\FeeCloseForm.cshtml" />
     <Content Include="Areas\FinanceManage\Views\FeeClose\Index.cshtml" />
+    <Content Include="Areas\TenementManage\Views\Feeticket\PrintPreview.cshtml" />
     <None Include="Properties\PublishProfiles\6.1.pubxml" />
     <Content Include="Areas\TenementManage\Views\DevicePart\DeviceCopy.cshtml" />
     <Content Include="Areas\RepostryManage\Views\InbillItem\DeleteIndex.cshtml" />
