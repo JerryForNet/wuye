@@ -31,6 +31,7 @@
     <UpgradeBackupLocation>
     </UpgradeBackupLocation>
     <UseGlobalApplicationHostFile />
+    <Use64BitIISExpress />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -507,7 +508,9 @@
     <Content Include="Content\scripts\utils\hurongclub-flowlayout.js" />
     <Content Include="Content\scripts\utils\hurongclub-im.js" />
     <Content Include="Content\images\video\5103.wav" />
-    <Content Include="doc\20180110_sql.sql" />
+    <Content Include="doc\20190110_sp_report_income.sql" />
+    <Content Include="doc\20190110_新增索引.sql" />
+    <Content Include="doc\20190110_sp_createfee_close.sql" />
     <Content Include="Views\Home\Desktop.cshtml" />
     <Content Include="Views\Home\AdminDefault.cshtml" />
     <Content Include="Views\Web.config">
@@ -516,7 +519,9 @@
     <Content Include="Web.config">
       <SubType>Designer</SubType>
     </Content>
-    <Content Include="Areas\AuthorizeManage\Views\Web.config" />
+    <Content Include="Areas\AuthorizeManage\Views\Web.config">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Areas\BaseManage\Views\Web.config">
       <SubType>Designer</SubType>
     </Content>
@@ -765,7 +770,12 @@
     <Content Include="Areas\TenementManage\Views\Feeticket\FeeListView.cshtml" />
     <Content Include="Areas\FinanceManage\Views\FeeClose\FeeCloseForm.cshtml" />
     <Content Include="Areas\FinanceManage\Views\FeeClose\Index.cshtml" />
+<<<<<<< HEAD
     <Content Include="Areas\TenementManage\Views\Feeticket\PrintPreview.cshtml" />
+=======
+    <Content Include="Areas\TenementManage\Views\Feeticket\PrintFrom.cshtml" />
+    <Content Include="Areas\RepostryManage\Views\Monthcheck\MonthDetailList.cshtml" />
+>>>>>>> bb511f6a71085db9a2c2a6e82e24cad545ba9b5e
     <None Include="Properties\PublishProfiles\6.1.pubxml" />
     <Content Include="Areas\TenementManage\Views\DevicePart\DeviceCopy.cshtml" />
     <Content Include="Areas\RepostryManage\Views\InbillItem\DeleteIndex.cshtml" />

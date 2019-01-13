@@ -181,21 +181,26 @@ namespace HuRongClub.Application.Busines.RepostryManage
                 var inbills = inbillIService.GetMonthInbill(goodsIds, Convert.ToInt32(queryParam["year"]));
                 if (inbills != null && inbills.Count() > 0)
                 {
-                    foreach (var good in result)
+                    foreach (GoodsinfoReportModel good in result)
                     {
-                        foreach (var inbill in inbills)
+                        List<BillReportModel> goodInbills = (List<BillReportModel>)inbills.Select(w => w.GoodsId == Convert.ToInt32(good.fgoodsid));
+                        if (goodInbills != null)
                         {
-                            if (inbill.GoodsId.ToString() == good.fgoodsid)
+                            foreach (BillReportModel inbill in goodInbills)
                             {
-                                
                             }
                         }
+
                     }
                 }
 
 
                 // 出库数据
                 var outbills = outbillIService.GetMonthInbill(goodsIds, Convert.ToInt32(queryParam["year"]));
+                if (outbills != null && outbills.Count() > 0)
+                {
+
+                }
             }
 
             return result;

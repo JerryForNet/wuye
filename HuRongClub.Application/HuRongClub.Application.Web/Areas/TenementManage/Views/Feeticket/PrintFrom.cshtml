@@ -1,6 +1,6 @@
 ﻿@{;
-ViewBag.Title = "缴费单打印";
-Layout = "~/Views/Shared/_OrderForm.cshtml";
+    ViewBag.Title = "缴费单打印";
+    Layout = "~/Views/Shared/_OrderForm.cshtml";
 }
 <script src="/Content/scripts/plugins/Amount/ArabiaToChinese.js"></script>
 <script src="/Content/scripts/plugins/Lodop/LodopFuncs.js"></script>
@@ -12,283 +12,99 @@ Layout = "~/Views/Shared/_OrderForm.cshtml";
     .top { width: 100%; margin: 0 auto; height: 35px; line-height: 30px; position: fixed; _position: absolute; z-index: 9999; left: 0; top: 0; text-align: center; background: #808080; }
     .Noprint { width: 120px; }
 </style>
+<!--jqgrid表格组件start-->
+<link href="/Content/scripts/plugins/jqgrid/jqgrid.css" rel="stylesheet" />
+<script src="/Content/scripts/plugins/jqgrid/grid.locale-cn.js"></script>
+<script src="/Content/scripts/plugins/jqgrid/jqgrid.min.js"></script>
+<!--表格组件end-->
+<script src="/Content/scripts/plugins/Amount/ArabiaToChinese.js"></script>
 <script>
     var keyValue = request('keyValue');
     $(function () {
-        InitialPage;
-        GetOrderEntryGrid();
-        InitControl();
-        InitialInfo();
-
-        $("#divP").height($(window).height() - 35);
-        //resize重设布局;
-        $(window).resize(function (e) {
-            window.setTimeout(function () {
-                $("#divP").height($(window).height() - 35);
-            }, 200);
-            e.stopPropagation();
-        });
+        initControl();
+        getGrid();
     });
-    //加载参数
-    function InitialInfo() {
-    }
-
-    //初始化页面url:
-    function InitialPage() {;
-        //resize重设(表格、树形)宽高
-        $(window).resize(function (e) {
-            window.setTimeout(function () {
-                $('#gridTable').setGridWidth(($('.gridPanel').width()));
-            }, 200);
-            e.stopPropagation();
-        });
-    }
-    //加载明细表
-    function GetOrderEntryGrid() {
-        var $grid = $('#gridTable');
-        $grid.jqGrid({
-            unwritten: false,
-            datatype: "local",
-            height: '100%',
-            autowidth: true,
-            colModel: [
-                { label: '服务名称', name: 'service_name', width: 500, align: 'center', sortable: false, resizable: false },
-                { label: '规格型号', name: 'sku', width: 150, align: 'center', sortable: false, resizable: false },
-                { label: '单位', name: 'unit', width: 150, align: 'center', sortable: false, resizable: false },
-                { label: '数量', name: 'quantity', width: 150, align: 'center', sortable: false, resizable: false },
-                { label: '单价', name: 'unit_price', width: 150, align: 'center', sortable: false, resizable: false },
-                { label: '金额', name: 'price', width: 150, align: 'center', sortable: false, resizable: false },
-                { label: '税率', name: 'tax_rate', width: 150, align: 'center', sortable: false, resizable: false },
-                { label: '税额', name: 'tax_price', width: 150, align: 'center', sortable: false, resizable: false },
-            ],
-            pager: false,
-            rownumbers: true,
-            shrinkToFit: false,
-            gridview: true,
-            footerrow: true,
-            gridComplete: function () {
-                //合计
-                $(this).footerData("set", {
-                    "property_name": "金额 <span id='TotalPrice'>0.00</span>",
-                    "fee_income": "税额 <span id='TotalTaxPrice'>0.00</span>",
-                });
-                $('table.ui-jqgrid-ftable td[aria-describedby="gridTable_fee_income"]').prevUntil().css("border-right-color", "#fff").css("text-align", "left");
-                $('table.ui-jqgrid-ftable td[aria-describedby="gridTable_fee_income"]').css("text-align", "left");
-            }
-        });
-        var $total = keyValue.split(',').length;
-        for (var i = 0; i < $total; i++) {
-            var rowdata = {
-                property_name: '<input name="property_name" type="text" class="editable center disabled" />',
-                fee_income: '<input name="fee_income" type="text" class="editable center decimal disabled" isvalid="yes" checkexpession="Double" />',
-            }
-            $grid.jqGrid('addRowData', i, rowdata);
-        };
-        $grid.find('.decimal').attr('onfocus', 'IsMoney(this.id)');
-        //价格文本框事件
-        $grid.find('.decimal').click(function () {
-            $(this).select();
-        });
-        //价格文本框换算
-        $grid.find('.decimal').keyup(function () {
-            //合计
-            var TotalPrice = 0.00;
-            $grid.find("tbody tr").each(function (i) {
-                var Price = $(this).find('td:eq(2)').find('input').val();
-                if (Price != "" && Price != undefined) {
-                    TotalPrice += Number(Price);
-                }
-            });
-            $("#TotalFeeincome").text(toDecimal(TotalPrice));
-            $("#TotalCapital").text(Arabia_to_Chinese(toDecimal(TotalPrice)));
-        });
-    }
     //初始化控件
-    function InitControl() {
-        var $property_name = "";
-        var $type = request('type');
-        if ($type == "" || $type == undefined) {
-            $type = 5;
-        }
+    function initControl() {
+        //类型
+        $("#ticket_type").ComboBox({
+            description: "==请选择==",
+        });
+        //部门
+        $("#dept_id").ComboBox({
+            url: "/PersonnelManage/HrDepartment/GetTreeJson",
+            id: "deptid",
+            text: "deptname",
+            description: "==请选择==",
+            height: "200px",
+            allowSearch: true,
+        });
         //获取表单
         if (!!keyValue) {
             $.SetForm({
-                url: "/TenementManage/Feeincome/GetListsJson?type=" + $type + "&owner_id=" + keyValue,
+                url: "/TenementManage/Feeticket/GetCostByTicketId",
+                param: { keyValue: keyValue },
                 success: function (data) {
-                    var orderEntry = data;
-
-                    var _con = data.length;
-                    //合计
-                    var TotalPrice = 0.00;
-                    var $fname = "";
-                    var $yearMonth = "";
-                    var $fincome = 0.00;
-                    var _json = [];
-
-                    console.log(data);
-
-                    //数据重组
-                    $.each(orderEntry, function (index, item) {
-                        // 业务逻辑有问题修改 Update:2017/10/11  Author:Jerry.Li
-                        var jsonIndex = getArrayItem(_json, item.feeitem_name);
-                        if (jsonIndex != null) {
-                            _json[jsonIndex] = {
-                                property_name: _json[jsonIndex].property_name,
-                                feeitem_name: _json[jsonIndex].feeitem_name,
-                                feeyear: _json[jsonIndex].feeyear + ',' + (item.fee_year + "/" + item.fee_month),
-                                fee_income: _json[jsonIndex].fee_income + item.fee_income
-                            };
-                        } else {
-                            _json.push({ property_name: item.property_name, feeitem_name: item.feeitem_name, feeyear: (item.fee_year + "/" + item.fee_month), fee_income: item.fee_income });
-                        }
-                    });
-
-                    console.log(_json);
-
-                    //数据绑定
-                    $("#gridTable").find('[role=row]').each(function (i) {
-                        var row = _json[i - 1];
-                        if (row != undefined) {
-                            $(this).find('input[name="property_name"]').attr("value", row.feeitem_name + "(" + row.feeyear + ")");
-                            $(this).find('input[name="fee_income"]').attr("value", toDecimal(row.fee_income));
-
-                            if (row.fee_income != "" && row.fee_income != undefined) {
-                                TotalPrice += Number(row.fee_income);
-                            }
-                            $property_name = row.property_name;
-                        } else {
-                            if (i > 1) {
-                                $(this).remove();
-                            }
-                        }
-                    });
-
-                    $("#TotalFeeincome").text(toDecimal(TotalPrice));
-                    $("#TotalCapital").text(Arabia_to_Chinese(toDecimal(TotalPrice)));
-
-                    var $type = request('type');
-
-                    $paydata = request('paydate');
-                    if ($paydata != undefined && $paydata.length > 0) {
-                        $paydata = $paydata.split('-');
-                        $("#txtYear").val($paydata[0]);
-                        $("#txtMouth").val($paydata[1]);
-                        $("#txtDay").val($paydata[2]);
-                    }
+                    $("#form1").SetWebControls(data);
                 }
-            });
-
-            if ($property_name.indexOf('/') > -1) {
-                var $property_names = $property_name.split('/');
-                var $name = $property_names[$property_names.length - 1];
-                if ($property_names.length >= 3) {
-                    $("#propertyname").attr("value", $property_names[1] + "/" + $property_names[2] + "(" + $name + ")");
-                } else {
-                    $("#propertyname").attr("value", $property_name);
-                }
-            }
-            else {
-                $("#propertyname").attr("value", $property_name);
-            }
-        }
-
-
-        // 取重复值下标
-        function getArrayItem(objArray, feeitem_name) {
-            if (objArray != null) {
-                for (var i = 0; i < objArray.length; i++) {
-                    if (objArray[i].feeitem_name == feeitem_name) {
-                        return i;
-                    }
-                }
-            }
-
-            return null;
+            })
         }
     }
+
+    $.fn.serializeJson = function () {
+        var serializeObj = {};
+        $(this.serializeArray()).each(function () {
+            serializeObj[this.name] = this.value;
+        });
+        return serializeObj;
+    };
+
+    function getGrid() {
+        var $grid = $("#gridTable");
+        $grid.jqGrid({
+            unwritten: false,
+            url: "/TenementManage/Feeticket/GetOherIncomeList?keyValue=" + keyValue,
+            postData: { queryJson: JSON.stringify($("#form1").serializeJson()) },
+            datatype: "json",
+            height: $(window).height() - 235,
+            autowidth: true,
+            colModel: [
+                { label: "费用项目", name: "fn", align: "left", width: 100, sortable: false },
+                { label: "摘要", name: "subject", align: "left", sortable: false },
+                { label: "费用金额", name: "check_money", align: "left", width: 100, sortable: false, formatter: 'number', formatoptions: { thousandsSeparator: "", decimalPlaces: 2 } },
+            ],
+            viewrecords: true,
+            rowNum: 1000,
+            gridview: true,
+            footerrow: true,
+            gridComplete: function () {
+                var totalamount = $(this).getCol("check_money", false, "sum").toFixed(2);
+                //合计
+                $(this).footerData("set", {
+                    "subject": "合计： 大写：" + Arabia_to_Chinese(totalamount) + "     小写：",
+                    "check_money": totalamount,
+                });
+                $('table.ui-jqgrid-ftable td').prevUntil().css("border-right-color", "#fff");
+                $('table.ui-jqgrid-ftable td[aria-describedby="gridTable_subject"]').css("text-align", "right");
+            }
+        });
+    }
+
     //保存表单;
-    function AcceptClick() {
-        if (!$('#form1').Validform()) {
-            return false;
+    function AcceptClick(type) {
+        switch (type) {
+            case 0:
+
+                break;
+            case 1:
+                break
         }
-
-        var LODOP; //声明为全局变量
-        LODOP = getLodop();
-
-        LODOP.PRINT_INITA(0, 0, 1050, 600, "");
-        LODOP.ADD_PRINT_SETUP_BKIMG("C:\\Users\\ajunf\\Desktop\\print.png");
-        LODOP.ADD_PRINT_TEXTA("购买方名称", 134, 160, 370, 20, "名称");
-        LODOP.SET_PRINT_STYLEA(0, "FontSize", 8);
-        LODOP.SET_PRINT_STYLEA(0, "FontColor", "#FF00FF");
-        LODOP.ADD_PRINT_TEXT(97, 656, 163, 20, "开票日期");
-        LODOP.SET_PRINT_STYLEA(0, "FontSize", 8);
-        LODOP.SET_PRINT_STYLEA(0, "FontColor", "#FF00FF");
-        LODOP.ADD_PRINT_TEXT(156, 161, 370, 20, "纳税人识别号");
-        LODOP.SET_PRINT_STYLEA(0, "FontSize", 8);
-        LODOP.SET_PRINT_STYLEA(0, "FontColor", "#FF00FF");
-        LODOP.ADD_PRINT_TEXT(179, 161, 370, 20, "地址、电话");
-        LODOP.SET_PRINT_STYLEA(0, "FontSize", 8);
-        LODOP.ADD_PRINT_TEXT(231, 47, 180, 152, "货物或应税劳务、服务名称");
-        LODOP.SET_PRINT_STYLEA(0, "FontSize", 8);
-        LODOP.SET_PRINT_STYLEA(0, "FontColor", "#FF00FF");
-        LODOP.ADD_PRINT_TEXT(231, 230, 149, 152, "规格型号");
-        LODOP.SET_PRINT_STYLEA(0, "FontSize", 8);
-        LODOP.SET_PRINT_STYLEA(0, "FontColor", "#FF00FF");
-        LODOP.ADD_PRINT_TEXT(420, 175, 370, 20, "名称");
-        LODOP.SET_PRINT_STYLEA(0, "FontSize", 8);
-        LODOP.SET_PRINT_STYLEA(0, "FontColor", "#FF00FF");
-        LODOP.ADD_PRINT_TEXT(521, 531, 100, 20, "开票人");
-        LODOP.SET_PRINT_STYLEA(0, "FontSize", 8);
-        LODOP.SET_PRINT_STYLEA(0, "FontColor", "#FF00FF");
-        LODOP.ADD_PRINT_TEXT(521, 347, 100, 20, "复核");
-        LODOP.SET_PRINT_STYLEA(0, "FontSize", 8);
-        LODOP.SET_PRINT_STYLEA(0, "FontColor", "#FF00FF");
-        LODOP.ADD_PRINT_TEXT(521, 124, 100, 20, "收款人");
-        LODOP.SET_PRINT_STYLEA(0, "FontSize", 8);
-        LODOP.SET_PRINT_STYLEA(0, "FontColor", "#FF00FF");
-        LODOP.ADD_PRINT_TEXT(203, 161, 370, 20, "开户行及账号");
-        LODOP.SET_PRINT_STYLEA(0, "FontSize", 8);
-        LODOP.ADD_PRINT_TEXT(231, 383, 70, 152, "单位");
-        LODOP.SET_PRINT_STYLEA(0, "FontSize", 8);
-        LODOP.SET_PRINT_STYLEA(0, "Alignment", 2);
-        LODOP.ADD_PRINT_TEXT(231, 458, 50, 152, "数量");
-        LODOP.SET_PRINT_STYLEA(0, "FontSize", 8);
-        LODOP.SET_PRINT_STYLEA(0, "Alignment", 3);
-        LODOP.ADD_PRINT_TEXT(231, 511, 80, 152, "单价");
-        LODOP.SET_PRINT_STYLEA(0, "FontSize", 8);
-        LODOP.SET_PRINT_STYLEA(0, "Alignment", 3);
-        LODOP.ADD_PRINT_TEXT(231, 595, 90, 152, "金额");
-        LODOP.SET_PRINT_STYLEA(0, "FontSize", 8);
-        LODOP.SET_PRINT_STYLEA(0, "Alignment", 3);
-        LODOP.ADD_PRINT_TEXT(230, 688, 50, 152, "税率");
-        LODOP.SET_PRINT_STYLEA(0, "FontSize", 8);
-        LODOP.ADD_PRINT_TEXT(230, 740, 100, 152, "税额");
-        LODOP.SET_PRINT_STYLEA(0, "FontSize", 8);
-        LODOP.SET_PRINT_STYLEA(0, "Alignment", 3);
-        LODOP.ADD_PRINT_TEXT(388, 230, 220, 20, "合计大写");
-        LODOP.SET_PRINT_STYLEA(0, "FontSize", 8);
-        LODOP.ADD_PRINT_TEXT(389, 639, 200, 20, "合计小写");
-        LODOP.SET_PRINT_STYLEA(0, "FontSize", 8);
-        LODOP.ADD_PRINT_TEXT(443, 175, 370, 20, "纳税人识别号");
-        LODOP.SET_PRINT_STYLEA(0, "FontSize", 8);
-        LODOP.ADD_PRINT_TEXT(465, 175, 370, 20, "地址电话");
-        LODOP.SET_PRINT_STYLEA(0, "FontSize", 8);
-        LODOP.ADD_PRINT_TEXT(488, 175, 370, 20, "开户行及账号");
-        LODOP.SET_PRINT_STYLEA(0, "FontSize", 8);
-        LODOP.ADD_PRINT_TEXT(422, 569, 270, 90, "新加文本23");
-        LODOP.SET_PRINT_STYLEA(0, "FontSize", 8);
-
-
-        //LODOP.PRINT_SETUP(); // 打印维护(开发)
-        LODOP.PRINT_DESIGN(); // 打印设计
-        //LODOP.PREVIEW();
-        //LODOP.PRINT();
     }
 </script>
 <div id="divTops">
     <div class="top" id="top">
-        <input type="button" class="Noprint" value="打印专票" onclick="javascript: AcceptClick();" />&nbsp;&nbsp;
-        <input type="button" class="Noprint" value="打印普票" onclick='javascript: AcceptClick();' />
+        <input type="button" class="Noprint" value="打印普票" onclick="javascript: AcceptClick(0);" />&nbsp;&nbsp;
+        <input type="button" class="Noprint" value="打印专票" onclick='javascript: AcceptClick(1);' />
         <input type="button" class="Noprint" value="关    闭" onclick='window.close();' />
     </div>
 </div>
@@ -332,7 +148,45 @@ Layout = "~/Views/Shared/_OrderForm.cshtml";
             </table>
         </div>
         <div class="gridPanel printArea">
-            <table id="gridTable"></table>
+            <div style="margin-top: 20px; margin-right: 10px; margin-left:10px;">
+                <table class="form">
+                    <tr>
+                        <td class="formTitle">物业：</td>
+                        <td class="formValue" colspan='3'>
+                            <input id="property_name" type="text" class="form-control" readonly="readonly" />
+                        </td>
+                        <td class="formTitle">业主：</td>
+                        <td class="formValue" colspan='3'>
+                            <input id="ownername" type="text" class="form-control" readonly="readonly" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="formTitle">收费日期：</td>
+                        <td class="formValue" colspan='3'>
+                            <input id="receive_date" type="text" class="form-control" readonly="readonly" />
+                        </td>
+                        <td class="formTitle">票据号码：</td>
+                        <td class="formValue" colspan='3'>
+                            <input id="ticket_code" type="text" class="form-control" readonly="readonly" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="formTitle">支付方式：</td>
+                        <td class="formValue" colspan='3'>
+                            <input id="pay_mode" type="text" class="form-control" readonly="readonly" />
+                        </td>
+                        <td class="formTitle">其它说明：</td>
+                        <td class="formValue" colspan='3'>
+                            <input id="pay_" type="text" class="form-control" readonly="readonly" />
+                        </td>
+                    </tr>
+                </table>
+                <input type="hidden" name="incomeid" id="incomeid" />
+                <input type="hidden" name="receive_id" id="receive_id">
+                <input type="hidden" name="is_income" id="is_income">
+                <input type="hidden" name="is_otherIncome" id="is_otherIncome">
+                <table id="gridTable"></table>
+            </div>
         </div>
         <div class="printArea">
             <table class="form" style="width: 100%; margin-top: 5px;font-size:12px; ">

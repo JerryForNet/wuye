@@ -327,7 +327,7 @@ Layout = "~/Views/Shared/_Index.cshtml";
 
     //打印
     function btn_print() {
-        var ticketId = $('#gridTable').jqGrid('getGridParam', 'ticket_id');
+        var ticketId = $("#gridTable").jqGridRowValue("ticket_id");
         if (ticketId == 0) {
             dialogMsg('未找到需要打印数据，请先查询到数据后再按打印操作！', 0);
             return false;
