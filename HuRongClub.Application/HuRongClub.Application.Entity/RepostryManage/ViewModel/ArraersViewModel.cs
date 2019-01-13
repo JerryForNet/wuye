@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace HuRongClub.Application.Entity.RepostryManage.ViewModel
+﻿namespace HuRongClub.Application.Entity.RepostryManage.ViewModel
 {
     public class ArraersViewModel
     {
@@ -18,9 +12,7 @@ namespace HuRongClub.Application.Entity.RepostryManage.ViewModel
 
         public decimal ArrearageAmount { get; set; }
 
-
         public string Type_name { get; set; }
-
 
         public string owner_name { get; set; }
         public string room_id { get; set; }

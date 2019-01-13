@@ -44,6 +44,14 @@ namespace HuRongClub.Application.IService.RepostryManage
         /// <returns></returns>
         IEnumerable<OutbillgoodModel> GetDetails(string keyValue);
 
+        /// <summary>
+        /// 出库统计
+        /// </summary>
+        /// <param name="goodsIds"></param>
+        /// <param name="year"></param>
+        /// <returns></returns>
+        IEnumerable<BillReportModel> GetMonthInbill(List<string> goodsIds, int year);
+
         #endregion 获取数据
 
         #region 提交数据

@@ -1,6 +1,4 @@
-﻿using HuRongClub.Application.Code;
-using System;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 
 namespace HuRongClub.Application.Entity.RepostryManage
 {

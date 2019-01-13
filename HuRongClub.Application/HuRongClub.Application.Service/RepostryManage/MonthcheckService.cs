@@ -206,6 +206,36 @@ namespace HuRongClub.Application.Service.RepostryManage
             }
         }
 
+        /// <summary>
+        /// 月销量库存
+        /// </summary>
+        /// <param name="pagination"></param>
+        /// <param name="queryJson"></param>
+        /// <returns></returns>
+        public IEnumerable<MonthGoodsModel> GetMonthDetailListJson(Pagination pagination, string queryJson)
+        {
+            var queryParam = queryJson.ToJObject();
+            List<DbParameter> param = new List<DbParameter>();
+            param.Add(DbParameters.CreateDbParameter("@fyear", queryParam["startDate"].ToString()));
+            param.Add(DbParameters.CreateDbParameter("@fmonth", queryParam["endDate"].ToString()));
+
+            RepositoryFactory<MonthGoodsModel> repository = new RepositoryFactory<MonthGoodsModel>();
+            StringBuilder strSql = new StringBuilder();
+            strSql.Append(@"SELECT TOP 50
+                                    tb_wh_monthgoods.fgoodsid ,
+                                    tb_wh_goodsinfo.funit ,
+                                    tb_wh_goodsinfo.fname ,
+                                    tb_wh_monthgoods.fcount ,
+                                    tb_wh_monthgoods.fprice ,
+                                    tb_wh_monthgoods.fmoney
+                            FROM    tb_wh_monthgoods
+                                    LEFT JOIN dbo.tb_wh_goodsinfo ON tb_wh_goodsinfo.fgoodsid = tb_wh_monthgoods.fgoodsid
+                            WHERE   fyear = @fyear
+                                    AND fmonth = @fmonth");
+
+            return repository.BaseRepository().FindList(strSql.ToString(), param.ToArray(), pagination);
+        }
+
         #endregion 提交数据
     }
 }

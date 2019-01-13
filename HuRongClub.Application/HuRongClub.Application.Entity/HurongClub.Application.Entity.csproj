@@ -94,9 +94,12 @@
     <Compile Include="RepostryManage\ViewModel\DistrictModel.cs" />
     <Compile Include="RepostryManage\ViewModel\GoodsinfoModel.cs" />
     <Compile Include="RepostryManage\ViewModel\billItemModel.cs" />
+    <Compile Include="RepostryManage\ViewModel\GoodsinfoReportModel.cs" />
     <Compile Include="RepostryManage\ViewModel\InbillModel.cs" />
     <Compile Include="RepostryManage\ViewModel\InbillItemByfinidModel.cs" />
+    <Compile Include="RepostryManage\ViewModel\BillReportModel.cs" />
     <Compile Include="RepostryManage\ViewModel\MonthcheckModel.cs" />
+    <Compile Include="RepostryManage\ViewModel\MonthGoodsModel.cs" />
     <Compile Include="RepostryManage\ViewModel\OutbillgoodModel.cs" />
     <Compile Include="RepostryManage\ViewModel\OutbillitemModel.cs" />
     <Compile Include="RepostryManage\ViewModel\OutStatisticsModel.cs" />

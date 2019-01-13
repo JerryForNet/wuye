@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace HuRongClub.Application.Entity.RepostryManage.ViewModel
+﻿namespace HuRongClub.Application.Entity.RepostryManage.ViewModel
 {
     public class DelayanaModel
     {
@@ -16,6 +10,5 @@ namespace HuRongClub.Application.Entity.RepostryManage.ViewModel
         public decimal fee_1218month { get; set; }
         public decimal fee_18month { get; set; }
         public decimal totalamount { get; set; }
-
     }
 }

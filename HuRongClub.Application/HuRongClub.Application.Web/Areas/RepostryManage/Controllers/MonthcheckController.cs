@@ -43,6 +43,7 @@ namespace HuRongClub.Application.Web.Areas.RepostryManage.Controllers
         {
             return View();
         }
+
         /// <summary>
         /// 打印界面
         /// </summary>
@@ -52,6 +53,17 @@ namespace HuRongClub.Application.Web.Areas.RepostryManage.Controllers
         {
             return View();
         }
+
+        /// <summary>
+        /// 月库存明细
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        public ActionResult MonthDetailList()
+        {
+            return View();
+        }
+
         #endregion 视图功能
 
         #region 获取数据
@@ -100,6 +112,28 @@ namespace HuRongClub.Application.Web.Areas.RepostryManage.Controllers
         {
             var data = monthcheckbll.GetEntity(keyValue);
             return ToJsonResult(data);
+        }
+
+        /// <summary>
+        /// 获取月库存明细
+        /// </summary>
+        /// <param name="pagination"></param>
+        /// <param name="queryJson"></param>
+        /// <returns></returns>
+        [HttpGet]
+        public ActionResult GetMonthDetailListJson(Pagination pagination, string queryJson)
+        {
+            var watch = CommonHelper.TimerStart();
+            var data = monthcheckbll.GetMonthDetailListJson(pagination, queryJson);
+            var jsonData = new
+            {
+                rows = data,
+                total = pagination.total,
+                page = pagination.page,
+                records = pagination.records,
+                costtime = CommonHelper.TimerEnd(watch)
+            };
+            return ToJsonResult(jsonData);
         }
 
         #endregion 获取数据

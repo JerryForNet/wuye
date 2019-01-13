@@ -155,6 +155,18 @@ Layout = "~/Views/Shared/_Index.cshtml";
         return false;
 
     }
+
+    // 月度库存明细
+    function btn_month_detail() {
+        dialogOpen({
+            id: 'Form',
+            title: '月度库存明细',
+            url: '/RepostryManage/Monthcheck/MonthDetailList?startDate=' + $("#StartDate").val() + '&endDate=' + $("#EndDate").val(),
+            width: '800px',
+            height: '460px',
+            btn: null
+        })
+    }
 </script>
 <div class="ui-report">
     <div class="titlePanel">
@@ -197,6 +209,7 @@ Layout = "~/Views/Shared/_Index.cshtml";
                     <td>月</td>
                     <td style="padding-left: 5px;">
                         <a id="btn_Search" class="btn btn-primary"><i class="fa fa-search"></i>查询</a>
+                        <a id="btn_month_detail" class="btn btn-primary" onclick="btn_month_detail()"><i class="fa fa-search"></i>月度库存明细</a>
                     </td>
                 </tr>
             </table>
