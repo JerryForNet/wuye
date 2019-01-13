@@ -404,7 +404,7 @@ namespace HuRongClub.Application.Web.Areas.TenementManage.Controllers
 
                 if (skulist != null && skulist.Count() > 0)
                 {
-                    strXML.AppendFormat("<group xh=\"{0}\">", skus.Count());
+                    strXML.AppendFormat("<group xh=\"{0}\">", skulist.Count());
 
                     foreach (var item in skulist)
                     {
