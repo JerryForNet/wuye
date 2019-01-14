@@ -772,6 +772,7 @@
     <Content Include="Areas\FinanceManage\Views\FeeClose\Index.cshtml" />
     <Content Include="Areas\TenementManage\Views\Feeticket\PrintFrom.cshtml" />
     <Content Include="Areas\RepostryManage\Views\Monthcheck\MonthDetailList.cshtml" />
+    <Content Include="Areas\RepostryManage\Views\Feereport\FeeReportGoods.cshtml" />
     <None Include="Properties\PublishProfiles\6.1.pubxml" />
     <Content Include="Areas\TenementManage\Views\DevicePart\DeviceCopy.cshtml" />
     <Content Include="Areas\RepostryManage\Views\InbillItem\DeleteIndex.cshtml" />

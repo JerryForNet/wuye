@@ -65,6 +65,7 @@ namespace HuRongClub.Application.Web.Areas.RepostryManage.Controllers
             return View();
         }
 
+
         #endregion 视图功能
 
         #region 获取数据
@@ -128,28 +129,6 @@ namespace HuRongClub.Application.Web.Areas.RepostryManage.Controllers
         {
             var data = goodsinfobll.GetEntity(keyValue);
             return ToJsonResult(data);
-        }
-
-        /// <summary>
-        /// 物质库存统计报表
-        /// </summary>
-        /// <param name="pagination"></param>
-        /// <param name="queryJson"></param>
-        /// <returns></returns>
-        [HttpGet]
-        public ActionResult GetReportGoods(Pagination pagination, string queryJson)
-        {
-            var watch = CommonHelper.TimerStart();
-            var data = goodsinfobll.GetReportGoods(pagination, queryJson);
-            var jsonData = new
-            {
-                rows = data,
-                total = pagination.total,
-                page = pagination.page,
-                records = pagination.records,
-                costtime = CommonHelper.TimerEnd(watch)
-            };
-            return ToJsonResult(jsonData);
         }
 
         #endregion 获取数据

@@ -50,7 +50,7 @@ namespace HuRongClub.Application.IService.RepostryManage
         /// <param name="goodsIds"></param>
         /// <param name="year"></param>
         /// <returns></returns>
-        IEnumerable<BillReportModel> GetMonthInbill(List<string> goodsIds, int year);
+        IEnumerable<BillReportModel> GetMonthInbill(List<string> goodsIds, string queryJson);
 
         #endregion 获取数据
 

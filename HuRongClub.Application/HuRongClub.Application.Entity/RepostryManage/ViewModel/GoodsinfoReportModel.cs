@@ -11,16 +11,10 @@ namespace HuRongClub.Application.Entity.RepostryManage.ViewModel
     public class GoodsinfoReportModel : GoodsinfoEntity
     {
         /// <summary>
-        /// 每月库存信息
+        /// 年
         /// </summary>
-        public List<MonthBill> monthBills;
-    }
+        public int year;
 
-    /// <summary>
-    /// 每月库存信息
-    /// </summary>
-    public class MonthBill
-    {
         /// <summary>
         /// 月份
         /// </summary>

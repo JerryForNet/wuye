@@ -221,8 +221,7 @@ namespace HuRongClub.Application.Service.RepostryManage
 
             RepositoryFactory<MonthGoodsModel> repository = new RepositoryFactory<MonthGoodsModel>();
             StringBuilder strSql = new StringBuilder();
-            strSql.Append(@"SELECT TOP 50
-                                    tb_wh_monthgoods.fgoodsid ,
+            strSql.Append(@"SELECT tb_wh_monthgoods.fgoodsid ,
                                     tb_wh_goodsinfo.funit ,
                                     tb_wh_goodsinfo.fname ,
                                     tb_wh_monthgoods.fcount ,

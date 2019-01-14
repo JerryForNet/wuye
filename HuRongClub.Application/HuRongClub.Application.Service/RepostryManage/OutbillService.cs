@@ -95,7 +95,13 @@ namespace HuRongClub.Application.Service.RepostryManage
             return repository.BaseRepository().FindList(strSql.ToString());
         }
 
-        public IEnumerable<BillReportModel> GetMonthInbill(List<string> fgoodsid, int year)
+        /// <summary>
+        /// 根据物资信息查询出库数据
+        /// </summary>
+        /// <param name="fgoodsid"></param>
+        /// <param name="queryJson"></param>
+        /// <returns></returns>
+        public IEnumerable<BillReportModel> GetMonthInbill(List<string> fgoodsid, string queryJson)
         {
             if (fgoodsid == null || fgoodsid.Count == 0) return null;
             StringBuilder ids = new StringBuilder();
@@ -112,13 +118,15 @@ namespace HuRongClub.Application.Service.RepostryManage
                                         DATEPART(MONTH, bill.foutdate) mon
                                 FROM    dbo.tb_wh_outbill bill
                                         LEFT JOIN dbo.tb_wh_outbill_item item ON bill.foutbillid = item.foutbillid
-                                WHERE   DATEPART(YEAR, bill.foutdate) = @year
-		                                AND item.fgoodsid IN ({0})
+                                WHERE   DATEPART(YEAR, bill.foutdate) = @year AND DATEPART(MONTH, bill.foutdate) = @month AND item.fgoodsid IN ({0})
                                 GROUP BY item.fgoodsid ,
                                         bill.foutdate", id);
 
+            var queryParam = queryJson.ToJObject();
+
             List<DbParameter> param = new List<DbParameter>();
-            param.Add(DbParameters.CreateDbParameter("@year", year));
+            param.Add(DbParameters.CreateDbParameter("@year", queryParam["year"]));
+            param.Add(DbParameters.CreateDbParameter("@month", queryParam["month"]));
 
             RepositoryFactory<BillReportModel> repository = new RepositoryFactory<BillReportModel>();
 

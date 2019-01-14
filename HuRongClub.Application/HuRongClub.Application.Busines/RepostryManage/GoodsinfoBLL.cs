@@ -164,21 +164,26 @@ namespace HuRongClub.Application.Busines.RepostryManage
             IEnumerable<GoodsinfoModel> goods = service.GetPageList(pagination, queryJson);
             if (goods != null && goods.Count() > 0)
             {
+                var queryParam = queryJson.ToJObject();
+
                 List<string> goodsIds = new List<string>();
                 foreach (GoodsinfoModel item in goods)
                 {
                     GoodsinfoReportModel mod = new GoodsinfoReportModel();
                     mod.fgoodsid = item.fgoodsid;
                     mod.fname = item.fname;
+
+                    mod.year = Convert.ToInt32(queryParam["year"]);
+                    mod.mon = Convert.ToInt32(queryParam["month"]);
+
+
                     result.Add(mod);
 
                     goodsIds.Add(item.fgoodsid);
                 }
 
-                var queryParam = queryJson.ToJObject();
-
                 // 入库数据
-                var inbills = inbillIService.GetMonthInbill(goodsIds, Convert.ToInt32(queryParam["year"]));
+                var inbills = inbillIService.GetMonthInbill(goodsIds, queryJson);
                 if (inbills != null && inbills.Count() > 0)
                 {
                     foreach (GoodsinfoReportModel good in result)
@@ -188,18 +193,29 @@ namespace HuRongClub.Application.Busines.RepostryManage
                         {
                             foreach (BillReportModel inbill in goodInbills)
                             {
+                                good.monInBillCount += inbill.TotCount;
+                                good.monInBillPrice += inbill.TotPrice;
                             }
                         }
-
                     }
                 }
 
-
                 // 出库数据
-                var outbills = outbillIService.GetMonthInbill(goodsIds, Convert.ToInt32(queryParam["year"]));
+                var outbills = outbillIService.GetMonthInbill(goodsIds, queryJson);
                 if (outbills != null && outbills.Count() > 0)
                 {
-
+                    foreach (GoodsinfoReportModel good in result)
+                    {
+                        List<BillReportModel> goodInbills = (List<BillReportModel>)outbills.Select(w => w.GoodsId == Convert.ToInt32(good.fgoodsid));
+                        if (goodInbills != null)
+                        {
+                            foreach (BillReportModel inbill in goodInbills)
+                            {
+                                good.monInBillCount += inbill.TotCount;
+                                good.monInBillPrice += inbill.TotPrice;
+                            }
+                        }
+                    }
                 }
             }
 

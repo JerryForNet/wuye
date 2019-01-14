@@ -15,6 +15,7 @@ namespace HuRongClub.Application.Web.Areas.RepostryManage.Controllers
     public class FeereportController : MvcControllerBase
     {
         private FeereportBLL FeereportBLL = new FeereportBLL();
+        private GoodsinfoBLL goodsinfobll = new GoodsinfoBLL();
 
         #region 视图功能
 
@@ -123,6 +124,18 @@ namespace HuRongClub.Application.Web.Areas.RepostryManage.Controllers
         [HttpGet]
         [HandlerAuthorize(PermissionMode.Enforce)]
         public ActionResult Account()
+        {
+            return View();
+        }
+
+
+        /// <summary>
+        /// 物资库存报表
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet]
+        [HandlerAuthorize(PermissionMode.Enforce)]
+        public ActionResult FeeReportGoods()
         {
             return View();
         }
@@ -349,6 +362,30 @@ namespace HuRongClub.Application.Web.Areas.RepostryManage.Controllers
                 FeereportBLL.GetExportList(queryJson);
                 return Success("导出成功。");
             }
+        }
+
+
+
+        /// <summary>
+        /// 物质库存统计报表
+        /// </summary>
+        /// <param name="pagination"></param>
+        /// <param name="queryJson"></param>
+        /// <returns></returns>
+        [HttpGet]
+        public ActionResult GetFeeReportGoodsJson(Pagination pagination, string queryJson)
+        {
+            var watch = CommonHelper.TimerStart();
+            var data = goodsinfobll.GetReportGoods(pagination, queryJson);
+            var jsonData = new
+            {
+                rows = data,
+                total = pagination.total,
+                page = pagination.page,
+                records = pagination.records,
+                costtime = CommonHelper.TimerEnd(watch)
+            };
+            return ToJsonResult(jsonData);
         }
 
         #endregion

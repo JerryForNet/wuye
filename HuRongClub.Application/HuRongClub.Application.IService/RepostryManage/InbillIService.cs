@@ -37,7 +37,13 @@ namespace HuRongClub.Application.IService.RepostryManage
         /// <returns></returns>
         IEnumerable<InbillItemByfinidModel> GetDetails(string keyValue);
 
-        IEnumerable<BillReportModel> GetMonthInbill(List<string> fgoodsids, int year);
+        /// <summary>
+        /// 查询物资入库信息
+        /// </summary>
+        /// <param name="fgoodsids"></param>
+        /// <param name="year"></param>
+        /// <returns></returns>
+        IEnumerable<BillReportModel> GetMonthInbill(List<string> fgoodsids, string queryJson);
 
         #endregion 获取数据
 
