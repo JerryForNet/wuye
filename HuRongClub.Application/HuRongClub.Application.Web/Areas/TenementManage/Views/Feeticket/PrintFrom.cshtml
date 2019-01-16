@@ -14,11 +14,44 @@
     .show-info { border: 1px solid #ccc; margin: 0 10px; }
     .show-info .info-title { writing-mode: horizontal-tb; padding: 0 10px; width: 10px; border-right: 1px solid #ccc; }
     .show-info input { margin: 1px 5px; border: 1px solid #ccc; }
+
+    .ui-autocomplete { width:300px;}
+    .ui-autocomplete li { width:300px;}
 </style>
 <!--jqgrid表格组件start-->
 <link href="/Content/scripts/plugins/jqgrid/jqgrid.css" rel="stylesheet" />
 <script src="/Content/scripts/plugins/jqgrid/grid.locale-cn.js"></script>
 <script src="/Content/scripts/plugins/jqgrid/jqgrid.min.js"></script>
+
+<!--jquery ui-->
+<link href="/Content/scripts/plugins/jquery-ui/jquery-ui.min.css" rel="stylesheet" />
+<script src="/Content/scripts/plugins/jquery-ui/jquery-ui.min.js"></script>
+
+<script>
+    $(function () {
+        $(".auto_name").autocomplete({
+            minLength: 0,
+            source: function () {
+                $.get("/FinanceManage/Invoice/GetListJson", { keyword: $(this).val() }, function (res) {
+                    return res;
+                }, "json")
+            },
+            focus: function (event, ui) {
+                $(this).val(ui.item.khmc);
+                return false;
+            },
+            select: function (event, ui) {
+                $(this).val(ui.item.khmc);
+
+                return false;
+            }
+        }).data("ui-autocomplete")._renderItem = function (ul, item) {
+            return $("<li>").append("<a>" + item.khum).appendTo(ul);
+        };
+    });
+</script>
+
+
 <!--表格组件end-->
 <script src="/Content/scripts/plugins/Amount/ArabiaToChinese.js"></script>
 <script>
@@ -106,7 +139,7 @@
             $(this).select();
         });
 
-        
+
     }
 
     // 价格文本框换算
@@ -161,7 +194,7 @@
                 proArrays.push(item);
             }
         });
-        
+
         console.log(queryJson);
         console.log(proArrays);
 
@@ -248,7 +281,7 @@
                             <table>
                                 <tr>
                                     <td style="width:100px;">名　　　　称：</td>
-                                    <td><input id="ghdwmc" name="ownername" type="text" class="editable" /></td>
+                                    <td><input id="ghdwmc" class="auto_name" name="ownername" type="text" class="editable" /></td>
                                 </tr>
                                 <tr>
                                     <td>纳税人识别号：</td>
@@ -278,7 +311,7 @@
                             <table style="width:450px;">
                                 <tr>
                                     <td style="width:100px;">名　　　　称：</td>
-                                    <td><input name="xhdwmc" type="text" class="editable" /></td>
+                                    <td><input name="xhdwmc" class="auto_name" type="text" class="editable" /></td>
                                 </tr>
                                 <tr>
                                     <td>纳税人识别号：</td>

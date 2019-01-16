@@ -58,6 +58,7 @@
     <Compile Include="AuthorizeManage\ModuleFormMap.cs" />
     <Compile Include="FinanceManage\FeeCloseMap.cs" />
     <Compile Include="FinanceManage\FeenoticeMap.cs" />
+    <Compile Include="FinanceManage\InvoiceInfoMap.cs" />
     <Compile Include="RepostryManage\LblistMap.cs" />
     <Compile Include="SysManage\Accounts_UsersMap.cs" />
     <Compile Include="TenementManage\FixmaterialMap.cs" />

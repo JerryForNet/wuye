@@ -56,6 +56,7 @@
     <Compile Include="FinanceManage\FeenoticeEntity.cs" />
     <Compile Include="FinanceManage\InnerbillEntity.cs" />
     <Compile Include="FinanceManage\InnerbillitemEntity.cs" />
+    <Compile Include="FinanceManage\InvoiceInfoEntity.cs" />
     <Compile Include="FinanceManage\ViewModel\FeeCloseModel.cs" />
     <Compile Include="FinanceManage\ViewModel\FeeticketModel.cs" />
     <Compile Include="FinanceManage\ViewModel\InnerbillModel.cs" />

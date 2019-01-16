@@ -57,6 +57,7 @@
     <Compile Include="FinanceManage\FeeitemBLL.cs" />
     <Compile Include="FinanceManage\FeenoticeBLL.cs" />
     <Compile Include="FinanceManage\InnerbillBLL.cs" />
+    <Compile Include="FinanceManage\InvoiceInfoBLL.cs" />
     <Compile Include="OaManage\NoticeBLL.cs" />
     <Compile Include="OaManage\WeekplanBLL.cs" />
     <Compile Include="PersonnelManage\EmployexchangeBLL.cs" />

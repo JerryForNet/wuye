@@ -178,6 +178,7 @@
     <Compile Include="Areas\FinanceManage\Controllers\FeeitemController.cs" />
     <Compile Include="Areas\FinanceManage\Controllers\FeenoticeController.cs" />
     <Compile Include="Areas\FinanceManage\Controllers\InnerbillController.cs" />
+    <Compile Include="Areas\FinanceManage\Controllers\InvoiceInfoController.cs" />
     <Compile Include="Areas\FinanceManage\FinanceManageAreaRegistration.cs" />
     <Compile Include="Areas\GeneratorManage\Controllers\MultiTableController.cs" />
     <Compile Include="Areas\GeneratorManage\Controllers\SingleTableController.cs" />
