@@ -24,15 +24,16 @@
 <script src="/Content/scripts/plugins/jqgrid/jqgrid.min.js"></script>
 
 <!--jquery ui-->
-<link href="/Content/scripts/plugins/jquery-ui/jquery-ui.min.css" rel="stylesheet" />
+@*<link href="/Content/scripts/plugins/jquery-ui/jquery-ui.min.css" rel="stylesheet" />*@
 <script src="/Content/scripts/plugins/jquery-ui/jquery-ui.min.js"></script>
 
 <script>
     $(function () {
-        $(".auto_name").autocomplete({
-            minLength: 0,
+        $(".auto_buy").autocomplete({
+            minLength: 1,
             source: function () {
-                $.get("/FinanceManage/Invoice/GetListJson", { keyword: $(this).val() }, function (res) {
+                $.get("/FinanceManage/InvoiceInfo/GetListJson", { keyword: $(".auto_buy").val().trim() }, function (res) {
+                    console.log(res);
                     return res;
                 }, "json")
             },
@@ -46,7 +47,11 @@
                 return false;
             }
         }).data("ui-autocomplete")._renderItem = function (ul, item) {
-            return $("<li>").append("<a>" + item.khum).appendTo(ul);
+            console.log("hai");
+
+            return $("<li>")
+                .append("<a>" + item.khum + "<br>" + item.khum + "</a>")
+                .appendTo(ul);
         };
     });
 </script>
@@ -121,8 +126,6 @@
                 var totalamount = $(this).getCol("check_money", false, "sum").toFixed(2);
                 var totalse = $(this).getCol("se", false, "sum").toFixed(2);
                 totalamount = Number(totalamount) + Number(totalse);
-
-                console.log(totalamount);
 
                 //合计
                 $(this).footerData("set", {
@@ -281,7 +284,7 @@
                             <table>
                                 <tr>
                                     <td style="width:100px;">名　　　　称：</td>
-                                    <td><input id="ghdwmc" class="auto_name" name="ownername" type="text" class="editable" /></td>
+                                    <td><input id="ghdwmc" class="auto_buy" name="ownername" type="text" class="editable" /></td>
                                 </tr>
                                 <tr>
                                     <td>纳税人识别号：</td>

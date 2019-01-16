@@ -1,10 +1,9 @@
 ﻿using HuRongClub.Application.Entity.FinanceManage;
 using HuRongClub.Application.IService.FinanceManage;
 using HuRongClub.Data.Repository;
-using HuRongClub.Util.WebControl;
+using HuRongClub.Util;
 using System.Collections.Generic;
 using System.Linq;
-using HuRongClub.Util;
 
 namespace HuRongClub.Application.Service.FinanceManage
 {
@@ -17,24 +16,24 @@ namespace HuRongClub.Application.Service.FinanceManage
     public class InvoiceInfoService : RepositoryFactory<InvoiceInfoEntity>, InvoiceInfoIService
     {
         #region 获取数据
+
         /// <summary>
         /// 获取列表
         /// </summary>
         /// <param name="queryJson">查询参数</param>
         /// <returns>返回列表</returns>
-        public IEnumerable<InvoiceInfoEntity> GetList(string queryJson)
+        public IEnumerable<InvoiceInfoEntity> GetList(string keyword)
         {
-            var queryParam = queryJson.ToJObject();
-            if (queryParam["keyword"] != null)
+            if (!string.IsNullOrEmpty(keyword))
             {
-                return this.BaseRepository().IQueryable().Where(w => w.khmc.Contains(queryParam["keyword"].ToString().Trim())).ToList();
+                return this.BaseRepository().IQueryable().Where(w => w.khmc.Contains(keyword.Trim())).ToList();
             }
             else
             {
                 return this.BaseRepository().IQueryable().ToList();
             }
-
         }
+
         /// <summary>
         /// 获取实体
         /// </summary>
@@ -44,9 +43,11 @@ namespace HuRongClub.Application.Service.FinanceManage
         {
             return this.BaseRepository().FindEntity(keyValue);
         }
+
         #endregion
 
         #region 提交数据
+
         /// <summary>
         /// 删除数据
         /// </summary>
@@ -55,6 +56,7 @@ namespace HuRongClub.Application.Service.FinanceManage
         {
             this.BaseRepository().Delete(keyValue);
         }
+
         /// <summary>
         /// 保存表单（新增、修改）
         /// </summary>
@@ -74,6 +76,7 @@ namespace HuRongClub.Application.Service.FinanceManage
                 this.BaseRepository().Insert(entity);
             }
         }
+
         #endregion
     }
 }

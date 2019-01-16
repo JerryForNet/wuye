@@ -1,9 +1,8 @@
 ﻿using HuRongClub.Application.Entity.FinanceManage;
 using HuRongClub.Application.IService.FinanceManage;
 using HuRongClub.Application.Service.FinanceManage;
-using HuRongClub.Util.WebControl;
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
 
 namespace HuRongClub.Application.Busines.FinanceManage
 {
@@ -18,6 +17,7 @@ namespace HuRongClub.Application.Busines.FinanceManage
         private InvoiceInfoIService service = new InvoiceInfoService();
 
         #region 获取数据
+
         /// <summary>
         /// 获取列表
         /// </summary>
@@ -27,6 +27,7 @@ namespace HuRongClub.Application.Busines.FinanceManage
         {
             return service.GetList(queryJson);
         }
+
         /// <summary>
         /// 获取实体
         /// </summary>
@@ -36,9 +37,11 @@ namespace HuRongClub.Application.Busines.FinanceManage
         {
             return service.GetEntity(keyValue);
         }
+
         #endregion
 
         #region 提交数据
+
         /// <summary>
         /// 删除数据
         /// </summary>
@@ -54,6 +57,7 @@ namespace HuRongClub.Application.Busines.FinanceManage
                 throw;
             }
         }
+
         /// <summary>
         /// 保存表单（新增、修改）
         /// </summary>
@@ -71,6 +75,7 @@ namespace HuRongClub.Application.Busines.FinanceManage
                 throw;
             }
         }
+
         #endregion
     }
 }

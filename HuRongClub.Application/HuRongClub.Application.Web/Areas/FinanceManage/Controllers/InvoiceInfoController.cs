@@ -1,8 +1,6 @@
-﻿using HuRongClub.Application.Entity.FinanceManage;
-using HuRongClub.Application.Busines.FinanceManage;
+﻿using HuRongClub.Application.Busines.FinanceManage;
 using HuRongClub.Application.Code;
-using HuRongClub.Util;
-using HuRongClub.Util.WebControl;
+using HuRongClub.Application.Entity.FinanceManage;
 using System.Web.Mvc;
 
 namespace HuRongClub.Application.Web.Areas.FinanceManage.Controllers
@@ -18,6 +16,7 @@ namespace HuRongClub.Application.Web.Areas.FinanceManage.Controllers
         private InvoiceInfoBLL invoiceinfobll = new InvoiceInfoBLL();
 
         #region 视图功能
+
         /// <summary>
         /// 列表页面
         /// </summary>
@@ -28,6 +27,7 @@ namespace HuRongClub.Application.Web.Areas.FinanceManage.Controllers
         {
             return View();
         }
+
         /// <summary>
         /// 表单页面
         /// </summary>
@@ -38,22 +38,25 @@ namespace HuRongClub.Application.Web.Areas.FinanceManage.Controllers
         {
             return View();
         }
+
         #endregion
 
         #region 获取数据
+
         /// <summary>
         /// 获取列表
         /// </summary>
-        /// <param name="queryJson">查询参数</param>
+        /// <param name="keyword">查询参数</param>
         /// <returns>返回列表Json</returns>
         [HttpGet]
-        public ActionResult GetListJson(string queryJson)
+        public ActionResult GetListJson(string keyword)
         {
-            var data = invoiceinfobll.GetList(queryJson);
+            var data = invoiceinfobll.GetList(keyword);
             return ToJsonResult(data);
         }
+
         /// <summary>
-        /// 获取实体 
+        /// 获取实体
         /// </summary>
         /// <param name="keyValue">主键值</param>
         /// <returns>返回对象Json</returns>
@@ -63,9 +66,11 @@ namespace HuRongClub.Application.Web.Areas.FinanceManage.Controllers
             var data = invoiceinfobll.GetEntity(keyValue);
             return ToJsonResult(data);
         }
+
         #endregion
 
         #region 提交数据
+
         /// <summary>
         /// 删除数据
         /// </summary>
@@ -80,6 +85,7 @@ namespace HuRongClub.Application.Web.Areas.FinanceManage.Controllers
             invoiceinfobll.RemoveForm(keyValue);
             return Success("删除成功。");
         }
+
         /// <summary>
         /// 保存表单（新增、修改）
         /// </summary>
@@ -95,6 +101,7 @@ namespace HuRongClub.Application.Web.Areas.FinanceManage.Controllers
             invoiceinfobll.SaveForm(keyValue, entity);
             return Success("操作成功。");
         }
+
         #endregion
     }
 }

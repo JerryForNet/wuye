@@ -1,5 +1,4 @@
 ﻿using HuRongClub.Application.Entity.FinanceManage;
-using HuRongClub.Util.WebControl;
 using System.Collections.Generic;
 
 namespace HuRongClub.Application.IService.FinanceManage
@@ -13,26 +12,31 @@ namespace HuRongClub.Application.IService.FinanceManage
     public interface InvoiceInfoIService
     {
         #region 获取数据
+
         /// <summary>
         /// 获取列表
         /// </summary>
         /// <param name="queryJson">查询参数</param>
         /// <returns>返回列表</returns>
         IEnumerable<InvoiceInfoEntity> GetList(string queryJson);
+
         /// <summary>
         /// 获取实体
         /// </summary>
         /// <param name="keyValue">主键值</param>
         /// <returns></returns>
         InvoiceInfoEntity GetEntity(string keyValue);
+
         #endregion
 
         #region 提交数据
+
         /// <summary>
         /// 删除数据
         /// </summary>
         /// <param name="keyValue">主键</param>
         void RemoveForm(string keyValue);
+
         /// <summary>
         /// 保存表单（新增、修改）
         /// </summary>
@@ -40,6 +44,7 @@ namespace HuRongClub.Application.IService.FinanceManage
         /// <param name="entity">实体对象</param>
         /// <returns></returns>
         void SaveForm(string keyValue, InvoiceInfoEntity entity);
+
         #endregion
     }
 }
