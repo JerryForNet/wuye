@@ -53,6 +53,12 @@ namespace HuRongClub.Application.Busines.TenementManage
             return service.GetListByIds(keyValue);
         }
 
+
+        public IEnumerable<TicketPrintEntity> GetPrintListJson(string keyValue, string queryJson)
+        {
+            return service.GetPrintListJson(keyValue,queryJson);
+        }
+
         /// <summary>
         /// 获取实体
         /// </summary>
@@ -161,5 +167,6 @@ namespace HuRongClub.Application.Busines.TenementManage
         }
 
         #endregion 提交数据
+
     }
 }

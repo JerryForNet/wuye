@@ -98,5 +98,7 @@ namespace HuRongClub.Application.IService.TenementManage
         void SaveForm(string keyValue, FeeticketEntity entity);
 
         #endregion 提交数据
+
+        IEnumerable<TicketPrintEntity> GetPrintListJson(string keyValue, string queryJson);
     }
 }

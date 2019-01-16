@@ -20,13 +20,13 @@ namespace HuRongClub.Application.Service.FinanceManage
         /// <summary>
         /// 获取列表
         /// </summary>
-        /// <param name="queryJson">查询参数</param>
+        /// <param name="keyword">查询参数</param>
         /// <returns>返回列表</returns>
         public IEnumerable<InvoiceInfoEntity> GetList(string keyword)
         {
             if (!string.IsNullOrEmpty(keyword))
             {
-                return this.BaseRepository().IQueryable().Where(w => w.khmc.Contains(keyword.Trim())).ToList();
+                return this.BaseRepository().IQueryable().Where(w => w.khmc.Contains(keyword.Trim())).Take(20).ToList();
             }
             else
             {

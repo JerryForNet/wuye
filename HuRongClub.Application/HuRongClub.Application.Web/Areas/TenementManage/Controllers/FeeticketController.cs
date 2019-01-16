@@ -215,6 +215,19 @@ namespace HuRongClub.Application.Web.Areas.TenementManage.Controllers
             return ToJsonResult(data);
         }
 
+        /// <summary>
+        /// 获取打印列表
+        /// </summary>
+        /// <param name="keyValue"></param>
+        /// <param name="queryJson"></param>
+        /// <returns></returns>
+        [HttpGet]
+        public ActionResult GetPrintListJson(string keyValue, string queryJson)
+        {
+            var data = feeticketbll.GetPrintListJson(keyValue, queryJson);
+            return ToJsonResult(data);
+        }
+
         #endregion 获取数据
 
         #region 提交数据

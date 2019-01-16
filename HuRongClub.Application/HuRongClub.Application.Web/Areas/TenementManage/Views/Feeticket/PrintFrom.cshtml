@@ -1,4 +1,4 @@
-﻿@{;
+﻿@{
     ViewBag.Title = "打印发票";
     Layout = "~/Views/Shared/_OrderForm.cshtml";
 }
@@ -23,36 +23,60 @@
 <script src="/Content/scripts/plugins/jqgrid/grid.locale-cn.js"></script>
 <script src="/Content/scripts/plugins/jqgrid/jqgrid.min.js"></script>
 
-<!--jquery ui-->
-@*<link href="/Content/scripts/plugins/jquery-ui/jquery-ui.min.css" rel="stylesheet" />*@
-<script src="/Content/scripts/plugins/jquery-ui/jquery-ui.min.js"></script>
+<!--jquery autocomplete-->
+@*<script src="/Content/scripts/plugins/autocomplate/browser.js"></script>
+<link href="~/Content/scripts/plugins/autocomplate/autocomplete.css" rel="stylesheet" />
+<script src="/Content/scripts/plugins/autocomplate/jquery.autocomplete.js"></script>*@
+
+<link href="~/Content/scripts/plugins/Autocomplete/styles.css" rel="stylesheet" />
+<script src="~/Content/scripts/plugins/Autocomplete/jquery.autocomplete.js"></script>
+
+<style>
+     .ui-autocomplete {
+         max-height: 100px;
+         overflow-y: auto;
+         /* 防止水平滚动条 */
+         overflow-x: hidden;
+     }
+     /* IE 6 不支持 max-height
+    * 我们使用 height 代替，但是这会强制菜单总是显示为那个高度
+    */
+     * html .ui-autocomplete {
+         height: 100px;
+     }
+</style>
 
 <script>
     $(function () {
-        $(".auto_buy").autocomplete({
-            minLength: 1,
-            source: function () {
-                $.get("/FinanceManage/InvoiceInfo/GetListJson", { keyword: $(".auto_buy").val().trim() }, function (res) {
-                    console.log(res);
-                    return res;
-                }, "json")
-            },
-            focus: function (event, ui) {
-                $(this).val(ui.item.khmc);
-                return false;
-            },
-            select: function (event, ui) {
-                $(this).val(ui.item.khmc);
+        $('.auto_buy').autocomplete({
+            serviceUrl: '/FinanceManage/InvoiceInfo/GetListJson',
+            params: { q: $(".auto_buy").val() },
+            paramName: "q",
+            width: 500,
+            height: 200,
+            onSelect: function (suggestion) {
+                console.log(suggestion)
+                var data = suggestion.data;
+                $("#ghdwmc").val(data.khmc);
+                $("#ghdwsbh").val(data.khsh);
+                $("#ghdwdzdh").val(data.khdz);
+                $("#ghdwyhzh").val(data.khkhyhzh);
 
-                return false;
+                $(".autocomplete-suggestions").hide();
+            },
+            transformResult: function (response, currentValue) {
+                var data = eval(response);
+
+                this.suggestion = $.map(data, function (item, index) {
+                    return { value: item.khmc, data: item };
+                });
+
+                return { displayUsers: "", suggestions: this.suggestion };
             }
-        }).data("ui-autocomplete")._renderItem = function (ul, item) {
-            console.log("hai");
+        });
 
-            return $("<li>")
-                .append("<a>" + item.khum + "<br>" + item.khum + "</a>")
-                .appendTo(ul);
-        };
+        $(document).on("click", ".autocomplete-suggestion", function () {
+        });
     });
 </script>
 
@@ -91,30 +115,27 @@
         var $grid = $("#gridTable");
         $grid.jqGrid({
             unwritten: false,
-            url: "/TenementManage/Feeticket/GetOherIncomeList?keyValue=" + keyValue,
+            url: "/TenementManage/Feeticket/GetPrintListJson?keyValue=" + keyValue,
             postData: { queryJson: JSON.stringify($("#form1").serializeJson()) },
             datatype: "json",
             autowidth: true,
             colModel: [
-                { label: "货物或应税劳务、服务名称", name: "fn", align: "left", sortable: false },
+                { label: "货物或应税劳务、服务名称", name: "feedispname", align: "left", sortable: false },
                 { label: "规格型号", name: "sku", align: "left", width: 60, sortable: false, formatter: function () { return "";} },
                 { label: "单位", name: "unit", align: "left", sortable: false, width: 40, formatter: function () { return "元" } },
                 { label: "数量", name: "num", align: "left", sortable: false, width: 40, formatter: function () { return "1" } },
-                { label: "单价", name: "check_money", align: "left", width: 60, sortable: false },
+                { label: "单价", name: "fmoney", align: "left", width: 60, sortable: false },
                 {
                     label: "金额", name: "je", align: "left", width: 60, sortable: false, formatter: function (cellvalue, options, rowObject) {
-                        return '<input name="dj" type="text" class="editable center decimal disabled" isvalid="yes" checkexpession="Double" value="' + rowObject.check_money + '" />';
+                        return '<input name="dj" type="text" class="editable center decimal disabled" isvalid="yes" checkexpession="Double" value="' + rowObject.fmoney + '" />';
                     }},
-                {
-                    label: "税率", name: "sl", align: "left", sortable: false, width: 60, formatter: function () {
-                        var rate = @ViewBag.option_exchange;
-                        return (rate / 100);
-                    }
-                },
+                { label: "税率", name: "taxrate", align: "left", sortable: false, width: 60 },
                 {
                     label: "税额", name: "se", align: "left", sortable: false, width: 60, formatter: function (cellvalue, options, rowObject) {
-                        var rate = @ViewBag.option_exchange;
-                        return rowObject.check_money * (rate / 100);
+                        if (rowObject.taxrate != undefined) {
+                            var rate = parseInt(rowObject.taxrate.replace('%', ''));
+                            return toDecimal(rowObject.fmoney * (rate / 100));
+                        }
                     }
                 }
             ],
@@ -123,7 +144,7 @@
             gridview: true,
             footerrow: true,
             gridComplete: function () {
-                var totalamount = $(this).getCol("check_money", false, "sum").toFixed(2);
+                var totalamount = $(this).getCol("fmoney", false, "sum").toFixed(2);
                 var totalse = $(this).getCol("se", false, "sum").toFixed(2);
                 totalamount = Number(totalamount) + Number(totalse);
 
@@ -198,11 +219,7 @@
             }
         });
 
-        console.log(queryJson);
-        console.log(proArrays);
-
         $.post("/TenementManage/Feeticket/GetPrintXML", { keyValue: keyValue, type: type, queryJson: JSON.stringify(queryJson), skus: JSON.stringify(proArrays)  }, function (res) {
-            console.log(res);
             if (res.type == 3) {
                 alert(res.message);
             } else {
@@ -246,7 +263,6 @@
             <input type="hidden" name="is_income" id="is_income">
             <input type="hidden" name="is_otherIncome" id="is_otherIncome">
             <input type="hidden" name="is_group" value="1">
-
             <div class="printArea fapiao">
                 <table class="form" style="width: 100%; margin-bottom: 5px;font-size:12px; ">
                     <tr>
@@ -281,22 +297,22 @@
                     <tr>
                         <td class="info-title">购买方</td>
                         <td style="padding-left:5px;">
-                            <table>
+                            <table style="width: 400px;">
                                 <tr>
                                     <td style="width:100px;">名　　　　称：</td>
-                                    <td><input id="ghdwmc" class="auto_buy" name="ownername" type="text" class="editable" /></td>
+                                    <td><input id="ghdwmc" class="auto_buy" name="ghdwmc" type="text" class="editable" style="width:300px" /></td>
                                 </tr>
                                 <tr>
                                     <td>纳税人识别号：</td>
-                                    <td><input name="ghdwsbh" type="text" class="editable" /></td>
+                                    <td><input id="ghdwsbh" name="ghdwsbh" type="text" class="editable" /></td>
                                 </tr>
                                 <tr>
                                     <td>地址　、电话：</td>
-                                    <td><input name="ghdwdzdh" type="text" class="editable" /></td>
+                                    <td><input id="ghdwdzdh" name="ghdwdzdh" type="text" class="editable" /></td>
                                 </tr>
                                 <tr>
                                     <td>开户行及账号：</td>
-                                    <td><input name="ghdwyhzh" type="text" class="editable" /></td>
+                                    <td><input id="ghdwyhzh" name="ghdwyhzh" type="text" class="editable" /></td>
                                 </tr>
                             </table>
                         </td>

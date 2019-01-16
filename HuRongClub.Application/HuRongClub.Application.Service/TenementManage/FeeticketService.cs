@@ -449,5 +449,45 @@ namespace HuRongClub.Application.Service.TenementManage
         }
 
         #endregion 提交数据
+
+        /// <summary>
+        /// 查询打印数据
+        /// </summary>
+        /// <param name="keyValue"></param>
+        /// <param name="queryJson"></param>
+        /// <returns></returns>
+        public IEnumerable<TicketPrintEntity> GetPrintListJson(string keyValue, string queryJson)
+        {
+            StringBuilder sql = new StringBuilder();
+            sql.Append(@"SELECT  a.feeitem_id ,
+                                ( RTRIM(a.fee_year) + '/' + RTRIM(a.fee_month) ) AS fperiod ,
+                                c.check_money
+                        INTO    #tmp
+                        FROM    wy_feecheck c
+                                INNER JOIN wy_feereceive r ON r.receive_id = c.receive_id
+                                INNER JOIN wy_feeincome a ON a.income_id = c.income_id
+                        WHERE   r.ticket_id = @ticketid
+
+                        SELECT  bb.* ,
+                                ff.feedispname ,
+                                ff.taxrate ,
+                                ff.taxtype
+                        FROM    ( SELECT    feeitem_id ,
+                                            SUM(check_money) AS fmoney ,
+                                            STUFF(( SELECT  ',' + fperiod
+                                                    FROM    #tmp
+                                                    WHERE   feeitem_id = #tmp.feeitem_id
+                                                    FOR
+                                                    XML PATH('')
+                                                    ), 1, 1, '') AS speriod
+                                    FROM      #tmp
+                                    GROUP BY  feeitem_id
+                                ) bb
+                                LEFT JOIN wy_feeitem ff ON ff.feeitem_id = bb.feeitem_id");
+            DbParameter[] parameter = { DbParameters.CreateDbParameter("@ticketid",keyValue) };
+
+            IRepository<TicketPrintEntity> resitory = new RepositoryFactory<TicketPrintEntity>().BaseRepository();
+            return resitory.FindList(sql.ToString(), parameter);
+        }
     }
 }

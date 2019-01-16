@@ -37,26 +37,7 @@ namespace HuRongClub.Application.Entity.FinanceManage
         /// </summary>
         /// <returns></returns>
         public string khkhyhzh { get; set; }
-        /// <summary>
-        /// vdef1
-        /// </summary>
-        /// <returns></returns>
-        public string vdef1 { get; set; }
-        /// <summary>
-        /// vdef2
-        /// </summary>
-        /// <returns></returns>
-        public string vdef2 { get; set; }
-        /// <summary>
-        /// vdef3
-        /// </summary>
-        /// <returns></returns>
-        public string vdef3 { get; set; }
-        /// <summary>
-        /// vdef4
-        /// </summary>
-        /// <returns></returns>
-        public string vdef4 { get; set; }
+        
         #endregion
 
         #region 扩展操作

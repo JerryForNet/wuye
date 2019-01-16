@@ -168,6 +168,7 @@
     <Compile Include="TenementManage\ViewModel\OtherincomeitemListEntity.cs" />
     <Compile Include="TenementManage\ViewModel\OutInModel.cs" />
     <Compile Include="TenementManage\ViewModel\RentcontractTree.cs" />
+    <Compile Include="TenementManage\ViewModel\TicketPrintEntity.cs" />
     <Compile Include="TenementManage\ViewModel\YearModel.cs" />
     <Compile Include="TenementManage\ViewModel\DevicePartModel.cs" />
     <Compile Include="TenementManage\ViewModel\FeeincomeAdjustEntity.cs" />

@@ -1,6 +1,8 @@
 ﻿using HuRongClub.Application.Busines.FinanceManage;
 using HuRongClub.Application.Code;
 using HuRongClub.Application.Entity.FinanceManage;
+using HuRongClub.Util;
+using System;
 using System.Web.Mvc;
 
 namespace HuRongClub.Application.Web.Areas.FinanceManage.Controllers
@@ -49,9 +51,12 @@ namespace HuRongClub.Application.Web.Areas.FinanceManage.Controllers
         /// <param name="keyword">查询参数</param>
         /// <returns>返回列表Json</returns>
         [HttpGet]
-        public ActionResult GetListJson(string keyword)
+        public ActionResult GetListJson(string q)
         {
-            var data = invoiceinfobll.GetList(keyword);
+            if (!String.IsNullOrEmpty(q)) {
+                q = Utils.UrlDecode(q);
+            }
+            var data = invoiceinfobll.GetList(q);
             return ToJsonResult(data);
         }
 
