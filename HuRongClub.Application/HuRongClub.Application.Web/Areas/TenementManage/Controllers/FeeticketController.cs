@@ -529,6 +529,19 @@ namespace HuRongClub.Application.Web.Areas.TenementManage.Controllers
             return strReturnValue;
         }
 
+        /// <summary>
+        /// 保存页面提交数据
+        /// </summary>
+        /// <param name="keyValue"></param>
+        /// <param name="queryJson"></param>
+        /// <returns></returns>
+        [HttpPost]
+        [AjaxOnly]
+        public ActionResult SavePrintData(string keyValue, string queryJson) {
+
+            return Success("操作成功。");
+        }
+
         #endregion 提交数据
     }
 }

@@ -124,14 +124,14 @@
                 { label: "规格型号", name: "sku", align: "left", width: 60, sortable: false, formatter: function () { return "";} },
                 { label: "单位", name: "unit", align: "left", sortable: false, width: 40, formatter: function () { return "元" } },
                 { label: "数量", name: "num", align: "left", sortable: false, width: 40, formatter: function () { return "1" } },
-                { label: "单价", name: "fmoney", align: "left", width: 60, sortable: false },
+                { label: "单价", name: "fmoney", align: "left", width: 50, sortable: false },
                 {
-                    label: "金额", name: "je", align: "left", width: 60, sortable: false, formatter: function (cellvalue, options, rowObject) {
+                    label: "金额", name: "je", align: "left", width: 50, sortable: false, formatter: function (cellvalue, options, rowObject) {
                         return '<input name="dj" type="text" class="editable center decimal disabled" isvalid="yes" checkexpession="Double" value="' + rowObject.fmoney + '" />';
                     }},
-                { label: "税率", name: "taxrate", align: "left", sortable: false, width: 60 },
+                { label: "税率", name: "taxrate", align: "left", sortable: false, width: 70 },
                 {
-                    label: "税额", name: "se", align: "left", sortable: false, width: 60, formatter: function (cellvalue, options, rowObject) {
+                    label: "税额", name: "se", align: "left", sortable: false, width: 50, formatter: function (cellvalue, options, rowObject) {
                         if (rowObject.taxrate != undefined) {
                             var rate = parseInt(rowObject.taxrate.replace('%', ''));
                             return toDecimal(rowObject.fmoney * (rate / 100));
@@ -150,8 +150,8 @@
 
                 //合计
                 $(this).footerData("set", {
-                    "fn": "大写金额 <span id='TotalCapital'>" + Arabia_to_Chinese(toDecimal(totalamount))+"</span>",
-                    "se": "小写金额 <span id='TotalFeeincome'>" + toDecimal(totalamount)+"</span>",
+                    "feedispname": "大写金额 <span id='TotalCapital'>" + Arabia_to_Chinese(toDecimal(totalamount)) + "</span>",
+                    "taxrate": "小写金额 <span id='TotalFeeincome'>" + toDecimal(totalamount) + "</span>",
                 });
                 $('table.ui-jqgrid-ftable td').prevUntil().css("border-right-color", "#fff");
                 $('table.ui-jqgrid-ftable td[aria-describedby="gridTable_subject"]').css("text-align", "right");
@@ -243,6 +243,14 @@
                     retdata = retdata + "返回编码：" + name;
                     var ip = elements[i].getElementsByTagName("returnmsg")[0].firstChild.nodeValue;
                     retdata = retdata + "返回信息：" + ip;
+                }
+
+                // 订单打印成功保存当前页面数据
+                var is_success = true;
+                if (is_success) {
+                    $.post("/TenementManage/Feeticket/SavePrintData", { queryJson: JSON.stringify(queryJson) }, function (res) {
+                        alert("打印成功");
+                    }, "json");
                 }
             }
         }, "json");
