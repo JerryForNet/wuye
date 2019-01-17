@@ -101,6 +101,8 @@
                 }
             })
         }
+
+        $("#ticket_id").val(keyValue);
     }
 
     $.fn.serializeJson = function () {
@@ -121,14 +123,15 @@
             autowidth: true,
             colModel: [
                 { label: "货物或应税劳务、服务名称", name: "feedispname", align: "left", sortable: false },
-                { label: "规格型号", name: "sku", align: "left", width: 60, sortable: false, formatter: function () { return "";} },
+                { label: "规格型号", name: "sku", align: "left", width: 60, sortable: false, formatter: function () { return ""; } },
                 { label: "单位", name: "unit", align: "left", sortable: false, width: 40, formatter: function () { return "元" } },
                 { label: "数量", name: "num", align: "left", sortable: false, width: 40, formatter: function () { return "1" } },
                 { label: "单价", name: "fmoney", align: "left", width: 50, sortable: false },
                 {
                     label: "金额", name: "je", align: "left", width: 50, sortable: false, formatter: function (cellvalue, options, rowObject) {
                         return '<input name="dj" type="text" class="editable center decimal disabled" isvalid="yes" checkexpession="Double" value="' + rowObject.fmoney + '" />';
-                    }},
+                    }
+                },
                 { label: "税率", name: "taxrate", align: "left", sortable: false, width: 70 },
                 {
                     label: "税额", name: "se", align: "left", sortable: false, width: 50, formatter: function (cellvalue, options, rowObject) {
@@ -186,6 +189,11 @@
         $("#TotalFeeincome").text(toDecimal(price));
     }
 
+    var fpregxml = '@ViewBag.fpregxml';
+    console.log(fpregxml);
+    var fpprintxml = '@ViewBag.fpprintxml';
+    console.log(fpprintxml);
+
     // 打印发票;
     function AcceptClick(type) {
         var keyValue = request('keyValue');
@@ -193,73 +201,102 @@
         var proArrays = new Array();
         var $grid = $("#gridTable");
 
+        //发票打印三个顺序方法必须全部客户端OCX接口交互，每个成功进入下一步，错误弹出错误代码及提示内容
 
-        $grid.find("tbody tr").each(function (i) {
-            if (i > 0) {
-                var item = {
-                    fphxz: '',
-                    spmc: $(this).find('td:eq(0)').text(),
-                    spsm: '',
-                    ggxh: '',
-                    dw: '元',
-                    spsl: 1,
-                    dj: $(this).find('td:eq(4)').text(),
-                    je: $(this).find('td:eq(5)').find('input').val(),
-                    kcje: '',
-                    sl: $(this).find('td:eq(6)').text(),
-                    se: $(this).find('td:eq(7)').text(),
-                    hsbz: '',
-                    spbm: '',
-                    zxbm: '',
-                    yhzcbs: '0',
-                    slbs: ''
-                };
+        //step1:获取发票打印注册码fpregxml并调用OCX注册码导入方法
+        var fpregxml = '@ViewBag.fpregxml';
+        console.log(fpregxml);
+        var fpregxmlres = ocxSend(fpregxml);
+        console.log(fpregxmlres);
 
-                proArrays.push(item);
+        //step2:根据step2调用返回xml结果判断，如果成功，获取发票开具fpkjxml内容并替换页面变量,调用OCX发票开具接口
+        var fpdyxml = getfpdyxml();
+        console.log(fpdyxml);
+        var fpdyxmlres = ocxSend(fpdyxml);
+        console.log(fpdyxmlres);
+
+        //step3 :根据step2调用返回xml结果判断，如果成功从返回结果解析fpdm、fphm，读取fpprintxml内容并替换变量，再调用OCX发票打印方法
+        var fpdm, fphm;
+        var fpprintxml = '@ViewBag.fpprintxml';
+        console.log(fpprintxml);
+        var fpprintxmlres = ocxSend(fpprintxml);
+        console.log(fpprintxmlres);
+
+        //step4 根据step3调用打印成功的话，调用保存数据接口SavePrintData，数据保存成功提示并关闭页面
+        var is_success = false;
+        if (is_success) {
+            $.post("/TenementManage/Feeticket/SavePrintData", { queryJson: JSON.stringify(queryJson), skus: JSON.stringify(proArrays) }, function (res) {
+                alert("打印成功");
+            }, "json");
+        }
+
+
+        function getfpdyxml() {
+            $grid.find("tbody tr").each(function (i) {
+                if (i > 0) {
+                    var item = {
+                        fphxz: '',
+                        spmc: $(this).find('td:eq(0)').text(),
+                        spsm: '',
+                        ggxh: '',
+                        dw: '元',
+                        spsl: 1,
+                        dj: $(this).find('td:eq(4)').text(),
+                        je: $(this).find('td:eq(5)').find('input').val(),
+                        kcje: '',
+                        sl: $(this).find('td:eq(6)').text(),
+                        se: $(this).find('td:eq(7)').text(),
+                        hsbz: '',
+                        spbm: '',
+                        zxbm: '',
+                        yhzcbs: '0',
+                        slbs: ''
+                    };
+
+                    proArrays.push(item);
+                }
+            });
+
+            $.ajax({
+                url:"/TenementManage/Feeticket/GetPrintXML",
+                data: { keyValue: keyValue, typecode: type, queryJson: JSON.stringify(queryJson), skus: JSON.stringify(proArrays) },
+                cache: false,
+                async:false,
+                success: function (res) {
+                    return res.data;
+                }
+            });
+        }
+
+        function ocxSend(sendXml) {
+            var mo = document.getElementById("ieOCX");
+            if (mo.OperateDiskX == undefined) {
+                mo = document.getElementById("chromeOCX");
             }
-        });
-
-        $.post("/TenementManage/Feeticket/GetPrintXML", { keyValue: keyValue, type: type, queryJson: JSON.stringify(queryJson), skus: JSON.stringify(proArrays)  }, function (res) {
-            if (res.type == 3) {
-                alert(res.message);
-            } else {
-                var mo = document.getElementById("ieOCX");
-                if (mo.OperateDiskX == undefined) {
-                    mo = document.getElementById("chromeOCX");
-                }
-                var retXml = "";
-                try {
-                    retXml = mo.OperateDiskX(decodeURI(res.resultdata));
-                } catch (e) {
-                    console.dir(e);
-                }
-
-                var xmldoc = loadXML(retXml);
-
-                var elements = xmldoc.getElementsByTagName("output");
-                var retdata = "";
-                for (var i = 0; i < elements.length; i++) {
-                    var name = elements[i].getElementsByTagName("returncode")[0].firstChild.nodeValue;
-                    retdata = retdata + "返回编码：" + name;
-                    var ip = elements[i].getElementsByTagName("returnmsg")[0].firstChild.nodeValue;
-                    retdata = retdata + "返回信息：" + ip;
-                }
-
-                // 订单打印成功保存当前页面数据
-                var is_success = true;
-                if (is_success) {
-                    $.post("/TenementManage/Feeticket/SavePrintData", { queryJson: JSON.stringify(queryJson) }, function (res) {
-                        alert("打印成功");
-                    }, "json");
-                }
+            var retXml = "";
+            try {
+                retXml = mo.OperateDiskX(decodeURI(sendXml));
+            } catch (e) {
+                console.dir(e);
             }
-        }, "json");
+
+            var xmldoc = loadXML(retXml);
+
+            var elements = xmldoc.getElementsByTagName("output");
+            var retdata = "";
+            for (var i = 0; i < elements.length; i++) {
+                var name = elements[i].getElementsByTagName("returncode")[0].firstChild.nodeValue;
+                retdata = retdata + "返回编码：" + name;
+                var ip = elements[i].getElementsByTagName("returnmsg")[0].firstChild.nodeValue;
+                retdata = retdata + "返回信息：" + ip;
+            }
+        }
     }
 </script>
 <div id="divTops">
     <div class="top" id="top">
-        <input type="button" class="Noprint" value="打印普票" onclick="javascript: AcceptClick(0);" />&nbsp;&nbsp;
-        <input type="button" class="Noprint" value="打印专票" onclick='javascript: AcceptClick(1);' />
+        <input type="button" class="Noprint" value="打印普票" onclick="javascript: AcceptClick('007');" />&nbsp;&nbsp;
+        <input type="button" class="Noprint" value="打印专票" onclick='javascript: AcceptClick("004");' />
         <input type="button" class="Noprint" value="关    闭" onclick='window.close();' />
     </div>
 </div>
@@ -271,6 +308,11 @@
             <input type="hidden" name="is_income" id="is_income">
             <input type="hidden" name="is_otherIncome" id="is_otherIncome">
             <input type="hidden" name="is_group" value="1">
+            <input type="hidden" id="ticket_id" name="ticket_id" value="">
+            <input type="hidden" id="fphm" name="fphm" value="">
+            <input type="hidden" id="fpkjxml" name="fpkjxml" value="@ViewBag.fpkjxml" />
+            <input type="hidden" id="fpprintxml" name="fpprintxml" value="@ViewBag.fpprintxml" />
+            <input type="hidden" id="fpregxml" name="fpregxml" value="@ViewBag.fpregxml" />
             <div class="printArea fapiao">
                 <table class="form" style="width: 100%; margin-bottom: 5px;font-size:12px; ">
                     <tr>

@@ -62,6 +62,7 @@
     <Compile Include="FinanceManage\FeenoticeIService.cs" />
     <Compile Include="FinanceManage\InnerbillIService.cs" />
     <Compile Include="FinanceManage\InvoiceInfoIService.cs" />
+    <Compile Include="FinanceManage\PtInvoiceIService.cs" />
     <Compile Include="IAccountService.cs" />
     <Compile Include="OaManage\NoticeIService.cs" />
     <Compile Include="OaManage\WeekplanIService.cs" />

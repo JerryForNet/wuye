@@ -60,6 +60,7 @@
     <Compile Include="FinanceManage\FeeCloseService.cs" />
     <Compile Include="FinanceManage\FeenoticeService.cs" />
     <Compile Include="FinanceManage\InvoiceInfoService.cs" />
+    <Compile Include="FinanceManage\PtInvoiceService.cs" />
     <Compile Include="PersonnelManage\PaydetailService.cs" />
     <Compile Include="RepostryManage\LblistService.cs" />
     <Compile Include="SysManage\Accounts_UsersService.cs" />
