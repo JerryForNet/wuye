@@ -216,20 +216,28 @@
         console.log(fpdyxmlres);
 
         //step3 :根据step2调用返回xml结果判断，如果成功从返回结果解析fpdm、fphm，读取fpprintxml内容并替换变量，再调用OCX发票打印方法
-        var fpdm, fphm;
-        var fpprintxml = '@ViewBag.fpprintxml';
-        console.log(fpprintxml);
-        var fpprintxmlres = ocxSend(fpprintxml);
-        console.log(fpprintxmlres);
+        $.ajax({
+            url:"/TenementManage/Feeticket/GetPrintDoXml",
+            data:{typecode:'',printXml:fpdyxmlres},
+            async:false,
+            success: function (res) {
+                if(res.type != 3){
+                    console.log(fpprintxml);
+                    var fpprintxmlres = ocxSend(fpprintxml);
+                    console.log(fpprintxmlres);
 
-        //step4 根据step3调用打印成功的话，调用保存数据接口SavePrintData，数据保存成功提示并关闭页面
-        var is_success = false;
-        if (is_success) {
-            $.post("/TenementManage/Feeticket/SavePrintData", { queryJson: JSON.stringify(queryJson), skus: JSON.stringify(proArrays) }, function (res) {
-                alert("打印成功");
-            }, "json");
-        }
-
+                    //step4 根据step3调用打印成功的话，调用保存数据接口SavePrintData，数据保存成功提示并关闭页面
+                    var is_success = false;
+                    if (is_success) {
+                        $.post("/TenementManage/Feeticket/SavePrintData", { queryJson: JSON.stringify(queryJson), skus: JSON.stringify(proArrays) }, function (res) {
+                            alert("打印成功");
+                        }, "json");
+                    }
+                }else{
+                    alert("打印失败");
+                }
+            }
+        });
 
         function getfpdyxml() {
             $grid.find("tbody tr").each(function (i) {

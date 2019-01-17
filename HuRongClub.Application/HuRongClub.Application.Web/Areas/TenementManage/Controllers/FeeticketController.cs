@@ -649,17 +649,23 @@ namespace HuRongClub.Application.Web.Areas.TenementManage.Controllers
 
             log4netHelper.Info("发票开具接口参数生成|" + strXML);
 
-           // strReturnValue = sendXMLRequest(strXML);
+            return Success("操作成功！", strXML);
+        }
 
-            log4netHelper.Info("发票开具接口调用返回|" + strReturnValue);
-
-            /*
+        /// <summary>
+        /// 发送xml请求，获取返回信息
+        /// </summary>
+        /// <param name="printXml"></param>
+        /// <param name="typecode"></param>
+        /// <returns></returns>
+        public string GetPrintDoXml(string printXml, string typecode){
+            
             string fpdm = String.Empty;
             string fphm = String.Empty;
-            if (strReturnValue.IndexOf("returnmsg") != -1 && strReturnValue.IndexOf("成功") != -1)
+            if (printXml.IndexOf("returnmsg") != -1 && printXml.IndexOf("成功") != -1)
             {
-                fpdm = XmlHelper.XmlNodeFind(@"business/body/output/fpdm", strReturnValue);
-                fphm = XmlHelper.XmlAnalysis(@"business/body/output/fphm", strReturnValue);
+                fpdm = XmlHelper.XmlNodeFind(@"business/body/output/fpdm", printXml);
+                fphm = XmlHelper.XmlAnalysis(@"business/body/output/fphm", printXml);
 
                 // 调用打印
                 StringBuilder printXML = new StringBuilder();
@@ -683,17 +689,12 @@ namespace HuRongClub.Application.Web.Areas.TenementManage.Controllers
 
                 Logger.Info("发票打印接口参数|" + printXML);
 
-               // strReturnValue = sendXMLRequest(printXML);
-
                 return Success("操作成功！", printXML);
             }
             else
             {
-                return Error(strReturnValue);
+                return Error(printXml);
             }
-       */
-            return Success("操作成功！", strXML);
-             
         }
 
         /// <summary>
