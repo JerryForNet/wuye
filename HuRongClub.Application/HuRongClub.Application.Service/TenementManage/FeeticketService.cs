@@ -468,10 +468,11 @@ namespace HuRongClub.Application.Service.TenementManage
                                 INNER JOIN wy_feeincome a ON a.income_id = c.income_id
                         WHERE   r.ticket_id = @ticketid
 
-                        SELECT  bb.* ,
+                        SELECT cc.*,ROUND(cc.fmoney*cc.sl/(1+cc.sl),2) AS se FROM ( SELECT  bb.* ,
                                 ff.feedispname ,
                                 ff.taxrate ,
-                                ff.taxtype
+                                left(ff.taxtype,19) as taxtype,
+								CONVERT(FLOAT,REPLACE(ff.taxrate,'%',''))/100 AS sl
                         FROM    ( SELECT    feeitem_id ,
                                             SUM(check_money) AS fmoney ,
                                             STUFF(( SELECT  ',' + fperiod
@@ -483,7 +484,7 @@ namespace HuRongClub.Application.Service.TenementManage
                                     FROM      #tmp
                                     GROUP BY  feeitem_id
                                 ) bb
-                                LEFT JOIN wy_feeitem ff ON ff.feeitem_id = bb.feeitem_id");
+                                LEFT JOIN wy_feeitem ff ON ff.feeitem_id = bb.feeitem_id ) cc");
             DbParameter[] parameter = { DbParameters.CreateDbParameter("@ticketid",keyValue) };
 
             IRepository<TicketPrintEntity> resitory = new RepositoryFactory<TicketPrintEntity>().BaseRepository();

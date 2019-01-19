@@ -5,18 +5,68 @@
 <script src="/Content/scripts/plugins/Amount/ArabiaToChinese.js"></script>
 <script src="/Content/scripts/plugins/Lodop/LodopFuncs.js"></script>
 <style>
-    body { width: 100%; background-color: #ccc; margin: 0px auto; padding: 0px; }
-    .ui-jqgrid .form-control { width: 100%; }
-    .ui-jqgrid .ui-jqgrid-view input { font-size: 12px; }
-    .brs { border: 0px; border-bottom: solid 1px #000000; }
-    .top { width: 100%; margin: 0 auto; height: 35px; line-height: 30px; position: fixed; _position: absolute; z-index: 9999; left: 0; top: 0; text-align: center; background: #808080; }
-    .Noprint { width: 120px; }
-    .show-info { border: 1px solid #ccc; margin: 0 10px; }
-    .show-info .info-title { writing-mode: horizontal-tb; padding: 0 10px; width: 10px; border-right: 1px solid #ccc; }
-    .show-info input { margin: 1px 5px; border: 1px solid #ccc; }
+    body {
+        width: 100%;
+        background-color: #ccc;
+        margin: 0px auto;
+        padding: 0px;
+    }
 
-    .ui-autocomplete { width:300px;}
-    .ui-autocomplete li { width:300px;}
+    .ui-jqgrid .form-control {
+        width: 100%;
+    }
+
+    .ui-jqgrid .ui-jqgrid-view input {
+        font-size: 12px;
+    }
+
+    .brs {
+        border: 0px;
+        border-bottom: solid 1px #000000;
+    }
+
+    .top {
+        width: 100%;
+        margin: 0 auto;
+        height: 35px;
+        line-height: 30px;
+        position: fixed;
+        _position: absolute;
+        z-index: 9999;
+        left: 0;
+        top: 0;
+        text-align: center;
+        background: #808080;
+    }
+
+    .Noprint {
+        width: 120px;
+    }
+
+    .show-info {
+        border: 1px solid #ccc;
+        margin: 0 10px;
+    }
+
+        .show-info .info-title {
+            writing-mode: horizontal-tb;
+            padding: 0 10px;
+            width: 10px;
+            border-right: 1px solid #ccc;
+        }
+
+        .show-info input {
+            margin: 1px 5px;
+            border: 1px solid #ccc;
+        }
+
+    .ui-autocomplete {
+        width: 300px;
+    }
+
+        .ui-autocomplete li {
+            width: 300px;
+        }
 </style>
 <!--jqgrid表格组件start-->
 <link href="/Content/scripts/plugins/jqgrid/jqgrid.css" rel="stylesheet" />
@@ -25,8 +75,8 @@
 
 <!--jquery autocomplete-->
 @*<script src="/Content/scripts/plugins/autocomplate/browser.js"></script>
-<link href="~/Content/scripts/plugins/autocomplate/autocomplete.css" rel="stylesheet" />
-<script src="/Content/scripts/plugins/autocomplate/jquery.autocomplete.js"></script>*@
+    <link href="~/Content/scripts/plugins/autocomplate/autocomplete.css" rel="stylesheet" />
+    <script src="/Content/scripts/plugins/autocomplate/jquery.autocomplete.js"></script>*@
 
 <link href="~/Content/scripts/plugins/Autocomplete/styles.css" rel="stylesheet" />
 <script src="~/Content/scripts/plugins/Autocomplete/jquery.autocomplete.js"></script>
@@ -79,7 +129,6 @@
         });
     });
 </script>
-
 
 <!--表格组件end-->
 <script src="/Content/scripts/plugins/Amount/ArabiaToChinese.js"></script>
@@ -166,7 +215,6 @@
             $(this).select();
         });
 
-
     }
 
     // 价格文本框换算
@@ -189,41 +237,72 @@
         $("#TotalFeeincome").text(toDecimal(price));
     }
 
-    var fpregxml = '@ViewBag.fpregxml';
-    console.log(fpregxml);
-    var fpprintxml = '@ViewBag.fpprintxml';
-    console.log(fpprintxml);
-
     // 打印发票;
     function AcceptClick(type) {
         var keyValue = request('keyValue');
         var queryJson = $("#form1").serializeJson();
         var proArrays = new Array();
         var $grid = $("#gridTable");
+        // 设置ajax 全局请求类型为同步
+        $.ajaxSettings.async = false;
 
         //发票打印三个顺序方法必须全部客户端OCX接口交互，每个成功进入下一步，错误弹出错误代码及提示内容
 
         //step1:获取发票打印注册码fpregxml并调用OCX注册码导入方法
-        var fpregxml = '@ViewBag.fpregxml';
-        console.log(fpregxml);
+        var fpregxml = $("#fpregxml").val();
         var fpregxmlres = ocxSend(fpregxml);
         console.log(fpregxmlres);
 
-        //step2:根据step2调用返回xml结果判断，如果成功，获取发票开具fpkjxml内容并替换页面变量,调用OCX发票开具接口
-        var fpdyxml = getfpdyxml();
-        console.log(fpdyxml);
-        var fpdyxmlres = ocxSend(fpdyxml);
-        console.log(fpdyxmlres);
+        if (fpregxmlres[0] != "00000000") {
+            alert('发票注册导入失败！|' + fpregxmlres[0] + '|' + fpregxmlres[1]);
+            return;
+        }
 
+        //step2:根据step2调用返回xml结果判断，如果成功，获取发票开具fpkjxml内容并替换页面变量,调用OCX发票开具接口
+        // var fpdyxmlres = getfpdyxml();
+        var fpdyxmlres = "";
+        $.post("/TenementManage/Feeticket/GetFpkjDoXML", { keyValue: keyValue, typecode: type, queryJson: JSON.stringify(queryJson) }, function (res) {
+            fpdyxmlres = ocxSend(res.resultdata);
+            // 如果字符串含有'/' 尝试使用 dom 对象
+            // fpdyxmlres = ocxSend(loadXML(res.resultdata));
+            console.log(fpdyxmlres);
+        }, "json")
+
+        console.log(fpdyxmlres);
+        if (fpdyxmlres != "" && fpdyxmlres[0] != "00000000") {
+            alert('发票开具失败！|' + fpdyxmlres[0] + '|' + fpdyxmlres[1]);
+            return;
+        }
+
+        //解析发票开具成功后产生的发票代码及发票号码 
+        var xmlfp = loadXML(fpdyxmlres[2]);
+        var elements = xmlfp.getElementsByTagName("output");
+        var fpdm = elements[0].getElementsByTagName("fpdm")[0].firstChild.nodeValue;
+        var fphm = elements[0].getElementsByTagName("fphm")[0].firstChild.nodeValue;
+        var hjje = elements[0].getElementsByTagName("hjje")[0].firstChild.nodeValue;   //本次开票合计金额
+
+        $("#fpdm").val(fpdm);
+        $("#fphm").val(fphm);
+        $("#fplxdm").val(type);
+        $("#fphjje").val(hjje);
+
+        $.post("/TenementManage/Feeticket/SavePrintData", { queryJson: JSON.stringify(queryJson), skus: JSON.stringify(proArrays) }, function (res) {
+            alert(res.message);
+        }, "json");
+
+        DoPrint(type, fpdm, fphm);
+
+        /*
         //step3 :根据step2调用返回xml结果判断，如果成功从返回结果解析fpdm、fphm，读取fpprintxml内容并替换变量，再调用OCX发票打印方法
         $.ajax({
-            url:"/TenementManage/Feeticket/GetPrintDoXml",
-            data:{typecode:'',printXml:fpdyxmlres},
-            async:false,
+            url: "/TenementManage/Feeticket/GetPrintDoXml",
+            data: { typecode: type, printXml: fpdyxmlres },
+            async: false,
+            type: 'GET',
             success: function (res) {
                 if(res.type != 3){
-                    console.log(fpprintxml);
-                    var fpprintxmlres = ocxSend(fpprintxml);
+                    console.log(res.data);
+                    var fpprintxmlres = ocxSend(res.data);
                     console.log(fpprintxmlres);
 
                     //step4 根据step3调用打印成功的话，调用保存数据接口SavePrintData，数据保存成功提示并关闭页面
@@ -238,67 +317,74 @@
                 }
             }
         });
+        */
 
-        function getfpdyxml() {
-            $grid.find("tbody tr").each(function (i) {
-                if (i > 0) {
-                    var item = {
-                        fphxz: '',
-                        spmc: $(this).find('td:eq(0)').text(),
-                        spsm: '',
-                        ggxh: '',
-                        dw: '元',
-                        spsl: 1,
-                        dj: $(this).find('td:eq(4)').text(),
-                        je: $(this).find('td:eq(5)').find('input').val(),
-                        kcje: '',
-                        sl: $(this).find('td:eq(6)').text(),
-                        se: $(this).find('td:eq(7)').text(),
-                        hsbz: '',
-                        spbm: '',
-                        zxbm: '',
-                        yhzcbs: '0',
-                        slbs: ''
-                    };
+        //纯打印,以备后单独用
+        function DoPrint(type, fpdm, fphm) {
+            var fpprintxml = getfpprintxml(type, fpdm, fphm);
+            var fpprintxmlres = ocxSend(fpprintxml);
 
-                    proArrays.push(item);
-                }
-            });
+        }
 
+        function getfpprintxml(type, fpdm, fphm) {
             $.ajax({
-                url:"/TenementManage/Feeticket/GetPrintXML",
-                data: { keyValue: keyValue, typecode: type, queryJson: JSON.stringify(queryJson), skus: JSON.stringify(proArrays) },
+                url: "/TenementManage/Feeticket/GetPrintDoXml",
+                data: { typecode: type, fpdm: fpdm, fphm: fphm },
                 cache: false,
-                async:false,
+                async: false,
+                type: 'POST',
+                datatype: 'json',
                 success: function (res) {
-                    return res.data;
+                    return res;
                 }
             });
         }
 
+        function getfpdyxml() {
+            var res = "";
+            $.ajax({
+                url: "/TenementManage/Feeticket/GetFpkjDoXML",
+                data: { keyValue: keyValue, typecode: type, queryJson: JSON.stringify(queryJson) },
+                cache: false,
+                async: false,
+                type: 'POST',
+                datatype: 'json',
+                success: function (resdata) {
+                    res = resdata.resultdata;
+                }
+            });
+            return res;
+        }
+
         function ocxSend(sendXml) {
+            var arrres = new Array(3);
+
             var mo = document.getElementById("ieOCX");
-            if (mo.OperateDiskX == undefined) {
-                mo = document.getElementById("chromeOCX");
-            }
+
             var retXml = "";
             try {
                 retXml = mo.OperateDiskX(decodeURI(sendXml));
             } catch (e) {
-                console.dir(e);
+                //console.dir(e);
+                alert(e.message);
             }
+            console.log(retXml);
 
             var xmldoc = loadXML(retXml);
 
             var elements = xmldoc.getElementsByTagName("output");
-            var retdata = "";
+            arrres[2] = retXml;
             for (var i = 0; i < elements.length; i++) {
-                var name = elements[i].getElementsByTagName("returncode")[0].firstChild.nodeValue;
-                retdata = retdata + "返回编码：" + name;
-                var ip = elements[i].getElementsByTagName("returnmsg")[0].firstChild.nodeValue;
-                retdata = retdata + "返回信息：" + ip;
+                var code = elements[i].getElementsByTagName("returncode")[0].firstChild.nodeValue;
+                arrres[0] = code;
+                var msg = elements[i].getElementsByTagName("returnmsg")[0].firstChild.nodeValue;
+                arrres[1] = msg;
             }
+
+            return arrres;
         }
+
+        $.ajaxSettings.async = true; // jquery ajax 全局设置
     }
 </script>
 <div id="divTops">
@@ -310,6 +396,7 @@
 </div>
 <div id="divP" style="margin:0 auto; width:900px; background-color:#ffffff; height:700px;margin-top: 35px;">
     <div id="divPrint" class="billss" style="margin:0 auto;width:96%;">
+
         <form id="">
             <input type="hidden" name="incomeid" id="incomeid" />
             <input type="hidden" name="receive_id" id="receive_id">
@@ -317,17 +404,15 @@
             <input type="hidden" name="is_otherIncome" id="is_otherIncome">
             <input type="hidden" name="is_group" value="1">
             <input type="hidden" id="ticket_id" name="ticket_id" value="">
+            <input type="hidden" id="fpdm" name="fpdm" value="">
             <input type="hidden" id="fphm" name="fphm" value="">
-            <input type="hidden" id="fpkjxml" name="fpkjxml" value="@ViewBag.fpkjxml" />
-            <input type="hidden" id="fpprintxml" name="fpprintxml" value="@ViewBag.fpprintxml" />
-            <input type="hidden" id="fpregxml" name="fpregxml" value="@ViewBag.fpregxml" />
+            <input type="hidden" id="fplxdm" name="fplxdm" value="">
+            <input type="hidden" id="fphjje" name="fphjje" value="">
             <div class="printArea fapiao">
                 <table class="form" style="width: 100%; margin-bottom: 5px;font-size:12px; ">
                     <tr>
-                        <th class="formTitle" style="width: 30px; text-align:left;">客户</th>
-                        <td class="formValue">
-                            <input id="propertyname" type="text" class="editable center decimal disabled brs" />
-                        </td>
+                        <th class="formTitle" style="width: 30px; text-align:left;"></th>
+                        <td class="formValue"></td>
                         <td style="width:220px">&nbsp;</td>
                         <td class="formValue" style="text-align:right;">
                             <table class="form">
@@ -388,19 +473,19 @@
                             <table style="width:450px;">
                                 <tr>
                                     <td style="width:100px;">名　　　　称：</td>
-                                    <td><input name="xhdwmc" class="auto_name" type="text" class="editable" /></td>
+                                    <td><input name="xhdwmc" type="text" class="editable" readonly value="@ViewBag.xhdwmc" /></td>
                                 </tr>
                                 <tr>
                                     <td>纳税人识别号：</td>
-                                    <td><input name="xhdwsbh" type="text" class="editable" /></td>
+                                    <td><input name="xhdwsbh" type="text" class="editable" readonly value="@ViewBag.xhdwsbh" /></td>
                                 </tr>
                                 <tr>
                                     <td>地址　、电话：</td>
-                                    <td><input name="xhdwdzdh" type="text" class="editable" /></td>
+                                    <td><input name="xhdwdzdh" type="text" class="editable" readonly value="@ViewBag.xhdwdzdh" /></td>
                                 </tr>
                                 <tr>
                                     <td>开户行及账号：</td>
-                                    <td><input name="xhdwyhzh" type="text" class="editable" /></td>
+                                    <td><input name="xhdwyhzh" type="text" class="editable" readonly value="@ViewBag.xhdwyhzh" /></td>
                                 </tr>
                             </table>
                         </td>
@@ -419,7 +504,7 @@
                         <th class="formTitle" style="width: 50px; text-align:left;">开 票 人：</th>
                         <td class="formValue"><input name="kpr" type="text" /></td>
                         <th class="formTitle" style="width: 80px; text-align:left;">销售方（章）：</th>
-                        <td class="formValue"><input name="xiaoshoufnag" type="text" /></td>
+                        <td class="formValue"></td>
                     </tr>
                 </table>
             </div>
@@ -462,3 +547,5 @@
     <object id="ieOCX" name="ieOCX" height="0" width="0" classid="CLSID:7E777ADB-F89A-49A3-BCC9-76B353AD0775"></object>
     <object id="chromeOCX" height="0" width="0" type="application/x-itst-activex" clsid="{7E777ADB-F89A-49A3-BCC9-76B353AD0775}"></object>
 </div>
+
+<input type="hidden" id="fpregxml" name="fpregxml" value="@ViewBag.fpregxml" />

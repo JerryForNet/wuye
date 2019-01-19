@@ -22,5 +22,10 @@ namespace HuRongClub.Application.Entity.TenementManage.ViewModel
         public string taxrate { get; set; }
 
         public string taxtype { get; set; }
+
+        public decimal sl { get; set; }
+
+        public decimal se { get; set; }
+
     }
 }
