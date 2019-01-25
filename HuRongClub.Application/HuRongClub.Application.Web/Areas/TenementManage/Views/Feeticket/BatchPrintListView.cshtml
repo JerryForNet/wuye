@@ -111,6 +111,7 @@ Layout = "~/Views/Shared/_Form.cshtml";
             printJson = eval(printJson);
         }
 
+        console.log(printJson);
         for (var item in printJson) {
             if (printJson[item].tmpticketid == keyValue) {
                 itemData = printJson[item].feeitems;
