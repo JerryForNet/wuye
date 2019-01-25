@@ -186,9 +186,20 @@
 
               console.log(rowData);
 
+              dialogOpen({
+                  id: 'Form',
+                  title: '打印明细',
+                  url: '/TenementManage/Feeticket/BatchPrintListView?tmpticketid=' + rowData.tmpticketid,
+                  width: '400px',
+                  height: '400px',
+                  callBack: function (iframeId) {
+                      top.frames[iframeId].AcceptClick();
+                  }
+              });
           }
       });
     }
+
 
     // 打印发票;
     function PrintClick(type) {
