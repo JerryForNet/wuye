@@ -366,9 +366,9 @@ Layout = "~/Views/Shared/_Index.cshtml";
         }
 
         var id = ticketId.split(',')[0];
-
-        window.open('/TenementManage/Feeticket/BatchPrintFrom?keyValue=' + ticketId);
-       
+        var url = '/TenementManage/Feeticket/BatchPrintFrom?keyValue=' + ticketId;
+        //window.open('/TenementManage/Feeticket/BatchPrintFrom?keyValue=' + ticketId);
+        parent.tablist.newTab({ moduleIdCookie: true, id: id, title: "打印明细", closed: true, icon: "fa fa-sitemap", url: url });
     }
 </script>
 <div class="titlePanel">
