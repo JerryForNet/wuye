@@ -1,7 +1,6 @@
 ﻿using HuRongClub.Application.Entity.FinanceManage;
 using HuRongClub.Application.IService.FinanceManage;
 using HuRongClub.Data.Repository;
-using HuRongClub.Util.WebControl;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -10,30 +9,19 @@ namespace HuRongClub.Application.Service.FinanceManage
     /// <summary>
     /// 版 本：HurongClub.Framework V1.0.1
     /// 创 建：超级管理员
-    /// 日 期：2019-01-17 09:31
-    /// 描 述：PtInvoice
+    /// 日 期：2019-01-20 20:54
+    /// 描 述：TicketUser
     /// </summary>
-    public class PtInvoiceService : RepositoryFactory<PtInvoiceEntity>, PtInvoiceIService
+    public class TicketUserService : RepositoryFactory<TicketUserEntity>, TicketUserIService
     {
         #region 获取数据
 
         /// <summary>
         /// 获取列表
         /// </summary>
-        /// <param name="pagination">分页</param>
-        /// <param name="queryJson">查询参数</param>
-        /// <returns>返回分页列表</returns>
-        public IEnumerable<PtInvoiceEntity> GetPageList(Pagination pagination, string queryJson)
-        {
-            return this.BaseRepository().FindList(pagination);
-        }
-
-        /// <summary>
-        /// 获取列表
-        /// </summary>
         /// <param name="queryJson">查询参数</param>
         /// <returns>返回列表</returns>
-        public IEnumerable<PtInvoiceEntity> GetList(string queryJson)
+        public IEnumerable<TicketUserEntity> GetList(string queryJson)
         {
             return this.BaseRepository().IQueryable().ToList();
         }
@@ -43,7 +31,7 @@ namespace HuRongClub.Application.Service.FinanceManage
         /// </summary>
         /// <param name="keyValue">主键值</param>
         /// <returns></returns>
-        public PtInvoiceEntity GetEntity(string keyValue)
+        public TicketUserEntity GetEntity(string keyValue)
         {
             return this.BaseRepository().FindEntity(keyValue);
         }
@@ -67,7 +55,7 @@ namespace HuRongClub.Application.Service.FinanceManage
         /// <param name="keyValue">主键值</param>
         /// <param name="entity">实体对象</param>
         /// <returns></returns>
-        public void SaveForm(string keyValue, PtInvoiceEntity entity)
+        public void SaveForm(string keyValue, TicketUserEntity entity)
         {
             if (!string.IsNullOrEmpty(keyValue))
             {

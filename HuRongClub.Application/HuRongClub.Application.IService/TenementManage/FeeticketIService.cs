@@ -3,6 +3,8 @@ using HuRongClub.Application.Entity.TenementManage;
 using HuRongClub.Application.Entity.TenementManage.ViewModel;
 using HuRongClub.Util.WebControl;
 using System;
+using System.Data;
+
 using System.Collections.Generic;
 
 namespace HuRongClub.Application.IService.TenementManage
@@ -100,5 +102,11 @@ namespace HuRongClub.Application.IService.TenementManage
         #endregion 提交数据
 
         IEnumerable<TicketPrintEntity> GetPrintListJson(string keyValue, string queryJson);
+
+        string GetMaxID();
+
+        DataTable GetBatchPrint(string tickets);
+        
+
     }
 }

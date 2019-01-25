@@ -74,13 +74,8 @@
 <script src="/Content/scripts/plugins/jqgrid/jqgrid.min.js"></script>
 
 <!--jquery autocomplete-->
-@*<script src="/Content/scripts/plugins/autocomplate/browser.js"></script>
-    <link href="~/Content/scripts/plugins/autocomplate/autocomplete.css" rel="stylesheet" />
-    <script src="/Content/scripts/plugins/autocomplate/jquery.autocomplete.js"></script>*@
-
 <link href="~/Content/scripts/plugins/Autocomplete/styles.css" rel="stylesheet" />
 <script src="~/Content/scripts/plugins/Autocomplete/jquery.autocomplete.js"></script>
-
 <style>
      .ui-autocomplete {
          max-height: 100px;
@@ -95,7 +90,6 @@
          height: 100px;
      }
 </style>
-
 <script>
     $(function () {
         $('.auto_buy').autocomplete({
@@ -111,7 +105,8 @@
                 $("#ghdwsbh").val(data.khsh);
                 $("#ghdwdzdh").val(data.khdz);
                 $("#ghdwyhzh").val(data.khkhyhzh);
-
+                $("#ghkhdm").val(data.khdm);
+                $("#sel_ghdwmc").val(data.khmc);
                 $(".autocomplete-suggestions").hide();
             },
             transformResult: function (response, currentValue) {
@@ -125,8 +120,7 @@
             }
         });
 
-        $(document).on("click", ".autocomplete-suggestion", function () {
-        });
+        $(document).on("click", ".autocomplete-suggestion", function () { });
     });
 </script>
 
@@ -136,19 +130,20 @@
     var keyValue = request('keyValue');
     $(function () {
         initControl();
-        getGrid();
+        //getGrid();
     });
     //初始化控件
     function initControl() {
         //获取表单
         if (!!keyValue) {
-            $.SetForm({
-                url: "/TenementManage/Feeticket/GetCostByTicketId",
-                param: { keyValue: keyValue },
-                success: function (data) {
-                    $("#form1").SetWebControls(data);
+            $.get("/TenementManage/Feeticket/GetPrintListJson", { keyValue: keyValue }, function (data) {
+                console.log(data);
+                if (data.type == 1) {
+                    getGrid(data.resultdata);
+                } else {
+                    alert(data.message);
                 }
-            })
+            }, "json");
         }
 
         $("#ticket_id").val(keyValue);
@@ -162,13 +157,14 @@
         return serializeObj;
     };
 
-    function getGrid() {
+    function getGrid(data) {
         var $grid = $("#gridTable");
         $grid.jqGrid({
             unwritten: false,
-            url: "/TenementManage/Feeticket/GetPrintListJson?keyValue=" + keyValue,
-            postData: { queryJson: JSON.stringify($("#form1").serializeJson()) },
-            datatype: "json",
+            //url: "/TenementManage/Feeticket/GetOherIncomeList?keyValue=" + keyValue,
+            //postData: { queryJson: JSON.stringify($("#form1").serializeJson()) },
+            datatype: "local",
+            data: data,
             autowidth: true,
             colModel: [
                 { label: "货物或应税劳务、服务名称", name: "feedispname", align: "left", sortable: false },
@@ -176,20 +172,9 @@
                 { label: "单位", name: "unit", align: "left", sortable: false, width: 40, formatter: function () { return "元" } },
                 { label: "数量", name: "num", align: "left", sortable: false, width: 40, formatter: function () { return "1" } },
                 { label: "单价", name: "fmoney", align: "left", width: 50, sortable: false },
-                {
-                    label: "金额", name: "je", align: "left", width: 50, sortable: false, formatter: function (cellvalue, options, rowObject) {
-                        return '<input name="dj" type="text" class="editable center decimal disabled" isvalid="yes" checkexpession="Double" value="' + rowObject.fmoney + '" />';
-                    }
-                },
+                { label: "金额", name: "fmoney", align: "left", width: 50, sortable: false },
                 { label: "税率", name: "taxrate", align: "left", sortable: false, width: 70 },
-                {
-                    label: "税额", name: "se", align: "left", sortable: false, width: 50, formatter: function (cellvalue, options, rowObject) {
-                        if (rowObject.taxrate != undefined) {
-                            var rate = parseInt(rowObject.taxrate.replace('%', ''));
-                            return toDecimal(rowObject.fmoney * (rate / 100));
-                        }
-                    }
-                }
+                { label: "税额", name: "se", align: "left", sortable: false, width: 50 }
             ],
             viewrecords: true,
             rowNum: 1000,
@@ -198,7 +183,7 @@
             gridComplete: function () {
                 var totalamount = $(this).getCol("fmoney", false, "sum").toFixed(2);
                 var totalse = $(this).getCol("se", false, "sum").toFixed(2);
-                totalamount = Number(totalamount) + Number(totalse);
+                totalamount = Number(totalamount);
 
                 //合计
                 $(this).footerData("set", {
@@ -209,11 +194,7 @@
                 $('table.ui-jqgrid-ftable td[aria-describedby="gridTable_subject"]').css("text-align", "right");
             }
         });
-        $grid.find('.decimal').attr('onfocus', 'IsMoney(this.id)');
-        //价格文本框事件
-        $grid.find('.decimal').click(function () {
-            $(this).select();
-        });
+       
 
     }
 
@@ -235,16 +216,15 @@
         });
         $("#TotalCapital").text(Arabia_to_Chinese(toDecimal(price)));
         $("#TotalFeeincome").text(toDecimal(price));
+        $("#fphjje").val(toDecimal(price));
     }
 
     // 打印发票;
     function AcceptClick(type) {
         var keyValue = request('keyValue');
         var queryJson = $("#form1").serializeJson();
-        var proArrays = new Array();
         var $grid = $("#gridTable");
         // 设置ajax 全局请求类型为同步
-        $.ajaxSettings.async = false;
 
         //发票打印三个顺序方法必须全部客户端OCX接口交互，每个成功进入下一步，错误弹出错误代码及提示内容
 
@@ -259,74 +239,69 @@
         }
 
         //step2:根据step2调用返回xml结果判断，如果成功，获取发票开具fpkjxml内容并替换页面变量,调用OCX发票开具接口
-        // var fpdyxmlres = getfpdyxml();
-        var fpdyxmlres = "";
-        $.post("/TenementManage/Feeticket/GetFpkjDoXML", { keyValue: keyValue, typecode: type, queryJson: JSON.stringify(queryJson) }, function (res) {
-            fpdyxmlres = ocxSend(res.resultdata);
-            // 如果字符串含有'/' 尝试使用 dom 对象
-            // fpdyxmlres = ocxSend(loadXML(res.resultdata));
-            console.log(fpdyxmlres);
-        }, "json")
+        var fpdyxml = getfpdyxml();
+        console.log(fpdyxml);
+        var fpdyxmlres = ocxSend(fpdyxml);;
 
         console.log(fpdyxmlres);
-        if (fpdyxmlres != "" && fpdyxmlres[0] != "00000000") {
+        if (fpdyxmlres[0] != "0") {
             alert('发票开具失败！|' + fpdyxmlres[0] + '|' + fpdyxmlres[1]);
             return;
         }
 
-        //解析发票开具成功后产生的发票代码及发票号码 
+        //解析发票开具成功后产生的发票代码及发票号码
+        console.log(fpdyxmlres[2]);
         var xmlfp = loadXML(fpdyxmlres[2]);
+       
+
         var elements = xmlfp.getElementsByTagName("output");
         var fpdm = elements[0].getElementsByTagName("fpdm")[0].firstChild.nodeValue;
         var fphm = elements[0].getElementsByTagName("fphm")[0].firstChild.nodeValue;
         var hjje = elements[0].getElementsByTagName("hjje")[0].firstChild.nodeValue;   //本次开票合计金额
+        console.log(fpdm);
+        console.log(fphm);
 
         $("#fpdm").val(fpdm);
         $("#fphm").val(fphm);
         $("#fplxdm").val(type);
-        $("#fphjje").val(hjje);
+        //$("#fphjje").val(hjje);
+        //#TotalFeeincome
 
-        $.post("/TenementManage/Feeticket/SavePrintData", { queryJson: JSON.stringify(queryJson), skus: JSON.stringify(proArrays) }, function (res) {
+
+
+        // 如果购买方名称与autocomplate填充的名称不一致，后台新增客户信息
+        if ($("#sel_ghdwmc").val() != $("#ghdwmc").val()) {
+            $("#ghkhdm  ").val("");
+        }
+
+        queryJson = $("#form1").serializeJson();
+        console.log(JSON.stringify(queryJson));
+
+        $.post("/TenementManage/Feeticket/SavePrintData", { keyValue: keyValue, queryJson: JSON.stringify(queryJson) }, function (res) {
             alert(res.message);
         }, "json");
 
         DoPrint(type, fpdm, fphm);
 
-        /*
-        //step3 :根据step2调用返回xml结果判断，如果成功从返回结果解析fpdm、fphm，读取fpprintxml内容并替换变量，再调用OCX发票打印方法
-        $.ajax({
-            url: "/TenementManage/Feeticket/GetPrintDoXml",
-            data: { typecode: type, printXml: fpdyxmlres },
-            async: false,
-            type: 'GET',
-            success: function (res) {
-                if(res.type != 3){
-                    console.log(res.data);
-                    var fpprintxmlres = ocxSend(res.data);
-                    console.log(fpprintxmlres);
-
-                    //step4 根据step3调用打印成功的话，调用保存数据接口SavePrintData，数据保存成功提示并关闭页面
-                    var is_success = false;
-                    if (is_success) {
-                        $.post("/TenementManage/Feeticket/SavePrintData", { queryJson: JSON.stringify(queryJson), skus: JSON.stringify(proArrays) }, function (res) {
-                            alert("打印成功");
-                        }, "json");
-                    }
-                }else{
-                    alert("打印失败");
-                }
-            }
-        });
-        */
-
         //纯打印,以备后单独用
         function DoPrint(type, fpdm, fphm) {
             var fpprintxml = getfpprintxml(type, fpdm, fphm);
+            console.log(fpprintxml);
             var fpprintxmlres = ocxSend(fpprintxml);
+            console.log(fpprintxmlres);
+
+            if (fpprintxmlres[0] != "00000000") {
+                alert('发票打印失败！|' + fpprintxmlres[0] + '|' + fpprintxmlres[1]);
+                //return;
+            }
+            else {
+                alert('发票打印成功！')
+            }
 
         }
 
         function getfpprintxml(type, fpdm, fphm) {
+            var res = "";
             $.ajax({
                 url: "/TenementManage/Feeticket/GetPrintDoXml",
                 data: { typecode: type, fpdm: fpdm, fphm: fphm },
@@ -334,10 +309,11 @@
                 async: false,
                 type: 'POST',
                 datatype: 'json',
-                success: function (res) {
-                    return res;
+                success: function (data) {
+                    res = data
                 }
             });
+            return res;
         }
 
         function getfpdyxml() {
@@ -350,7 +326,7 @@
                 type: 'POST',
                 datatype: 'json',
                 success: function (resdata) {
-                    res = resdata.resultdata;
+                    res = resdata;
                 }
             });
             return res;
@@ -384,7 +360,7 @@
             return arrres;
         }
 
-        $.ajaxSettings.async = true; // jquery ajax 全局设置
+        //  $.ajaxSettings.async = true; // jquery ajax 全局设置
     }
 </script>
 <div id="divTops">
@@ -408,6 +384,8 @@
             <input type="hidden" id="fphm" name="fphm" value="">
             <input type="hidden" id="fplxdm" name="fplxdm" value="">
             <input type="hidden" id="fphjje" name="fphjje" value="">
+            <input type="hidden" id="ghkhdm" name="ghkhdm" value=""><!--开户代码，用于提交 savePrint 时判断是否需要保持客户信息-->
+            <input type="hidden" id="sel_ghdwmc" name="sel_ghdwmc">
             <div class="printArea fapiao">
                 <table class="form" style="width: 100%; margin-bottom: 5px;font-size:12px; ">
                     <tr>

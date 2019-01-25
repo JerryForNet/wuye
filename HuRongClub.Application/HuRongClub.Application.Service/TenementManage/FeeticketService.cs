@@ -126,6 +126,7 @@ namespace HuRongClub.Application.Service.TenementManage
                 is_income = true;
 
                 #region 应收
+
                 builder.Append(@"SELECT  receive_id ,
                                     property_id ,
                                     ( SELECT    owner_name
@@ -160,6 +161,7 @@ namespace HuRongClub.Application.Service.TenementManage
                                     pay_mode
                             FROM    wy_feereceive
                             WHERE   ticket_id = @ticketid");
+
                 #endregion
             }
             else if (otherIncome != null)
@@ -167,6 +169,7 @@ namespace HuRongClub.Application.Service.TenementManage
                 is_otherIncome = true;
 
                 #region 其他收入
+
                 builder.Append(@"SELECT  customer AS ownername ,
                                         feedate AS receive_date ,
                                         property_id ,
@@ -181,6 +184,7 @@ namespace HuRongClub.Application.Service.TenementManage
                                         ) AS ticket_code
                                 FROM    wy_otherincome
                                 WHERE   ticketid = @ticketid ");
+
                 #endregion
             }
             else
@@ -485,10 +489,45 @@ namespace HuRongClub.Application.Service.TenementManage
                                     GROUP BY  feeitem_id
                                 ) bb
                                 LEFT JOIN wy_feeitem ff ON ff.feeitem_id = bb.feeitem_id ) cc");
-            DbParameter[] parameter = { DbParameters.CreateDbParameter("@ticketid",keyValue) };
+            DbParameter[] parameter = { DbParameters.CreateDbParameter("@ticketid", keyValue) };
 
             IRepository<TicketPrintEntity> resitory = new RepositoryFactory<TicketPrintEntity>().BaseRepository();
             return resitory.FindList(sql.ToString(), parameter);
         }
+
+        /// <summary>
+        /// 获取最大ID
+        /// </summary>
+        /// <returns></returns>
+        public string GetMaxID()
+        {
+            string safeSql = "SELECT MAX(khdm)+1 FROM [pt_kpkhxx]";
+
+            return this.BaseRepository().FindObject(safeSql).ToString();
+        }
+
+        /// <summary>
+        ///查询获取批量发票打印明细数据
+        /// </summary>
+        /// <param name="tickets">选中的ticket_id用逗号分开</param>
+        /// <returns></returns>
+        public DataTable GetBatchPrint(string tickets)
+        {
+              StringBuilder sql = new StringBuilder();
+              sql.Append(@"SELECT t_name,check_money,ticket_id,feeitem_name,taxrate,taxtype,(LTRIM(fee_year)+'/'+ltrim(fee_month)) as fperiod,feedispname,khmc,kh.khdm,khsh,khdz,kh.khkhyhzh 
+                            FROM dbo.v_GetPrint t 
+                            LEFT JOIN pt_kpkhxx kh ON kh.khmc=t.t_name
+                            WHERE t.ticket_id IN('0113001023','0113001024','0113001025') ");
+
+              DbParameter[] parameter = { DbParameters.CreateDbParameter("@tickets", tickets) };
+
+              
+
+              return this.BaseRepository().FindTable(sql.ToString(), parameter);
+            
+              //return dtticket;
+
+        }
+
     }
 }

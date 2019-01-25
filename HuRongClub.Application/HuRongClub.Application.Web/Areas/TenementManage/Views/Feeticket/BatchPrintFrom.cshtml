@@ -1,0 +1,421 @@
+﻿@{
+    ViewBag.Title = "打印发票";
+    Layout = "~/Views/Shared/_OrderForm.cshtml";
+}
+<script src="/Content/scripts/plugins/Amount/ArabiaToChinese.js"></script>
+<script src="/Content/scripts/plugins/Lodop/LodopFuncs.js"></script>
+<style>
+    body {
+        width: 100%;
+        background-color: #ccc;
+        margin: 0px auto;
+        padding: 0px;
+    }
+
+    .ui-jqgrid .form-control {
+        width: 100%;
+    }
+
+    .ui-jqgrid .ui-jqgrid-view input {
+        font-size: 12px;
+    }
+
+    .brs {
+        border: 0px;
+        border-bottom: solid 1px #000000;
+    }
+
+    .top {
+        width: 100%;
+        margin: 0 auto;
+        height: 35px;
+        line-height: 30px;
+        position: fixed;
+        _position: absolute;
+        z-index: 9999;
+        left: 0;
+        top: 0;
+        text-align: center;
+        background: #808080;
+    }
+
+    .Noprint {
+        width: 120px;
+    }
+
+    .show-info {
+        border: 1px solid #ccc;
+        margin: 0 10px;
+    }
+
+        .show-info .info-title {
+            writing-mode: horizontal-tb;
+            padding: 0 10px;
+            width: 10px;
+            border-right: 1px solid #ccc;
+        }
+
+        .show-info input {
+            margin: 1px 5px;
+            border: 1px solid #ccc;
+        }
+
+    .ui-autocomplete {
+        width: 300px;
+    }
+
+        .ui-autocomplete li {
+            width: 300px;
+        }
+</style>
+<!--jqgrid表格组件start-->
+<link href="/Content/scripts/plugins/jqgrid/jqgrid.css" rel="stylesheet" />
+<script src="/Content/scripts/plugins/jqgrid/grid.locale-cn.js"></script>
+<script src="/Content/scripts/plugins/jqgrid/jqgrid.min.js"></script>
+
+<!--jquery autocomplete-->
+<link href="~/Content/scripts/plugins/Autocomplete/styles.css" rel="stylesheet" />
+<script src="~/Content/scripts/plugins/Autocomplete/jquery.autocomplete.js"></script>
+<style>
+     .ui-autocomplete {
+         max-height: 100px;
+         overflow-y: auto;
+         /* 防止水平滚动条 */
+         overflow-x: hidden;
+     }
+     /* IE 6 不支持 max-height
+    * 我们使用 height 代替，但是这会强制菜单总是显示为那个高度
+    */
+     * html .ui-autocomplete {
+         height: 100px;
+     }
+</style>
+<script>
+    $(function () {
+        $('.auto_buy').autocomplete({
+            serviceUrl: '/FinanceManage/InvoiceInfo/GetListJson',
+            params: { q: $(".auto_buy").val() },
+            paramName: "q",
+            width: 500,
+            height: 200,
+            onSelect: function (suggestion) {
+                console.log(suggestion)
+                var data = suggestion.data;
+                $("#ghdwmc").val(data.khmc);
+                $("#ghdwsbh").val(data.khsh);
+                $("#ghdwdzdh").val(data.khdz);
+                $("#ghdwyhzh").val(data.khkhyhzh);
+                $("#ghkhdm").val(data.khdm);
+                $("#sel_ghdwmc").val(data.khmc);
+                $(".autocomplete-suggestions").hide();
+            },
+            transformResult: function (response, currentValue) {
+                var data = eval(response);
+
+                this.suggestion = $.map(data, function (item, index) {
+                    return { value: item.khmc, data: item };
+                });
+
+                return { displayUsers: "", suggestions: this.suggestion };
+            }
+        });
+
+        $(document).on("click", ".autocomplete-suggestion", function () { });
+    });
+</script>
+
+<!--表格组件end-->
+<script src="/Content/scripts/plugins/Amount/ArabiaToChinese.js"></script>
+<script>
+    var keyValue = request('keyValue');
+    var objdata;
+
+    $.post("/TenementManage/Feeticket/GetBatchPrint", { ticketid: keyValue}, function (res) {
+        objdata = res;
+        console.log(objdata);
+    }, "json");
+
+    $(function () {
+        initControl();
+        getGrid();
+    });
+    //初始化控件
+    function initControl() {
+        // resize重设布局;
+        $(window).resize(function (e) {
+            window.setTimeout(function () {
+                $('#gridTable').setGridWidth(($('.gridPanel').width()));
+                $('#gridTable').setGridHeight($(window).height() );
+            }, 200);
+            e.stopPropagation();
+        });
+    }
+
+    $.fn.serializeJson = function () {
+        var serializeObj = {};
+        $(this.serializeArray()).each(function () {
+            serializeObj[this.name] = this.value;
+        });
+        return serializeObj;
+    };
+
+    function getGrid() {
+      var $grid = $("#gridTable");
+      $grid.jqGrid({
+          unwritten: false,
+          datatype: "local",
+          data: objdata,
+          autowidth: true,
+          colModel: [
+              { label: "发票号", name: "tmpticketid", align: "left", sortable: false, key: true },
+              { label: "客户名称", name: "khmc", align: "left", sortable: false },
+              { label: "不含税金额", name: "bhsje", align: "left", sortable: false },
+              { label: "总税额", name: "hjse", align: "left", sortable: false },
+              { label: "价税合计", name: "hjje", align: "left", sortable: false },
+              { label: "客户代码", name: "khdm", align: "left", sortable: false },
+              { label: "客户税号", name: "khsh", align: "left", sortable: false },
+              { label: "客户地址", name: "khdz", align: "left", sortable: false },
+              { label: "客户开户银行", name: "khkhyhzh", align: "left", sortable: false },
+              { label: "备注", name: "bz", align: "left", sortable: false, width: 200 },
+          ],
+
+          rowNum: 1000,
+
+          ondblClickRow: function (row) {
+              var rowData = $('#gridTable').jqGrid('getRowData', row);
+
+              console.log(rowData);
+
+          }
+      });
+    }
+
+    // 打印发票;
+    function PrintClick(type) {
+        var keyValue = request('keyValue');
+        var queryJson = $("#form1").serializeJson();
+        var $grid = $("#gridTable");
+        // 设置ajax 全局请求类型为同步
+
+        //发票打印三个顺序方法必须全部客户端OCX接口交互，每个成功进入下一步，错误弹出错误代码及提示内容
+
+        //step1:获取发票打印注册码fpregxml并调用OCX注册码导入方法
+        var fpregxml = $("#fpregxml").val();
+        var fpregxmlres = ocxSend(fpregxml);
+        console.log(fpregxmlres);
+
+        if (fpregxmlres[0] != "00000000") {
+            alert('发票注册导入失败！|' + fpregxmlres[0] + '|' + fpregxmlres[1]);
+            return;
+        }
+
+        //step2:根据step2调用返回xml结果判断，如果成功，获取发票开具fpkjxml内容并替换页面变量,调用OCX发票开具接口
+        var fpdyxml = getfpdyxml();
+        console.log(fpdyxml);
+        var fpdyxmlres = ocxSend(fpdyxml);;
+
+        console.log(fpdyxmlres);
+        if (fpdyxmlres[0] != "0") {
+            alert('发票开具失败！|' + fpdyxmlres[0] + '|' + fpdyxmlres[1]);
+            return;
+        }
+
+        //解析发票开具成功后产生的发票代码及发票号码
+        console.log(fpdyxmlres[2]);
+        var xmlfp = loadXML(fpdyxmlres[2]);
+       
+
+        var elements = xmlfp.getElementsByTagName("output");
+        var fpdm = elements[0].getElementsByTagName("fpdm")[0].firstChild.nodeValue;
+        var fphm = elements[0].getElementsByTagName("fphm")[0].firstChild.nodeValue;
+        var hjje = elements[0].getElementsByTagName("hjje")[0].firstChild.nodeValue;   //本次开票合计金额
+        console.log(fpdm);
+        console.log(fphm);
+
+        $("#fpdm").val(fpdm);
+        $("#fphm").val(fphm);
+        $("#fplxdm").val(type);
+        //$("#fphjje").val(hjje);
+        //#TotalFeeincome
+
+
+
+        // 如果购买方名称与autocomplate填充的名称不一致，后台新增客户信息
+        if ($("#sel_ghdwmc").val() != $("#ghdwmc").val()) {
+            $("#ghkhdm  ").val("");
+        }
+
+        queryJson = $("#form1").serializeJson();
+        console.log(JSON.stringify(queryJson));
+
+        $.post("/TenementManage/Feeticket/SavePrintData", { keyValue: keyValue, queryJson: JSON.stringify(queryJson) }, function (res) {
+            alert(res.message);
+        }, "json");
+
+        DoPrint(type, fpdm, fphm);
+
+        //纯打印,以备后单独用
+        function DoPrint(type, fpdm, fphm) {
+            var fpprintxml = getfpprintxml(type, fpdm, fphm);
+            console.log(fpprintxml);
+            var fpprintxmlres = ocxSend(fpprintxml);
+            console.log(fpprintxmlres);
+
+            if (fpprintxmlres[0] != "00000000") {
+                alert('发票打印失败！|' + fpprintxmlres[0] + '|' + fpprintxmlres[1]);
+                //return;
+            }
+            else {
+                alert('发票打印成功！')
+            }
+
+        }
+
+        function getfpprintxml(type, fpdm, fphm) {
+            var res = "";
+            $.ajax({
+                url: "/TenementManage/Feeticket/GetPrintDoXml",
+                data: { typecode: type, fpdm: fpdm, fphm: fphm },
+                cache: false,
+                async: false,
+                type: 'POST',
+                datatype: 'json',
+                success: function (data) {
+                    res = data
+                }
+            });
+            return res;
+        }
+
+        function getfpdyxml() {
+            var res = "";
+            $.ajax({
+                url: "/TenementManage/Feeticket/GetFpkjDoXML",
+                data: { keyValue: keyValue, typecode: type, queryJson: JSON.stringify(queryJson) },
+                cache: false,
+                async: false,
+                type: 'POST',
+                datatype: 'json',
+                success: function (resdata) {
+                    res = resdata;
+                }
+            });
+            return res;
+        }
+
+        function ocxSend(sendXml) {
+            var arrres = new Array(3);
+
+            var mo = document.getElementById("ieOCX");
+
+            var retXml = "";
+            try {
+                retXml = mo.OperateDiskX(decodeURI(sendXml));
+            } catch (e) {
+                //console.dir(e);
+                alert(e.message);
+            }
+            console.log(retXml);
+
+            var xmldoc = loadXML(retXml);
+
+            var elements = xmldoc.getElementsByTagName("output");
+            arrres[2] = retXml;
+            for (var i = 0; i < elements.length; i++) {
+                var code = elements[i].getElementsByTagName("returncode")[0].firstChild.nodeValue;
+                arrres[0] = code;
+                var msg = elements[i].getElementsByTagName("returnmsg")[0].firstChild.nodeValue;
+                arrres[1] = msg;
+            }
+
+            return arrres;
+        }
+
+        //  $.ajaxSettings.async = true; // jquery ajax 全局设置
+    }
+
+</script>
+<script>
+    var loadXML = function (xmlString) {
+        var xmlDoc = null;
+
+        if (!window.DOMParser && window.ActiveXObject) {
+            var xmlDomVersions = ['MSXML.2.DOMDocument.6.0', 'MSXML.2.DOMDocument.3.0', 'Microsoft.XMLDOM'];
+            for (var i = 0; i < xmlDomVersions.length; i++) {
+                try {
+                    xmlDoc = new ActiveXObject(xmlDomVersions[i]);
+                    xmlDoc.async = false;
+                    xmlDoc.loadXML(xmlString); //loadXML方法载入xml字符串
+                    break;
+                }
+                catch (e) {
+                }
+            }
+        }
+        else if (window.DOMParser && document.implementation && document.implementation.createDocument) {
+            try {
+                domParser = new DOMParser();
+                xmlDoc = domParser.parseFromString(xmlString, 'text/xml');
+            }
+            catch (e) {
+            }
+        }
+        else {
+            return null;
+        }
+
+        return xmlDoc;
+    }
+</script>
+
+<div id="printBody" style="display:none;">
+    
+    <object id="ieOCX" name="ieOCX" height="0" width="0" classid="CLSID:7E777ADB-F89A-49A3-BCC9-76B353AD0775"></object>
+    <object id="chromeOCX" height="0" width="0" type="application/x-itst-activex" clsid="{7E777ADB-F89A-49A3-BCC9-76B353AD0775}"></object>
+</div>
+
+
+<div class="titlePanel">
+    <div class="title-search">
+    </div>
+    <div class="toolbar">
+        <div class="btn-group">
+            <a id="lr-print-default" class="btn btn-default" onclick="btn_print_default()"><i class="fa fa-print"></i>&nbsp;打印普票</a>
+            <a id="lr-print-unite" class="btn btn-default" onclick="btn_print_unite()"><i class="fa fa-print"></i>&nbsp;打印专票</a>
+        </div>
+    </div>
+</div>
+<div class="gridPanel">
+    <table id="gridTable"></table>
+ 
+</div>
+<div style="margin-top: 20px; margin-right: 10px; margin-left:10px;">
+    <table style="width:100%;">
+        <tr>
+            <td class="info-title">购货方</td>
+            <td style="padding-left:5px;">
+                <table style="width:450px;">
+                    <tr>
+                        <td style="width:100px;">名　　　　称：</td>
+                        <td><input id="ghdwmc" class="auto_buy" name="ghdwmc" type="text" class="editable" style="width:300px" /></td>
+                    </tr>
+                    <tr>
+                        <td>纳税人识别号：</td>
+                        <td><input id="ghdwsbh" name="ghdwsbh" type="text" class="editable" /></td>
+                    </tr>
+                    <tr>
+                        <td>地址　、电话：</td>
+                        <td><input id="ghdwdzdh" name="ghdwdzdh" type="text" class="editable" /></td>
+                    </tr>
+                    <tr>
+                        <td>开户行及账号：</td>
+                        <td><input id="ghdwyhzh" name="ghdwyhzh" type="text" class="editable" /></td>
+                    </tr>
+                </table>
+            </td>
+            <td class="info-title">备注</td>
+            <td><textarea name="bz" style="height:80px; width:100px;" class="editable"></textarea></td>
+        </tr>
+    </table>
+    <table id="gridItems"></table>
+</div>

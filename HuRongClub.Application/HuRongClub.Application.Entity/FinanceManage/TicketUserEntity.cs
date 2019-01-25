@@ -1,58 +1,14 @@
-﻿using System;
-
-namespace HuRongClub.Application.Entity.FinanceManage
+﻿namespace HuRongClub.Application.Entity.FinanceManage
 {
     /// <summary>
     /// 版 本：HurongClub.Framework V1.0.1
     /// 创 建：超级管理员
-    /// 日 期：2019-01-17 09:31
-    /// 描 述：PtInvoice
+    /// 日 期：2019-01-20 20:54
+    /// 描 述：TicketUser
     /// </summary>
-    public class PtInvoiceEntity : BaseEntity
+    public class TicketUserEntity : BaseEntity
     {
         #region 实体成员
-
-        /// <summary>
-        /// ticket_id
-        /// </summary>
-        /// <returns></returns>
-        public string ticket_id { get; set; }
-
-        /// <summary>
-        /// inv_num
-        /// </summary>
-        /// <returns></returns>
-        public string inv_num { get; set; }
-
-        /// <summary>
-        /// inputtime
-        /// </summary>
-        /// <returns></returns>
-        public DateTime? inputtime { get; set; }
-
-        /// <summary>
-        /// inv_date
-        /// </summary>
-        /// <returns></returns>
-        public DateTime? inv_date { get; set; }
-
-        /// <summary>
-        /// inv_name
-        /// </summary>
-        /// <returns></returns>
-        public string inv_name { get; set; }
-
-        /// <summary>
-        /// inv_money
-        /// </summary>
-        /// <returns></returns>
-        public Decimal inv_money { get; set; }
-
-        /// <summary>
-        /// inv_notes
-        /// </summary>
-        /// <returns></returns>
-        public string inv_notes { get; set; }
 
         /// <summary>
         /// khdm
@@ -60,9 +16,53 @@ namespace HuRongClub.Application.Entity.FinanceManage
         /// <returns></returns>
         public string khdm { get; set; }
 
-        public string inv_fpdm { get; set; }
+        /// <summary>
+        /// khmc
+        /// </summary>
+        /// <returns></returns>
+        public string khmc { get; set; }
 
-        public string inv_lxdm { get; set; }
+        /// <summary>
+        /// khsh
+        /// </summary>
+        /// <returns></returns>
+        public string khsh { get; set; }
+
+        /// <summary>
+        /// khdz
+        /// </summary>
+        /// <returns></returns>
+        public string khdz { get; set; }
+
+        /// <summary>
+        /// khkhyhzh
+        /// </summary>
+        /// <returns></returns>
+        public string khkhyhzh { get; set; }
+
+        /// <summary>
+        /// vdef1
+        /// </summary>
+        /// <returns></returns>
+        public string vdef1 { get; set; }
+
+        /// <summary>
+        /// vdef2
+        /// </summary>
+        /// <returns></returns>
+        public string vdef2 { get; set; }
+
+        /// <summary>
+        /// vdef3
+        /// </summary>
+        /// <returns></returns>
+        public string vdef3 { get; set; }
+
+        /// <summary>
+        /// vdef4
+        /// </summary>
+        /// <returns></returns>
+        public string vdef4 { get; set; }
 
         #endregion
 
@@ -73,7 +73,6 @@ namespace HuRongClub.Application.Entity.FinanceManage
         /// </summary>
         public override void Create()
         {
-            //this.ticket_id = Guid.NewGuid().ToString();
         }
 
         /// <summary>
@@ -82,7 +81,7 @@ namespace HuRongClub.Application.Entity.FinanceManage
         /// <param name="keyValue"></param>
         public override void Modify(string keyValue)
         {
-            this.ticket_id = keyValue;
+            // 主健只能为 uniqueidentifier 或 int
         }
 
         #endregion

@@ -60,6 +60,7 @@
     <Compile Include="FinanceManage\FeenoticeMap.cs" />
     <Compile Include="FinanceManage\InvoiceInfoMap.cs" />
     <Compile Include="FinanceManage\PtInvoiceMap.cs" />
+    <Compile Include="FinanceManage\TicketUserMap.cs" />
     <Compile Include="RepostryManage\LblistMap.cs" />
     <Compile Include="SysManage\Accounts_UsersMap.cs" />
     <Compile Include="TenementManage\FixmaterialMap.cs" />

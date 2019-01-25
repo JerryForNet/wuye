@@ -1,0 +1,151 @@
+﻿@{;
+ViewBag.Title = "表单页面";
+Layout = "~/Views/Shared/_Form.cshtml";
+}
+<!--jqgrid表格组件start-->
+<link href="/Content/scripts/plugins/jqgrid/jqgrid.css" rel="stylesheet" />
+<script src="/Content/scripts/plugins/jqgrid/grid.locale-cn.js"></script>
+<script src="/Content/scripts/plugins/jqgrid/jqgrid.min.js"></script>
+<!--表格组件end-->
+<script src="/Content/scripts/plugins/Amount/ArabiaToChinese.js"></script>
+<!--jquery autocomplete-->
+<link href="~/Content/scripts/plugins/Autocomplete/styles.css" rel="stylesheet" />
+<script src="~/Content/scripts/plugins/Autocomplete/jquery.autocomplete.js"></script>
+<style>
+    .ui-autocomplete {
+        max-height: 100px;
+        overflow-y: auto;
+        /* 防止水平滚动条 */
+        overflow-x: hidden;
+    }
+    /* IE 6 不支持 max-height
+    * 我们使用 height 代替，但是这会强制菜单总是显示为那个高度
+    */
+    * html .ui-autocomplete {
+        height: 100px;
+    }
+</style>
+
+<script>
+    var keyValue = request('tmpticketid');
+    var printJson = $.currentIframe().$("#printJson").val();
+    if (printJson != undefined && printJson != "") {
+        printJson = eval(printJson);
+    }
+
+    $(function () {
+        initControl();
+        getGrid();
+    });
+    //初始化控件
+    function initControl() {
+        // 客户姓名、税号、地址、银行账户、备注
+        $('#ghdwmc').autocomplete({
+            serviceUrl: '/FinanceManage/InvoiceInfo/GetListJson',
+            params: { q: $("#ghdwmc").val() },
+            paramName: "q",
+            width: 350,
+            height: 150,
+            onSelect: function (suggestion) {
+                var data = suggestion.data;
+                $("#ghdwmc").val(data.khmc);
+                $("#ghdwsbh").val(data.khsh);
+                $("#ghdwdzdh").val(data.khdz);
+                $("#ghdwyhzh").val(data.khkhyhzh);
+                $("#ghkhdm").val(data.khdm);
+
+                $(".autocomplete-suggestions").hide();
+            },
+            transformResult: function (response, currentValue) {
+                var data = eval(response);
+
+                this.suggestion = $.map(data, function (item, index) {
+                    return { value: item.khmc, data: item };
+                });
+
+                return { displayUsers: "", suggestions: this.suggestion };
+            }
+        });
+
+        $(document).on("click", ".autocomplete-suggestion", function () { });
+    }
+
+    $.fn.serializeJson = function () {
+        var serializeObj = {};
+        $(this.serializeArray()).each(function () {
+            serializeObj[this.name] = this.value;
+        });
+        return serializeObj;
+    };
+
+    function getGrid() {
+        var data;
+        for (var item in printJson) {
+            if (item.tmpticketid == keyValue) {
+                data = printJson[item].feeitems;
+            }
+        }
+        console.log(data);
+        if (data == undefined) return;
+
+        var $grid = $("#gridTable");
+        $grid.jqGrid({
+            unwritten: false,
+            datatype: "local",
+            data: data,
+            height: $(window).height() - 235,
+            autowidth: true,
+            colModel: [
+                { label: "费用项目", name: "feeitemname", align: "left", width: 100, sortable: false },
+                { label: "费率", name: "taxrate", align: "left", sortable: false },
+                { label: "费用金额", name: "fmoney", align: "left", width: 100, sortable: false, formatter: 'number', formatoptions: { thousandsSeparator: "", decimalPlaces: 2 } },
+            ],
+            viewrecords: true,
+            gridview: true
+        });
+    }
+
+    //保存表单;
+    function AcceptClick() {
+        printJson[keyValue].printUser = $("#printItemForm").GetWebControls(keyValue);
+
+        $.currentIframe().$("#printJson").val(eval(printJson));
+    }
+</script>
+<form id="printItemForm">
+    <div style="margin-top: 20px; margin-right: 10px; margin-left:10px;">
+        <table class="form">
+            <tr>
+                <td class="formTitle">客户姓名：</td>
+                <td class="formValue" colspan='3'>
+                    <input id="ghdwmc" name="ghdwmc" type="text" class="form-control" />
+                </td>
+                <td class="formTitle">税号：</td>
+                <td class="formValue" colspan='3'>
+                    <input id="ghdwsbh" name="ghdwsbh" type="text" class="form-control" />
+                </td>
+            </tr>
+            <tr>
+                <td class="formTitle">地址、电话：</td>
+                <td class="formValue" colspan='3'>
+                    <input id="ghdwdzdh" name="ghdwdzdh" type="text" class="form-control" />
+                </td>
+                <td class="formTitle">银行账户：</td>
+                <td class="formValue" colspan='3'>
+                    <input id="ghdwyhzh" name="ghdwyhzh" type="text" class="form-control" />
+                </td>
+            </tr>
+            <tr>
+                <td class="formTitle">备注：</td>
+                <td class="formValue" colspan='7'>
+                    <input id="remark" name="remark" type="text" class="form-control" />
+                </td>
+            </tr>
+        </table>
+        <input type="hidden" name="incomeid" id="incomeid" />
+        <input type="hidden" name="receive_id" id="receive_id">
+        <input type="hidden" name="is_income" id="is_income">
+        <input type="hidden" name="is_otherIncome" id="is_otherIncome">
+        <table id="gridTable"></table>
+    </div>
+</form>

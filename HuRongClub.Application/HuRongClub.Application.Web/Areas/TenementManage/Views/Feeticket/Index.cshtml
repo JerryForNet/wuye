@@ -328,12 +328,54 @@ Layout = "~/Views/Shared/_Index.cshtml";
     //打印
     function btn_print() {
         var ticketId = $("#gridTable").jqGridRowValue("ticket_id");
+        if (ticketId.split(",").length > 1) {
+            dialogMsg('请选择一张发票打印！', 0);
+            return;
+        }
+        var status = $("#gridTable").jqGridRowValue("ticket_status");
+        if (status != '已使用') {
+            dialogMsg('请选择一张已使用的发票打印！', 0);
+            return;
+        }
+
         if (ticketId == 0) {
             dialogMsg('未找到需要打印数据，请先查询到数据后再按打印操作！', 0);
             return false;
         } else {
             window.open('/TenementManage/Feeticket/PrintFrom?keyValue=' + ticketId);
         }
+    }
+
+    // 批量打印
+    function btn_batch_print() {
+        var ticketId = $("#gridTable").jqGridRowValue("ticket_id");
+        console.log(ticketId);
+        if (ticketId.split(",").length == 1) {
+            dialogMsg('请至少选择一张发票打印！', 0);
+            return;
+        }
+        var status = $("#gridTable").jqGridRowValue("ticket_status");
+        if (status.length > 0) {
+            var statusCount = status.split(',').length;
+            var statusNameCount = status.split('已使用').length - 1;
+
+            if (statusCount != statusNameCount) {
+                dialogMsg('请选择已使用的发票打印！', 0);
+                return;
+            }
+        }
+
+        var id = ticketId.split(',')[0];
+
+        //window.open('/TenementManage/Feeticket/BatchPrintFrom?keyValue=' + ticketId);
+        parent.tablist.newTab({
+            moduleIdCookie: true,
+            id: id,
+            title: "批量打印",
+            closed: true,
+            icon: "fa fa-bell",
+            url: '/TenementManage/Feeticket/BatchPrintFrom?keyValue=' + ticketId
+        });
     }
 </script>
 <div class="titlePanel">
@@ -438,6 +480,7 @@ Layout = "~/Views/Shared/_Index.cshtml";
     </div>
     <div class="toolbar">
         <div class="btn-group">
+            <a id="lr-batch-print" class="btn btn-default" onclick="btn_batch_print()"><i class="fa fa-print"></i>&nbsp;批量打印发票</a>
             <a id="lr-print" class="btn btn-default" onclick="btn_print()"><i class="fa fa-print"></i>&nbsp;打印发票</a>
             <a id="lr-replace" class="btn btn-default" onclick="reload()"><i class="fa fa-refresh"></i>&nbsp;刷新</a>
             <a id="lr-add" class="btn btn-default" onclick="btn_add()"><i class="fa fa-plus"></i>&nbsp;新增</a>

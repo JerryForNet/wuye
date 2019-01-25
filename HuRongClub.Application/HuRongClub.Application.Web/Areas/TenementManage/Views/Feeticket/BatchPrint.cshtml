@@ -1,0 +1,20 @@
+﻿@{
+    ViewBag.Title = "打印发票";
+    Layout = "~/Views/Shared/_OrderForm.cshtml";
+}
+<link href="/Content/scripts/plugins/jqgrid/jqgrid.css" rel="stylesheet" />
+<script src="/Content/scripts/plugins/jqgrid/grid.locale-cn.js"></script>
+<script src="/Content/scripts/plugins/jqgrid/jqgrid.min.js"></script>
+<script>
+    $(function () {
+        initControl();
+        //getGrid();
+    });
+    //初始化控件
+    function initControl() {
+        $.post("/TenementManage/Feeticket/GetBatchPrint", { ticketid: "0113001023,0113001024,0113001025" }, function (res) {
+            alert(res.message);
+        }, "json");
+    }
+
+</script>

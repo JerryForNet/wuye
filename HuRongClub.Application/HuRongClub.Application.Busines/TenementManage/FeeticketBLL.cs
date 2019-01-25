@@ -3,9 +3,9 @@ using HuRongClub.Application.Entity.TenementManage;
 using HuRongClub.Application.Entity.TenementManage.ViewModel;
 using HuRongClub.Application.IService.TenementManage;
 using HuRongClub.Application.Service.TenementManage;
-using HuRongClub.Cache.Factory;
 using HuRongClub.Util.WebControl;
 using System;
+using System.Data;
 using System.Collections.Generic;
 
 namespace HuRongClub.Application.Busines.TenementManage
@@ -53,10 +53,9 @@ namespace HuRongClub.Application.Busines.TenementManage
             return service.GetListByIds(keyValue);
         }
 
-
         public IEnumerable<TicketPrintEntity> GetPrintListJson(string keyValue, string queryJson)
         {
-            return service.GetPrintListJson(keyValue,queryJson);
+            return service.GetPrintListJson(keyValue, queryJson);
         }
 
         /// <summary>
@@ -68,6 +67,7 @@ namespace HuRongClub.Application.Busines.TenementManage
         {
             return service.GetEntity();
         }
+
         /// <summary>
         /// 获取实体
         /// </summary>
@@ -78,7 +78,6 @@ namespace HuRongClub.Application.Busines.TenementManage
             return service.GetEntity(keyValue);
         }
 
-
         /// <summary>
         /// 获取费用明细
         /// </summary>
@@ -88,7 +87,6 @@ namespace HuRongClub.Application.Busines.TenementManage
         {
             return service.GetCostByTicketId(keyValue);
         }
-
 
         /// <summary>
         /// 获取其他收入明细列表
@@ -111,7 +109,28 @@ namespace HuRongClub.Application.Busines.TenementManage
         {
             return service.GetSelList(dept_id, ticket_type, ticket_status);
         }
+
+        /// <summary>
+        /// 获取最大ID
+        /// </summary>
+        /// <returns></returns>
+        public string GetMaxID()
+        {
+            return service.GetMaxID();
+        }
+
         #endregion 获取数据
+
+        /// <summary>
+        /// 获取批量发票打印数据，datatable便于前端组合数据
+        /// </summary>
+        /// <param name="tickets"></param>
+        /// <returns></returns>
+        public DataTable GetBatchPrint(string tickets)
+        {
+            return service.GetBatchPrint(tickets);
+        }
+
 
         #region 提交数据
 
@@ -167,6 +186,5 @@ namespace HuRongClub.Application.Busines.TenementManage
         }
 
         #endregion 提交数据
-
     }
 }

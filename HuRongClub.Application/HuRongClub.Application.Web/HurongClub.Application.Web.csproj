@@ -782,6 +782,9 @@
     <Content Include="Areas\RepostryManage\Views\Monthcheck\MonthDetailList.cshtml" />
     <Content Include="Areas\RepostryManage\Views\Feereport\FeeReportGoods.cshtml" />
     <Content Include="Content\scripts\plugins\autocomplate\jquery.autocomplete.js" />
+    <Content Include="Areas\TenementManage\Views\Feeticket\BatchPrint.cshtml" />
+    <Content Include="Areas\TenementManage\Views\Feeticket\BatchPrintFrom.cshtml" />
+    <Content Include="Areas\TenementManage\Views\Feeticket\BatchPrintListView.cshtml" />
     <None Include="Properties\PublishProfiles\6.1.pubxml" />
     <Content Include="Areas\TenementManage\Views\DevicePart\DeviceCopy.cshtml" />
     <Content Include="Areas\RepostryManage\Views\InbillItem\DeleteIndex.cshtml" />
